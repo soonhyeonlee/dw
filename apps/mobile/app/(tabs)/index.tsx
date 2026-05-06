@@ -26,11 +26,21 @@ function mallLabel(malls: ApiMall[], platform: string): string {
 }
 
 const QUICK_MENU = [
-  { key: 'history', label: '적립내역', icon: 'receipt-outline', route: '/(tabs)/cashback' },
-  { key: 'alert', label: '적립알림', icon: 'notifications-outline', route: '/(tabs)/cashback' },
-  { key: 'invite', label: '친구초대', icon: 'person-add-outline', route: '/(tabs)/mypage' },
-  { key: 'support', label: '고객센터', icon: 'headset-outline', route: '/(tabs)/mypage' },
+  { key: 'history', label: '적립내역', icon: 'receipt-outline', tint: '#FF6B35', route: '/(tabs)/cashback' },
+  { key: 'alert',   label: '적립알림', icon: 'notifications-outline', tint: '#1673E8', route: '/(tabs)/cashback' },
+  { key: 'invite',  label: '친구초대', icon: 'person-add-outline', tint: '#118658', route: '/(tabs)/mypage' },
+  { key: 'support', label: '고객센터', icon: 'headset-outline', tint: '#9B77F7', route: '/(tabs)/mypage' },
+  { key: 'guide',   label: '이용가이드', icon: 'book-outline', tint: '#E97DCE', route: '/guide' },
 ] as const;
+
+const SEGMENTS = [
+  { key: 'all',     label: '전체',         category: null,        badge: null },
+  { key: 'travel',  label: '여행',         category: '여행·예약', badge: 'NEW' },
+  { key: 'digital', label: '디지털·가전',  category: '가전·디지털', badge: null },
+  { key: 'fashion', label: '패션·뷰티',    category: '패션',      badge: null },
+] as const;
+
+const DAILY_LABELS = ['실시간', '오늘', '+1일', '+2일', '+3일', '+4일'] as const;
 
 function formatMoney(v: number) {
   return v.toLocaleString();
@@ -119,6 +129,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [malls, setMalls] = useState<ApiMall[]>([]);
+  const [segment, setSegment] = useState<typeof SEGMENTS[number]['key']>('all');
   const [dealProducts, setDealProducts] = useState<ApiProduct[]>([]);
   const [recProducts, setRecProducts] = useState<ApiProduct[]>([]);
 
@@ -238,21 +249,50 @@ export default function HomeScreen() {
           <Ionicons name="chevron-forward" size={16} color={COLORS.ink[400]} />
         </TouchableOpacity>
 
-        {/* Quick menu */}
-        <View style={styles.quickmenu}>
+        {/* Quick action chips (horizontal scroll) */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.quickChipScroll}
+        >
           {QUICK_MENU.map((m) => (
             <TouchableOpacity
               key={m.key}
-              style={styles.quickItem}
+              style={styles.quickChip}
               onPress={() => router.push(m.route as any)}
               activeOpacity={0.7}
             >
-              <View style={styles.quickIcon}>
-                <Ionicons name={m.icon as any} size={22} color={COLORS.ink[800]} />
+              <View style={[styles.quickChipIcon, { backgroundColor: `${m.tint}1A` }]}>
+                <Ionicons name={m.icon as any} size={22} color={m.tint} />
               </View>
-              <Text style={styles.quickLabel}>{m.label}</Text>
+              <Text style={styles.quickChipLabel}>{m.label}</Text>
             </TouchableOpacity>
           ))}
+        </ScrollView>
+
+        {/* Segment tabs */}
+        <View style={styles.segmentRow}>
+          {SEGMENTS.map((s) => {
+            const active = segment === s.key;
+            return (
+              <TouchableOpacity
+                key={s.key}
+                style={styles.segmentTab}
+                onPress={() => setSegment(s.key)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.segmentLabelGroup}>
+                  <Text style={[styles.segmentLabel, active && styles.segmentLabelActive]}>{s.label}</Text>
+                  {s.badge ? (
+                    <View style={styles.segmentBadge}>
+                      <Text style={styles.segmentBadgeText}>{s.badge}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                {active ? <View style={styles.segmentUnderline} /> : null}
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Mall grid */}
@@ -269,20 +309,25 @@ export default function HomeScreen() {
         <View style={styles.mallGrid}>
           {loading && malls.length === 0 ? (
             <ActivityIndicator size="small" color={COLORS.primary} style={{ width: '100%', paddingVertical: 20 }} />
-          ) : malls.length === 0 ? (
-            <Text style={{ width: '100%', textAlign: 'center', color: COLORS.ink[400], paddingVertical: 20 }}>
-              등록된 쇼핑몰이 없습니다
-            </Text>
-          ) : (
-            malls.map((m) => (
+          ) : (() => {
+            const seg = SEGMENTS.find((s) => s.key === segment)!;
+            const filtered = seg.category ? malls.filter((m) => m.category === seg.category) : malls;
+            if (filtered.length === 0) {
+              return (
+                <Text style={{ width: '100%', textAlign: 'center', color: COLORS.ink[400], paddingVertical: 20 }}>
+                  {seg.category ? `${seg.label} 카테고리 쇼핑몰이 곧 추가됩니다` : '등록된 쇼핑몰이 없습니다'}
+                </Text>
+              );
+            }
+            return filtered.map((m) => (
               <MallCard
                 key={m.id}
                 mall={m}
                 variant="home"
                 onPress={() => router.push(`/mall/${m.platform}` as any)}
               />
-            ))
-          )}
+            ));
+          })()}
         </View>
 
         {/* Promo carousel */}
@@ -291,6 +336,47 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.divider} />
+
+        {/* Daily cashback grid */}
+        <View style={styles.sectionHead}>
+          <View style={styles.sectionTitleGroup}>
+            <Text style={styles.sectionTitle}>일자별 인기 캐시백</Text>
+            <Text style={styles.sectionSub}>매일 새로 갱신</Text>
+          </View>
+          <TouchableOpacity style={styles.moreBtn} onPress={() => router.push('/categories' as any)}>
+            <Text style={styles.moreText}>전체</Text>
+            <Ionicons name="chevron-forward" size={12} color={COLORS.ink[500]} />
+          </TouchableOpacity>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dailyScroll}>
+          {DAILY_LABELS.map((label, i) => {
+            const m = malls[i % Math.max(1, malls.length)];
+            if (!m) {
+              return (
+                <View key={label} style={dailyStyles.cell}>
+                  <View style={[dailyStyles.logoBox, { backgroundColor: COLORS.ink[100] }]} />
+                  <Text style={dailyStyles.dayLabel}>{label}</Text>
+                </View>
+              );
+            }
+            return (
+              <TouchableOpacity
+                key={`${label}-${m.id}`}
+                style={dailyStyles.cell}
+                onPress={() => router.push(`/mall/${m.platform}` as any)}
+                activeOpacity={0.85}
+              >
+                <View style={[dailyStyles.logoBox, { backgroundColor: m.color || COLORS.ink[600] }]}>
+                  <Text style={dailyStyles.logoText}>{m.name.slice(0, 1)}</Text>
+                </View>
+                <Text style={dailyStyles.rate}>최대 {Number(m.cashbackRate)}%</Text>
+                <Text style={dailyStyles.dayLabel}>{label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        <View style={[styles.divider, { marginTop: 18 }]} />
 
         {/* Today's deal */}
         <View style={styles.sectionHead}>
@@ -429,14 +515,36 @@ const styles = StyleSheet.create({
   guideBannerSub: { fontSize: 11, color: COLORS.ink[500], marginTop: 2 },
 
 
-  quickmenu: { flexDirection: 'row', paddingHorizontal: SPACING.md, paddingVertical: 24 },
-  quickItem: { flex: 1, alignItems: 'center', gap: 8 },
-  quickIcon: {
-    width: 44, height: 44, borderRadius: 14,
-    backgroundColor: COLORS.ink[100],
+  quickChipScroll: { paddingHorizontal: SPACING.md, paddingVertical: 18, gap: 14 },
+  quickChip: { width: 64, alignItems: 'center', gap: 6 },
+  quickChipIcon: {
+    width: 48, height: 48, borderRadius: 16,
     alignItems: 'center', justifyContent: 'center',
   },
-  quickLabel: { fontSize: 12, color: COLORS.ink[700], fontWeight: '500' },
+  quickChipLabel: { fontSize: 11, color: COLORS.ink[800], fontWeight: '500' },
+
+  segmentRow: {
+    flexDirection: 'row',
+    paddingHorizontal: SPACING.xl,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.ink[100],
+  },
+  segmentTab: { paddingVertical: 12, marginRight: 22, alignItems: 'flex-start' },
+  segmentLabelGroup: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  segmentLabel: { fontSize: 15, color: COLORS.ink[500], fontWeight: '600', letterSpacing: -0.3 },
+  segmentLabelActive: { color: COLORS.ink[900], fontWeight: '800' },
+  segmentBadge: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 5, paddingVertical: 1,
+    borderRadius: 4,
+  },
+  segmentBadgeText: { fontSize: 9, fontWeight: '800', color: COLORS.white, letterSpacing: 0.3 },
+  segmentUnderline: {
+    position: 'absolute',
+    left: 0, right: 0, bottom: -1,
+    height: 2,
+    backgroundColor: COLORS.ink[900],
+  },
 
   sectionHead: {
     paddingHorizontal: SPACING.xl,
@@ -462,6 +570,8 @@ const styles = StyleSheet.create({
 
   divider: { height: 8, backgroundColor: COLORS.ink[50], marginTop: 24 },
 
+  dailyScroll: { paddingHorizontal: SPACING.xl, gap: 10, paddingBottom: 4 },
+
   dealScroll: { paddingHorizontal: SPACING.xl, gap: 12 },
   recGrid: {
     paddingHorizontal: SPACING.xl,
@@ -469,6 +579,17 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
   },
+});
+
+const dailyStyles = StyleSheet.create({
+  cell: { width: 88, alignItems: 'center', gap: 6 },
+  logoBox: {
+    width: 72, height: 72, borderRadius: 18,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  logoText: { fontSize: 22, fontWeight: '800', color: COLORS.white, letterSpacing: -0.5 },
+  rate: { fontSize: 12, fontWeight: '800', color: COLORS.ink[900] },
+  dayLabel: { fontSize: 11, color: COLORS.ink[600], fontWeight: '600' },
 });
 
 const dealStyles = StyleSheet.create({

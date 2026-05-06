@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { Ionicons } from '@expo/vector-icons';
@@ -49,6 +50,61 @@ const PROMO_BADGE_LABEL: Record<string, { text: string; bg: string; fg: string }
   rate_up:   { text: '상향 캐시백', bg: '#EEEEFF', fg: '#4B4BF4' },
   welcome:   { text: '웰컴 혜택', bg: '#FFE6DC', fg: '#FF6B35' },
 };
+
+interface RateTier { category: string; rate: number; note?: string }
+
+function buildRateTiers(platform: string, baseRate: number, mallCategory: string | null): RateTier[] {
+  const tiersByPlatform: Record<string, RateTier[]> = {
+    coupang: [
+      { category: '로켓배송', rate: baseRate },
+      { category: '로켓프레시', rate: Math.max(0.5, +(baseRate * 0.85).toFixed(1)) },
+      { category: '쿠팡이츠 식품', rate: Math.max(0.5, +(baseRate * 0.7).toFixed(1)) },
+      { category: '여행·티켓', rate: Math.max(0.3, +(baseRate * 0.5).toFixed(1)), note: '예약 확정 후 적립' },
+      { category: '쿠팡플레이·도서', rate: 0, note: '캐시백 제외' },
+    ],
+    naver: [
+      { category: '스마트스토어', rate: baseRate },
+      { category: '브랜드스토어', rate: +(baseRate * 0.9).toFixed(1) },
+      { category: 'N+ Pay 추가 적립', rate: +(baseRate * 0.5).toFixed(1), note: 'N Pay 결제 한정' },
+      { category: '여행·예약', rate: Math.max(0.3, +(baseRate * 0.4).toFixed(1)) },
+      { category: '쇼핑LIVE 라이브', rate: 0, note: '제외' },
+    ],
+    '11st': [
+      { category: '오늘의딜', rate: baseRate },
+      { category: '아마존글로벌', rate: +(baseRate * 0.8).toFixed(1) },
+      { category: '신선식품', rate: Math.max(0.3, +(baseRate * 0.4).toFixed(1)) },
+      { category: '디지털 콘텐츠', rate: 0, note: '제외' },
+    ],
+  };
+  if (tiersByPlatform[platform]) return tiersByPlatform[platform];
+
+  const cat = mallCategory || '';
+  if (cat.includes('여행')) {
+    return [
+      { category: '호텔·숙박', rate: baseRate },
+      { category: '항공·티켓', rate: +(baseRate * 0.6).toFixed(1) },
+      { category: '액티비티·투어', rate: +(baseRate * 0.8).toFixed(1) },
+      { category: '렌터카·패스', rate: +(baseRate * 0.4).toFixed(1) },
+      { category: '여행 보험', rate: +(baseRate * 1.0).toFixed(1) },
+    ];
+  }
+  if (cat.includes('패션') || cat.includes('뷰티')) {
+    return [
+      { category: '여성의류', rate: baseRate },
+      { category: '남성의류', rate: +(baseRate * 0.95).toFixed(1) },
+      { category: '신발·잡화', rate: +(baseRate * 0.85).toFixed(1) },
+      { category: '뷰티·액세서리', rate: +(baseRate * 0.9).toFixed(1) },
+      { category: '럭셔리·명품', rate: +(baseRate * 0.5).toFixed(1), note: '브랜드별 상이' },
+    ];
+  }
+  return [
+    { category: '의류·잡화', rate: baseRate },
+    { category: '식품·생필품', rate: +(baseRate * 0.8).toFixed(1) },
+    { category: '가전·디지털', rate: +(baseRate * 0.6).toFixed(1) },
+    { category: '도서·문구', rate: Math.max(0.3, +(baseRate * 0.4).toFixed(1)) },
+    { category: '여행·티켓', rate: 0, note: '캐시백 제외' },
+  ];
+}
 
 export default function MallDetailScreen() {
   const { platform } = useLocalSearchParams<{ platform: string }>();
@@ -154,27 +210,60 @@ export default function MallDetailScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 110 }}>
-        {/* Hero */}
-        <View style={styles.hero}>
-          <View style={[styles.heroLogo, { backgroundColor: mall.tintColor }]}>
-            <Text style={styles.heroLogoText}>{mall.wordmark}</Text>
+        {/* Hero collage with gradient + brand logo + page indicator */}
+        <View style={styles.heroCollageWrap}>
+          <LinearGradient
+            colors={[mall.tintColor, '#000000']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroCollage}
+          >
+            <View style={[styles.heroCollageLogo, { backgroundColor: COLORS.white }]}>
+              <Text style={[styles.heroCollageLogoText, { color: mall.tintColor }]}>{mall.wordmark}</Text>
+            </View>
+          </LinearGradient>
+          <View style={styles.heroCollageDots}>
+            <View style={[styles.heroCollageDot, styles.heroCollageDotActive]} />
+            <View style={styles.heroCollageDot} />
+            <View style={styles.heroCollageDot} />
           </View>
+        </View>
+
+        {/* Mall info row */}
+        <View style={styles.mallInfo}>
           {category ? (
             <View style={styles.categoryChip}>
               <Text style={styles.categoryChipText}>{category}</Text>
             </View>
           ) : null}
-          <Text style={styles.heroName}>{mall.name}</Text>
           {badge ? (
             <View style={[styles.heroBadge, { backgroundColor: badge.bg }]}>
               <Text style={[styles.heroBadgeText, { color: badge.fg }]}>{badge.text}</Text>
             </View>
           ) : null}
+          <Text style={styles.heroName}>{mall.name}</Text>
           <Text style={styles.heroRateBig}>최대 {mall.cashbackRate}% 캐시백</Text>
-          <Text style={styles.heroDesc}>
-            {mall.name} 상품을 더블윈에서 경유 결제하면{'\n'}
-            구매 금액의 최대 {mall.cashbackRate}%를 캐시백으로 돌려드려요.
-          </Text>
+        </View>
+
+        {/* Cashback rate table */}
+        <View style={styles.rateTableWrap}>
+          <Text style={styles.rateTableTitle}>카테고리별 캐시백률</Text>
+          <View style={styles.rateTable}>
+            {buildRateTiers(mall.platform, Number(mall.cashbackRate), category).map((t, i, arr) => (
+              <View
+                key={t.category}
+                style={[styles.rateRow, i === arr.length - 1 && { borderBottomWidth: 0 }]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rateRowCategory}>{t.category}</Text>
+                  {t.note ? <Text style={styles.rateRowNote}>{t.note}</Text> : null}
+                </View>
+                <Text style={[styles.rateRowRate, t.rate === 0 && styles.rateRowRateMuted]}>
+                  {t.rate > 0 ? `${t.rate}%` : '제외'}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
 
         <View style={styles.divider} />
@@ -252,13 +341,26 @@ const styles = StyleSheet.create({
   topActions: { flexDirection: 'row' },
   iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
 
-  hero: { alignItems: 'center', paddingTop: 28, paddingBottom: 24, paddingHorizontal: SPACING.xl },
-  heroLogo: {
-    width: 72, height: 72, borderRadius: 20,
+  heroCollageWrap: { paddingTop: 0 },
+  heroCollage: {
+    height: 220,
     alignItems: 'center', justifyContent: 'center',
-    marginBottom: 14,
   },
-  heroLogoText: { fontSize: 24, fontWeight: '800', color: COLORS.white, letterSpacing: -0.5 },
+  heroCollageLogo: {
+    width: 96, height: 96, borderRadius: 24,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  heroCollageLogoText: { fontSize: 32, fontWeight: '800', letterSpacing: -0.6 },
+  heroCollageDots: {
+    flexDirection: 'row', justifyContent: 'center', gap: 5,
+    marginTop: 12, marginBottom: 12,
+  },
+  heroCollageDot: {
+    width: 6, height: 6, borderRadius: 3,
+    backgroundColor: COLORS.ink[200],
+  },
+  heroCollageDotActive: { width: 16, backgroundColor: COLORS.ink[900] },
+  mallInfo: { alignItems: 'center', paddingHorizontal: SPACING.xl, paddingBottom: 14, gap: 6 },
   heroName: { fontSize: 20, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.3 },
   heroRateBox: {
     marginTop: 10,
@@ -294,6 +396,23 @@ const styles = StyleSheet.create({
   },
 
   divider: { height: 8, backgroundColor: COLORS.ink[50] },
+
+  rateTableWrap: { paddingHorizontal: SPACING.xl, paddingVertical: 18 },
+  rateTableTitle: { fontSize: 14, fontWeight: '700', color: COLORS.ink[900], marginBottom: 10 },
+  rateTable: {
+    borderWidth: 1, borderColor: COLORS.ink[100],
+    borderRadius: RADIUS.md,
+    overflow: 'hidden',
+  },
+  rateRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 14, paddingVertical: 14,
+    borderBottomWidth: 1, borderBottomColor: COLORS.ink[100],
+  },
+  rateRowCategory: { fontSize: 13, color: COLORS.ink[800], fontWeight: '600' },
+  rateRowNote: { fontSize: 11, color: COLORS.ink[500], marginTop: 2 },
+  rateRowRate: { fontSize: 15, fontWeight: '800', color: COLORS.primary, letterSpacing: -0.3 },
+  rateRowRateMuted: { color: COLORS.ink[400], fontWeight: '600' },
 
   timelineWrap: {
     paddingHorizontal: SPACING.xl,

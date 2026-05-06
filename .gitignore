@@ -1,0 +1,51 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Expo
+.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+*.tsbuildinfo
+coverage/
+.next/
+*.apk
+*.xapk
+
+# Android / iOS native build artifacts (huge)
+**/android/build/
+**/android/.gradle/
+**/android/app/build/
+**/android/app/.cxx/
+**/android/.kotlin/
+**/ios/build/
+**/ios/Pods/
+**/ios/DerivedData/
+
+# QA captures (large screenshot folders, kept locally only)
+design-mockup/qa-*/
+

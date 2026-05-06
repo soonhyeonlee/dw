@@ -1,0 +1,81 @@
+{
+  "CallerReference": "doublewin-api-dev-2026-04-21",
+  "Aliases": {
+    "Quantity": 1,
+    "Items": ["api-dev.sumbodyweb.com"]
+  },
+  "DefaultRootObject": "",
+  "Origins": {
+    "Quantity": 1,
+    "Items": [
+      {
+        "Id": "ec2-doublewin-api",
+        "DomainName": "ec2-54-238-64-159.ap-northeast-1.compute.amazonaws.com",
+        "OriginPath": "",
+        "CustomHeaders": {"Quantity": 0},
+        "CustomOriginConfig": {
+          "HTTPPort": 4000,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "http-only",
+          "OriginSslProtocols": {
+            "Quantity": 1,
+            "Items": ["TLSv1.2"]
+          },
+          "OriginReadTimeout": 60,
+          "OriginKeepaliveTimeout": 30
+        },
+        "ConnectionAttempts": 3,
+        "ConnectionTimeout": 10,
+        "OriginShield": {"Enabled": false}
+      }
+    ]
+  },
+  "OriginGroups": {"Quantity": 0},
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "ec2-doublewin-api",
+    "ViewerProtocolPolicy": "redirect-to-https",
+    "AllowedMethods": {
+      "Quantity": 7,
+      "Items": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
+      "CachedMethods": {
+        "Quantity": 2,
+        "Items": ["GET", "HEAD"]
+      }
+    },
+    "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+    "OriginRequestPolicyId": "216adef6-5c7f-47e4-b989-5492eafa07d3",
+    "Compress": true,
+    "SmoothStreaming": false,
+    "FieldLevelEncryptionId": "",
+    "LambdaFunctionAssociations": {"Quantity": 0},
+    "FunctionAssociations": {"Quantity": 0}
+  },
+  "CacheBehaviors": {"Quantity": 0},
+  "CustomErrorResponses": {"Quantity": 0},
+  "Comment": "DoubleWin API dev (EC2 HTTP:4000 origin)",
+  "Logging": {
+    "Enabled": false,
+    "IncludeCookies": false,
+    "Bucket": "",
+    "Prefix": ""
+  },
+  "PriceClass": "PriceClass_200",
+  "Enabled": true,
+  "ViewerCertificate": {
+    "ACMCertificateArn": "arn:aws:acm:us-east-1:884057032474:certificate/cd8fc61d-909d-43d0-8d18-08ce0086bb6a",
+    "SSLSupportMethod": "sni-only",
+    "MinimumProtocolVersion": "TLSv1.2_2021",
+    "Certificate": "arn:aws:acm:us-east-1:884057032474:certificate/cd8fc61d-909d-43d0-8d18-08ce0086bb6a",
+    "CertificateSource": "acm"
+  },
+  "Restrictions": {
+    "GeoRestriction": {
+      "RestrictionType": "none",
+      "Quantity": 0
+    }
+  },
+  "WebACLId": "",
+  "HttpVersion": "http2",
+  "IsIPV6Enabled": true,
+  "Staging": false
+}

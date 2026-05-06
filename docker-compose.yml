@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: doublewin-db
+    environment:
+      POSTGRES_USER: doublewin
+      POSTGRES_PASSWORD: doublewin_dev
+      POSTGRES_DB: doublewin
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: doublewin-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: doublewin-api
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: doublewin
+      DATABASE_PASSWORD: doublewin_dev
+      DATABASE_NAME: doublewin
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-doublewin-prod-secret}
+      JWT_EXPIRATION: 7d
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-doublewin-webhook-secret}
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+    container_name: doublewin-admin
+    ports:
+      - '3001:3001'
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:3000
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  crawler:
+    build:
+      context: .
+      dockerfile: apps/crawler/Dockerfile
+    container_name: doublewin-crawler
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: doublewin
+      DATABASE_PASSWORD: doublewin_dev
+      DATABASE_NAME: doublewin
+      CRAWLER_MODE: schedule
+      CRAWLER_INTERVAL_HOURS: 6
+      COUPANG_ACCESS_KEY: ${COUPANG_ACCESS_KEY:-}
+      COUPANG_SECRET_KEY: ${COUPANG_SECRET_KEY:-}
+      COUPANG_PARTNER_ID: ${COUPANG_PARTNER_ID:-}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:-}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:-}
+      NAVER_AFFILIATE_ID: ${NAVER_AFFILIATE_ID:-}
+      ELEVENTH_API_KEY: ${ELEVENTH_API_KEY:-}
+      ELEVENTH_AFFILIATE_ID: ${ELEVENTH_AFFILIATE_ID:-}
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: doublewin-nginx
+    ports:
+      - '80:80'
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+      - admin
+    restart: unless-stopped
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+  redis_data:

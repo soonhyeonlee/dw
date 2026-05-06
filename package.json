@@ -1,0 +1,23 @@
+{
+  "name": "doublewin",
+  "version": "0.0.1",
+  "private": true,
+  "workspaces": [
+    "apps/api",
+    "apps/admin",
+    "packages/*"
+  ],
+  "overrides": {
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "scripts": {
+    "api": "npm run start:dev --workspace=apps/api",
+    "admin": "npm run dev --workspace=apps/admin",
+    "mobile": "cd apps/mobile && npx expo start",
+    "crawler": "cd apps/crawler && python main.py",
+    "db:migrate": "npm run migration:run --workspace=apps/api",
+    "seed": "npm run seed --workspace=apps/api",
+    "seed:dummy": "npm run seed:dummy --workspace=apps/api"
+  }
+}

@@ -1,0 +1,62 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: doublewin-api
+    ports:
+      - '4000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_SSL: "true"
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: 7d
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+    restart: unless-stopped
+
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    container_name: doublewin-admin
+    ports:
+      - '80:3001'
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  crawler:
+    build:
+      context: .
+      dockerfile: apps/crawler/Dockerfile
+    container_name: doublewin-crawler
+    environment:
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_SSL: "true"
+      CRAWLER_MODE: schedule
+      CRAWLER_INTERVAL_HOURS: 6
+      COUPANG_ACCESS_KEY: ${COUPANG_ACCESS_KEY:-}
+      COUPANG_SECRET_KEY: ${COUPANG_SECRET_KEY:-}
+      COUPANG_PARTNER_ID: ${COUPANG_PARTNER_ID:-}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:-}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:-}
+      NAVER_AFFILIATE_ID: ${NAVER_AFFILIATE_ID:-}
+      ELEVENTH_API_KEY: ${ELEVENTH_API_KEY:-}
+      ELEVENTH_AFFILIATE_ID: ${ELEVENTH_AFFILIATE_ID:-}
+    restart: unless-stopped

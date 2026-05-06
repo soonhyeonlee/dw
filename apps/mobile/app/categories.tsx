@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,6 +12,8 @@ import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS } from '../src/constants/theme';
 import { getMalls, type Mall } from '../src/api/home';
+import { MallCard } from '../src/components/MallCard';
+import { PromoCarousel, type PromoSlide } from '../src/components/PromoCarousel';
 
 const CATEGORY_ORDER: { key: string; label: string; emoji: string }[] = [
   { key: '종합쇼핑',        label: '종합쇼핑',        emoji: '🛍️' },
@@ -26,45 +27,22 @@ const CATEGORY_ORDER: { key: string; label: string; emoji: string }[] = [
   { key: '유아동',          label: '유아동',          emoji: '👶' },
 ];
 
-const MALL_DISPLAY_OVERRIDE: Record<string, string> = {
-  coupang: 'C', naver: 'N', '11st': '11', gmarket: 'G',
-  ssg: 'SSG', lotteon: 'L', wemakeprice: '위메프', tmon: '티몬',
-};
-
-function mallLogoUrl(baseUrl?: string): string | undefined {
-  if (!baseUrl) return undefined;
-  try {
-    const u = new URL(baseUrl);
-    return `https://logo.clearbit.com/${u.hostname}?size=120`;
-  } catch {
-    return undefined;
-  }
-}
-
-function MallTile({ mall, onPress }: { mall: Mall; onPress: () => void }) {
-  const [imgFailed, setImgFailed] = useState(false);
-  const logoUrl = mallLogoUrl(mall.baseUrl);
-  const useImage = !!logoUrl && !imgFailed;
-  const wordmark = MALL_DISPLAY_OVERRIDE[mall.platform] ?? mall.name.slice(0, 1);
-  return (
-    <TouchableOpacity style={tileStyles.card} onPress={onPress} activeOpacity={0.85}>
-      <View style={[tileStyles.logoBox, !useImage && { backgroundColor: mall.color }]}>
-        {useImage ? (
-          <Image
-            source={{ uri: logoUrl }}
-            style={tileStyles.logoImg}
-            resizeMode="contain"
-            onError={() => setImgFailed(true)}
-          />
-        ) : (
-          <Text style={tileStyles.logoFallback}>{wordmark}</Text>
-        )}
-      </View>
-      <Text style={tileStyles.name} numberOfLines={1}>{mall.name}</Text>
-      <Text style={tileStyles.rate}>최대 {Number(mall.cashbackRate)}%</Text>
-    </TouchableOpacity>
-  );
-}
+const CAT_PROMO_SLIDES: PromoSlide[] = [
+  {
+    id: 'cat-travel',
+    badge: '여행 BIG',
+    title: '여행 카테고리 캐시백 +5%',
+    subtitle: '아고다 · 클룩 · 트립닷컴',
+    bg: ['#1673E8', '#0C5CC2'],
+  },
+  {
+    id: 'cat-fashion',
+    badge: '패션',
+    title: '신상 입고 패션 최대 12%',
+    subtitle: 'adidas · SHEIN · W.CONCEPT',
+    bg: ['#E97DCE', '#9B77F7'],
+  },
+];
 
 export default function CategoriesScreen() {
   const router = useRouter();
@@ -116,6 +94,11 @@ export default function CategoriesScreen() {
           <Ionicons name="chevron-forward" size={18} color={COLORS.ink[400]} />
         </TouchableOpacity>
 
+        {/* Promo carousel */}
+        <View style={{ marginTop: 18 }}>
+          <PromoCarousel slides={CAT_PROMO_SLIDES} />
+        </View>
+
         {/* Category sections */}
         {loading && malls.length === 0 ? (
           <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 80 }} />
@@ -135,9 +118,10 @@ export default function CategoriesScreen() {
                 </View>
                 <View style={styles.tileRow}>
                   {items.slice(0, 3).map((m) => (
-                    <MallTile
+                    <MallCard
                       key={m.id}
                       mall={m}
+                      variant="category"
                       onPress={() => router.push(`/mall/${m.platform}` as any)}
                     />
                   ))}
@@ -198,24 +182,3 @@ const styles = StyleSheet.create({
   tileRow: { flexDirection: 'row', gap: 8 },
 });
 
-const tileStyles = StyleSheet.create({
-  card: {
-    flex: 1,
-    backgroundColor: COLORS.ink[50],
-    borderRadius: RADIUS.md,
-    paddingVertical: 18,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    gap: 8,
-  },
-  logoBox: {
-    width: 56, height: 56, borderRadius: 14,
-    backgroundColor: COLORS.white,
-    alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  logoImg: { width: 38, height: 38 },
-  logoFallback: { fontSize: 16, fontWeight: '800', color: COLORS.white, letterSpacing: -0.5 },
-  name: { fontSize: 12, fontWeight: '600', color: COLORS.ink[800], textAlign: 'center' },
-  rate: { fontSize: 10, fontWeight: '700', color: COLORS.primary },
-});

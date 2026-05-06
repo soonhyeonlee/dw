@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
-  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +16,7 @@ import PlatformFilter from '../../src/components/PlatformFilter';
 import ProductCard from '../../src/components/ProductCard';
 import { getProducts } from '../../src/api/products';
 import { getMalls, type Mall } from '../../src/api/home';
+import { MallCard } from '../../src/components/MallCard';
 
 const DEMO_PRODUCTS = [
   { id: '1', platform: 'coupang', title: '나이키 에어맥스 270 남성 러닝화', price: 89000, originalPrice: 159000, imageUrl: 'https://via.placeholder.com/300x300/FF6B35/FFFFFF?text=NIKE', cashbackRate: 3, cashbackAmount: 2670 },
@@ -25,40 +25,6 @@ const DEMO_PRODUCTS = [
 ];
 
 const POPULAR_KEYWORDS = ['에어팟', '나이키', '다이슨', '갤럭시', '아이패드', '무선충전기', '운동화', '맥북'];
-
-function mallLogoUrl(baseUrl?: string): string | undefined {
-  if (!baseUrl) return undefined;
-  try {
-    const u = new URL(baseUrl);
-    return `https://logo.clearbit.com/${u.hostname}?size=120`;
-  } catch {
-    return undefined;
-  }
-}
-
-function MallChip({ mall, onPress }: { mall: Mall; onPress: () => void }) {
-  const [imgFailed, setImgFailed] = useState(false);
-  const logoUrl = mallLogoUrl(mall.baseUrl);
-  const useImage = !!logoUrl && !imgFailed;
-  return (
-    <TouchableOpacity style={chipStyles.card} onPress={onPress} activeOpacity={0.85}>
-      <View style={[chipStyles.logoBox, !useImage && { backgroundColor: mall.color }]}>
-        {useImage ? (
-          <Image
-            source={{ uri: logoUrl }}
-            style={chipStyles.logoImg}
-            resizeMode="contain"
-            onError={() => setImgFailed(true)}
-          />
-        ) : (
-          <Text style={chipStyles.logoFallback}>{mall.name.slice(0, 1)}</Text>
-        )}
-      </View>
-      <Text style={chipStyles.name} numberOfLines={1}>{mall.name}</Text>
-      <Text style={chipStyles.rate}>최대 {Number(mall.cashbackRate)}%</Text>
-    </TouchableOpacity>
-  );
-}
 
 export default function SearchScreen() {
   const router = useRouter();
@@ -166,9 +132,10 @@ export default function SearchScreen() {
           <Text style={styles.mallMatchTitle}>쇼핑몰 바로가기</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.mallMatchRow}>
             {matchingMalls.map((m) => (
-              <MallChip
+              <MallCard
                 key={m.id}
                 mall={m}
+                variant="search"
                 onPress={() => router.push(`/mall/${m.platform}` as any)}
               />
             ))}
@@ -186,9 +153,10 @@ export default function SearchScreen() {
               <Text style={styles.sectionTitle}>추천 쇼핑몰</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recMallRow}>
                 {malls.slice(0, 8).map((m) => (
-                  <MallChip
+                  <MallCard
                     key={m.id}
                     mall={m}
+                    variant="search"
                     onPress={() => router.push(`/mall/${m.platform}` as any)}
                   />
                 ))}
@@ -274,22 +242,3 @@ const styles = StyleSheet.create({
   recMallRow: { paddingVertical: SPACING.sm, gap: 8 },
 });
 
-const chipStyles = StyleSheet.create({
-  card: {
-    width: 78,
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-  },
-  logoBox: {
-    width: 56, height: 56, borderRadius: 14,
-    backgroundColor: COLORS.white,
-    borderWidth: 1, borderColor: COLORS.ink[200],
-    alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  logoImg: { width: 38, height: 38 },
-  logoFallback: { fontSize: 16, fontWeight: '800', color: COLORS.white },
-  name: { fontSize: 11, fontWeight: '500', color: COLORS.ink[800] },
-  rate: { fontSize: 10, fontWeight: '700', color: COLORS.primary },
-});

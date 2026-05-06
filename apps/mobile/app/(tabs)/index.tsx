@@ -11,34 +11,15 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { getHomeData, type Mall as ApiMall } from '../../src/api/home';
 import { getProducts, type Product as ApiProduct } from '../../src/api/products';
-
-// 쇼핑몰 아이콘 매핑 (DB에 logoUrl 컬럼 없어 당분간 Clearbit 로고 + platform 기준 wordmark)
-const MALL_DISPLAY_OVERRIDE: Record<string, { wordmark: string }> = {
-  coupang: { wordmark: 'C' },
-  naver: { wordmark: 'N' },
-  '11st': { wordmark: '11' },
-  gmarket: { wordmark: 'G' },
-  ssg: { wordmark: 'SSG' },
-  lotteon: { wordmark: 'L' },
-  wemakeprice: { wordmark: '위메프' },
-  tmon: { wordmark: '티몬' },
-};
-
-function mallLogoUrl(baseUrl?: string): string | undefined {
-  if (!baseUrl) return undefined;
-  try {
-    const u = new URL(baseUrl);
-    return `https://logo.clearbit.com/${u.hostname}?size=120`;
-  } catch {
-    return undefined;
-  }
-}
+import { PromoCarousel, type PromoSlide } from '../../src/components/PromoCarousel';
+import { MallCard } from '../../src/components/MallCard';
 
 function mallLabel(malls: ApiMall[], platform: string): string {
   return malls.find((m) => m.platform === platform)?.name || platform;
@@ -59,62 +40,33 @@ function calcCashback(price: number, rate: number) {
   return Math.round(price * rate / 100);
 }
 
-const PROMO_BADGE_LABEL: Record<string, { text: string; bg: string; fg: string }> = {
-  time_deal: { text: '타임특가', bg: '#E0311E', fg: '#FFFFFF' },
-  rate_up:   { text: '상향 캐시백', bg: '#EEEEFF', fg: '#4B4BF4' },
-  welcome:   { text: '웰컴 혜택', bg: '#FFE6DC', fg: '#FF6B35' },
-};
-
-function formatPromoCountdown(endsAt?: string | null): string | null {
-  if (!endsAt) return null;
-  const end = new Date(endsAt).getTime();
-  const diff = end - Date.now();
-  if (diff <= 0) return null;
-  const hours = Math.floor(diff / 3_600_000);
-  if (hours < 24) return `${hours}시간 후 종료`;
-  const days = Math.floor(hours / 24);
-  return `${days}일 후 종료`;
-}
-
-function MallCell({ mall, onPress }: { mall: ApiMall; onPress: () => void }) {
-  const [imgFailed, setImgFailed] = useState(false);
-  const logoUrl = mallLogoUrl(mall.baseUrl);
-  const useImage = !!logoUrl && !imgFailed;
-  const wordmark = MALL_DISPLAY_OVERRIDE[mall.platform]?.wordmark ?? mall.name.slice(0, 1);
-  const badge = mall.promoBadge ? PROMO_BADGE_LABEL[mall.promoBadge] : null;
-  const countdown = formatPromoCountdown(mall.promoEndsAt);
-  const prevRate = mall.previousCashbackRate != null ? Number(mall.previousCashbackRate) : null;
-  return (
-    <TouchableOpacity style={mallStyles.item} onPress={onPress} activeOpacity={0.7}>
-      <View style={mallStyles.logoWrap}>
-        <View style={[mallStyles.logoBox, !useImage && { backgroundColor: mall.color, borderColor: mall.color }]}>
-          {useImage ? (
-            <Image
-              source={{ uri: logoUrl }}
-              style={mallStyles.logoImg}
-              resizeMode="contain"
-              onError={() => setImgFailed(true)}
-            />
-          ) : (
-            <Text style={mallStyles.logoFallback} numberOfLines={1}>{wordmark}</Text>
-          )}
-        </View>
-        {badge ? (
-          <View style={[mallStyles.badge, { backgroundColor: badge.bg }]}>
-            <Text style={[mallStyles.badgeText, { color: badge.fg }]}>{badge.text}</Text>
-          </View>
-        ) : null}
-      </View>
-      <Text style={mallStyles.name} numberOfLines={1}>{mall.name}</Text>
-      <View style={mallStyles.rateRow}>
-        <Text style={mallStyles.rateText}>최대 {Number(mall.cashbackRate)}%</Text>
-        {prevRate != null ? (
-          <Text style={mallStyles.prevRateText}>{prevRate}%</Text>
-        ) : null}
-      </View>
-      {countdown ? <Text style={mallStyles.countdownText}>{countdown}</Text> : null}
-    </TouchableOpacity>
-  );
+function PROMO_SLIDES(router: ReturnType<typeof useRouter>): PromoSlide[] {
+  return [
+    {
+      id: 'welcome2x',
+      badge: '신규 혜택',
+      title: '첫 구매 캐시백 2배',
+      subtitle: '이달 한정 · 최대 10,000원',
+      bg: ['#FF6B35', '#E55A2B'],
+      onPress: () => router.push('/guide'),
+    },
+    {
+      id: 'signup5k',
+      badge: '회원가입',
+      title: '가입 즉시 5,000원 적립',
+      subtitle: '이메일 인증만 완료하면 OK',
+      bg: ['#4B4BF4', '#6161FF'],
+      onPress: () => router.push('/auth/register' as any),
+    },
+    {
+      id: 'tier-up',
+      badge: '협회 회원',
+      title: '협회 회원 캐시백 +1%',
+      subtitle: '모든 쇼핑몰에서 추가 적립',
+      bg: ['#118658', '#176644'],
+      onPress: () => router.push('/(tabs)/mypage'),
+    },
+  ];
 }
 
 function DealCard({ p, label, onPress }: { p: ApiProduct; label: string; onPress: () => void }) {
@@ -210,7 +162,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
@@ -218,19 +170,55 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
         }
       >
-        {/* Top bar */}
-        <View style={styles.topbar}>
-          <Text style={styles.logo}>더블윈</Text>
-          <View style={styles.topActions}>
-            <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/(tabs)/search')}>
-              <Ionicons name="search-outline" size={24} color={COLORS.ink[800]} />
+        {/* Hero: orange gradient header (greeting + actions + cashback) */}
+        <LinearGradient
+          colors={[COLORS.primary, COLORS.primaryDark]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.hero}
+        >
+          <View style={styles.heroTopRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.heroGreeting} numberOfLines={1}>
+                {isAuthenticated ? `안녕하세요, ${user?.nickname || '회원'}님` : '안녕하세요!'}
+              </Text>
+              <Text style={styles.heroSub}>오늘도 캐시백 받고 쇼핑하세요</Text>
+            </View>
+            <TouchableOpacity style={styles.heroIconBtn} onPress={() => router.push('/(tabs)/search')}>
+              <Ionicons name="search-outline" size={22} color={COLORS.white} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications')}>
-              <Ionicons name="notifications-outline" size={24} color={COLORS.ink[800]} />
-              <View style={styles.dot} />
+            <TouchableOpacity style={styles.heroIconBtn} onPress={() => router.push('/notifications')}>
+              <Ionicons name="notifications-outline" size={22} color={COLORS.white} />
+              <View style={styles.heroDot} />
             </TouchableOpacity>
           </View>
-        </View>
+
+          <View style={styles.heroCashRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.heroCashLabel}>내 캐시백</Text>
+              <View style={styles.heroAmountRow}>
+                <Text style={styles.heroAmount}>{formatMoney(balance)}</Text>
+                <Text style={styles.heroAmountUnit}>원</Text>
+              </View>
+            </View>
+            <TouchableOpacity style={styles.heroWithdraw} onPress={() => router.push('/(tabs)/cashback')}>
+              <Text style={styles.heroWithdrawText}>출금</Text>
+              <Ionicons name="chevron-forward" size={14} color={COLORS.white} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.heroStatsRow}>
+            <View style={styles.heroStat}>
+              <Text style={styles.heroStatKey}>이번 달</Text>
+              <Text style={styles.heroStatVal}>{formatMoney(monthEarned)}원</Text>
+            </View>
+            <View style={styles.heroStatSep} />
+            <View style={styles.heroStat}>
+              <Text style={styles.heroStatKey}>누적</Text>
+              <Text style={styles.heroStatVal}>{formatMoney(totalEarned)}원</Text>
+            </View>
+          </View>
+        </LinearGradient>
 
         {/* Welcome guide banner */}
         <TouchableOpacity
@@ -249,35 +237,6 @@ export default function HomeScreen() {
           </View>
           <Ionicons name="chevron-forward" size={16} color={COLORS.ink[400]} />
         </TouchableOpacity>
-
-        {/* Cashback card */}
-        <View style={styles.cashcard}>
-          <View style={styles.cashcardRow}>
-            <Text style={styles.cashcardLabel}>내 캐시백</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/cashback')} style={styles.moreLinkRow}>
-              <Text style={styles.cashcardMore}>전체보기</Text>
-              <Ionicons name="chevron-forward" size={14} color="#D1D5DB" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.cashcardAmountRow}>
-            <Text style={styles.cashcardAmount}>{formatMoney(balance)}</Text>
-            <Text style={styles.cashcardUnit}>원</Text>
-          </View>
-          <View style={styles.cashcardStats}>
-            <View style={styles.stat}>
-              <Text style={styles.statKey}>이번 달 적립</Text>
-              <Text style={styles.statVal}>{formatMoney(monthEarned)}원</Text>
-            </View>
-            <View style={styles.statSep} />
-            <View style={styles.stat}>
-              <Text style={styles.statKey}>누적 적립</Text>
-              <Text style={styles.statVal}>{formatMoney(totalEarned)}원</Text>
-            </View>
-            <TouchableOpacity style={styles.withdraw} onPress={() => router.push('/(tabs)/cashback')}>
-              <Text style={styles.withdrawText}>출금하기</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
 
         {/* Quick menu */}
         <View style={styles.quickmenu}>
@@ -316,28 +275,20 @@ export default function HomeScreen() {
             </Text>
           ) : (
             malls.map((m) => (
-              <MallCell
+              <MallCard
                 key={m.id}
                 mall={m}
+                variant="home"
                 onPress={() => router.push(`/mall/${m.platform}` as any)}
               />
             ))
           )}
         </View>
 
-        {/* Promo banner */}
-        <TouchableOpacity style={styles.promo} activeOpacity={0.9}>
-          <View style={{ flex: 1 }}>
-            <View style={styles.promoBadge}>
-              <Text style={styles.promoBadgeText}>신규 혜택</Text>
-            </View>
-            <Text style={styles.promoTitle}>첫 구매 캐시백 2배</Text>
-            <Text style={styles.promoSub}>4월 한정 · 최대 10,000원</Text>
-          </View>
-          <View style={styles.promoArt}>
-            <Ionicons name="gift-outline" size={36} color={COLORS.primary} />
-          </View>
-        </TouchableOpacity>
+        {/* Promo carousel */}
+        <View style={{ marginTop: 16 }}>
+          <PromoCarousel slides={PROMO_SLIDES(router)} />
+        </View>
 
         <View style={styles.divider} />
 
@@ -401,24 +352,63 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: COLORS.primaryDark },
   container: { flex: 1, backgroundColor: COLORS.background },
 
-  topbar: {
-    height: 56,
+  hero: {
+    paddingHorizontal: SPACING.xl,
+    paddingTop: 12,
+    paddingBottom: 22,
+  },
+  heroTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.xl,
+    gap: 6,
+    marginBottom: 18,
   },
-  logo: { fontSize: 22, fontWeight: '800', color: COLORS.primary, letterSpacing: -0.5 },
-  topActions: { flexDirection: 'row', gap: SPACING.lg },
-  iconBtn: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  dot: { position: 'absolute', top: 2, right: 2, width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.primary },
+  heroGreeting: { fontSize: 17, fontWeight: '700', color: COLORS.white, letterSpacing: -0.3 },
+  heroSub: { fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
+  heroIconBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    position: 'relative',
+  },
+  heroDot: {
+    position: 'absolute', top: 7, right: 8,
+    width: 7, height: 7, borderRadius: 4,
+    backgroundColor: '#FFD94E',
+    borderWidth: 1, borderColor: COLORS.primaryDark,
+  },
+  heroCashRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingTop: 6,
+  },
+  heroCashLabel: { fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: '500' },
+  heroAmountRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 4 },
+  heroAmount: { fontSize: 32, fontWeight: '800', color: COLORS.white, letterSpacing: -0.6 },
+  heroAmountUnit: { fontSize: 18, fontWeight: '700', color: COLORS.white, marginLeft: 3 },
+  heroWithdraw: {
+    flexDirection: 'row', alignItems: 'center', gap: 2,
+    paddingHorizontal: 14, paddingVertical: 9,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+  },
+  heroWithdrawText: { color: COLORS.white, fontSize: 13, fontWeight: '700' },
+  heroStatsRow: {
+    flexDirection: 'row', alignItems: 'center',
+    marginTop: 16, paddingTop: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,255,255,0.22)',
+  },
+  heroStat: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
+  heroStatKey: { fontSize: 11, color: 'rgba(255,255,255,0.78)', fontWeight: '500' },
+  heroStatVal: { fontSize: 13, color: COLORS.white, fontWeight: '700' },
+  heroStatSep: { width: StyleSheet.hairlineWidth, height: 14, backgroundColor: 'rgba(255,255,255,0.28)', marginHorizontal: 14 },
 
   guideBanner: {
     marginHorizontal: SPACING.xl,
-    marginTop: SPACING.xs,
+    marginTop: 16,
     marginBottom: SPACING.md,
     backgroundColor: COLORS.white,
     borderRadius: RADIUS.lg,
@@ -438,42 +428,6 @@ const styles = StyleSheet.create({
   guideBannerTitle: { fontSize: 13, fontWeight: '600', color: COLORS.ink[800] },
   guideBannerSub: { fontSize: 11, color: COLORS.ink[500], marginTop: 2 },
 
-  cashcard: {
-    marginHorizontal: SPACING.xl,
-    marginTop: SPACING.xs,
-    backgroundColor: COLORS.ink[900],
-    borderRadius: RADIUS.xl,
-    padding: 22,
-    overflow: 'hidden',
-  },
-  cashcardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cashcardLabel: { fontSize: 13, color: COLORS.ink[400], fontWeight: '500' },
-  moreLinkRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  cashcardMore: { fontSize: 12, color: COLORS.ink[300] },
-  cashcardAmountRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 8 },
-  cashcardAmount: { fontSize: 32, fontWeight: '800', color: COLORS.white, letterSpacing: -0.5 },
-  cashcardUnit: { fontSize: 20, fontWeight: '700', color: COLORS.white, marginLeft: 2 },
-  cashcardStats: {
-    marginTop: 18,
-    paddingTop: 14,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.12)',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  stat: { gap: 3 },
-  statKey: { fontSize: 11, color: COLORS.ink[400], fontWeight: '500' },
-  statVal: { fontSize: 15, color: COLORS.white, fontWeight: '600' },
-  statSep: { width: StyleSheet.hairlineWidth, height: 24, backgroundColor: 'rgba(255,255,255,0.14)', marginHorizontal: 14 },
-  withdraw: {
-    marginLeft: 'auto',
-    borderWidth: 1,
-    borderColor: 'rgba(255,107,53,0.6)',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: RADIUS.sm,
-  },
-  withdrawText: { color: COLORS.primary, fontSize: 12, fontWeight: '600' },
 
   quickmenu: { flexDirection: 'row', paddingHorizontal: SPACING.md, paddingVertical: 24 },
   quickItem: { flex: 1, alignItems: 'center', gap: 8 },
@@ -506,32 +460,6 @@ const styles = StyleSheet.create({
     rowGap: 16,
   },
 
-  promo: {
-    marginHorizontal: SPACING.xl,
-    marginTop: 16,
-    backgroundColor: '#FAF6F0',
-    borderRadius: RADIUS.lg,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  promoBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: COLORS.white,
-    borderWidth: 1, borderColor: COLORS.primarySoft,
-    paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 999, marginBottom: 8,
-  },
-  promoBadgeText: { fontSize: 10, fontWeight: '700', color: COLORS.primary },
-  promoTitle: { fontSize: 16, fontWeight: '700', color: COLORS.ink[900], marginBottom: 4 },
-  promoSub: { fontSize: 12, color: COLORS.ink[600] },
-  promoArt: {
-    width: 88, height: 88, borderRadius: 18,
-    backgroundColor: '#FFE5D6',
-    alignItems: 'center', justifyContent: 'center',
-  },
-
   divider: { height: 8, backgroundColor: COLORS.ink[50], marginTop: 24 },
 
   dealScroll: { paddingHorizontal: SPACING.xl, gap: 12 },
@@ -541,40 +469,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
   },
-});
-
-const mallStyles = StyleSheet.create({
-  item: { width: '25%', alignItems: 'center', gap: 4 },
-  logoWrap: { position: 'relative' },
-  logoBox: {
-    width: 60, height: 60, borderRadius: 16,
-    backgroundColor: COLORS.white,
-    borderWidth: 1, borderColor: COLORS.ink[200],
-    alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  logoImg: { width: 40, height: 40 },
-  logoFallback: { fontSize: 16, fontWeight: '800', color: COLORS.white, letterSpacing: -0.5 },
-  badge: {
-    position: 'absolute',
-    top: -4,
-    left: -2,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 4,
-    minWidth: 32,
-    alignItems: 'center',
-  },
-  badgeText: { fontSize: 9, fontWeight: '700' },
-  name: { fontSize: 12, fontWeight: '500', color: COLORS.ink[800], marginTop: 2 },
-  rateRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  rateText: { fontSize: 11, fontWeight: '800', color: COLORS.ink[900] },
-  prevRateText: {
-    fontSize: 10,
-    color: COLORS.ink[400],
-    textDecorationLine: 'line-through',
-  },
-  countdownText: { fontSize: 9, color: COLORS.error, fontWeight: '600' },
 });
 
 const dealStyles = StyleSheet.create({

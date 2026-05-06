@@ -264,6 +264,28 @@ export default function MallDetailScreen() {
               </View>
             ))}
           </View>
+
+          {/* Notice card */}
+          <View style={styles.noticeCard}>
+            <View style={styles.noticeIconBox}>
+              <Ionicons name="information-circle-outline" size={18} color={COLORS.ink[700]} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.noticeTitle}>참고 사항</Text>
+              <Text style={styles.noticeBody}>
+                · 캐시백은 구매 확정 후 정산되며 평균 30일 이내 승인됩니다.{'\n'}
+                · 환불·취소 시 적립이 자동 취소됩니다.{'\n'}
+                · 쿠폰·기프트카드·앱 자체 적립과 중복 시 제외될 수 있습니다.
+              </Text>
+            </View>
+          </View>
+
+          {/* More deals pill */}
+          <TouchableOpacity style={styles.moreDealsPill} activeOpacity={0.85} onPress={handleGo}>
+            <Ionicons name="pricetag-outline" size={16} color={COLORS.ink[800]} />
+            <Text style={styles.moreDealsText}>더 많은 세일·쿠폰 탐색</Text>
+            <Ionicons name="chevron-forward" size={14} color={COLORS.ink[600]} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.divider} />
@@ -413,6 +435,32 @@ const styles = StyleSheet.create({
   rateRowNote: { fontSize: 11, color: COLORS.ink[500], marginTop: 2 },
   rateRowRate: { fontSize: 15, fontWeight: '800', color: COLORS.primary, letterSpacing: -0.3 },
   rateRowRateMuted: { color: COLORS.ink[400], fontWeight: '600' },
+
+  noticeCard: {
+    marginTop: 14,
+    flexDirection: 'row', gap: 10,
+    backgroundColor: COLORS.ink[50],
+    borderRadius: RADIUS.md,
+    padding: 14,
+  },
+  noticeIconBox: {
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: COLORS.white,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  noticeTitle: { fontSize: 12, fontWeight: '700', color: COLORS.ink[800], marginBottom: 4 },
+  noticeBody: { fontSize: 11, color: COLORS.ink[600], lineHeight: 17 },
+
+  moreDealsPill: {
+    marginTop: 12,
+    alignSelf: 'flex-start',
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 14, paddingVertical: 9,
+    borderRadius: 999,
+    borderWidth: 1, borderColor: COLORS.ink[200],
+    backgroundColor: COLORS.white,
+  },
+  moreDealsText: { fontSize: 12, fontWeight: '700', color: COLORS.ink[800] },
 
   timelineWrap: {
     paddingHorizontal: SPACING.xl,

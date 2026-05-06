@@ -66,6 +66,7 @@ export default function TabsLayout() {
         name="cashback"
         options={{
           title: '캐시백',
+          headerShown: false,
           tabBarIcon: tabIcon('wallet-outline', 'wallet'),
         }}
       />
@@ -81,6 +82,7 @@ export default function TabsLayout() {
         name="mypage"
         options={{
           title: '마이',
+          headerShown: false,
           tabBarIcon: tabIcon('person-outline', 'person'),
         }}
       />
@@ -88,6 +90,7 @@ export default function TabsLayout() {
         name="search"
         options={{
           title: '검색',
+          headerShown: false,
           tabBarIcon: tabIcon('search-outline', 'search'),
           href: null,
         }}

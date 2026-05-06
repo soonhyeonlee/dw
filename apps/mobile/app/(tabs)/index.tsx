@@ -42,6 +42,12 @@ const SEGMENTS = [
 
 const DAILY_LABELS = ['실시간', '오늘', '+1일', '+2일', '+3일', '+4일'] as const;
 
+const PROMO_BADGE_LABEL: Record<string, { text: string; bg: string; fg: string }> = {
+  time_deal: { text: '타임특가', bg: '#E0311E', fg: '#FFFFFF' },
+  rate_up:   { text: '상향', bg: '#EEEEFF', fg: '#4B4BF4' },
+  welcome:   { text: '웰컴', bg: '#FFE6DC', fg: '#FF6B35' },
+};
+
 function formatMoney(v: number) {
   return v.toLocaleString();
 }
@@ -130,6 +136,7 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [malls, setMalls] = useState<ApiMall[]>([]);
   const [segment, setSegment] = useState<typeof SEGMENTS[number]['key']>('all');
+  const [dailyTabIdx, setDailyTabIdx] = useState(0);
   const [dealProducts, setDealProducts] = useState<ApiProduct[]>([]);
   const [recProducts, setRecProducts] = useState<ApiProduct[]>([]);
 
@@ -204,31 +211,49 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.heroCashRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.heroCashLabel}>내 캐시백</Text>
-              <View style={styles.heroAmountRow}>
-                <Text style={styles.heroAmount}>{formatMoney(balance)}</Text>
-                <Text style={styles.heroAmountUnit}>원</Text>
+          {isAuthenticated ? (
+            <>
+              <View style={styles.heroCashRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.heroCashLabel}>내 캐시백</Text>
+                  <View style={styles.heroAmountRow}>
+                    <Text style={styles.heroAmount}>{formatMoney(balance)}</Text>
+                    <Text style={styles.heroAmountUnit}>원</Text>
+                  </View>
+                </View>
+                <TouchableOpacity style={styles.heroWithdraw} onPress={() => router.push('/(tabs)/cashback')}>
+                  <Text style={styles.heroWithdrawText}>출금</Text>
+                  <Ionicons name="chevron-forward" size={14} color={COLORS.white} />
+                </TouchableOpacity>
               </View>
-            </View>
-            <TouchableOpacity style={styles.heroWithdraw} onPress={() => router.push('/(tabs)/cashback')}>
-              <Text style={styles.heroWithdrawText}>출금</Text>
-              <Ionicons name="chevron-forward" size={14} color={COLORS.white} />
-            </TouchableOpacity>
-          </View>
 
-          <View style={styles.heroStatsRow}>
-            <View style={styles.heroStat}>
-              <Text style={styles.heroStatKey}>이번 달</Text>
-              <Text style={styles.heroStatVal}>{formatMoney(monthEarned)}원</Text>
-            </View>
-            <View style={styles.heroStatSep} />
-            <View style={styles.heroStat}>
-              <Text style={styles.heroStatKey}>누적</Text>
-              <Text style={styles.heroStatVal}>{formatMoney(totalEarned)}원</Text>
-            </View>
-          </View>
+              <View style={styles.heroStatsRow}>
+                <View style={styles.heroStat}>
+                  <Text style={styles.heroStatKey}>이번 달</Text>
+                  <Text style={styles.heroStatVal}>{formatMoney(monthEarned)}원</Text>
+                </View>
+                <View style={styles.heroStatSep} />
+                <View style={styles.heroStat}>
+                  <Text style={styles.heroStatKey}>누적</Text>
+                  <Text style={styles.heroStatVal}>{formatMoney(totalEarned)}원</Text>
+                </View>
+              </View>
+            </>
+          ) : (
+            <TouchableOpacity
+              style={styles.heroGuestCta}
+              activeOpacity={0.9}
+              onPress={() => router.push('/auth/register' as any)}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.heroGuestCtaTitle}>지금 가입하고 5,000원 받기</Text>
+                <Text style={styles.heroGuestCtaSub}>이메일 인증만 하면 즉시 적립</Text>
+              </View>
+              <View style={styles.heroGuestCtaArrow}>
+                <Ionicons name="arrow-forward" size={18} color={COLORS.primary} />
+              </View>
+            </TouchableOpacity>
+          )}
         </LinearGradient>
 
         {/* Welcome guide banner */}
@@ -249,7 +274,7 @@ export default function HomeScreen() {
           <Ionicons name="chevron-forward" size={16} color={COLORS.ink[400]} />
         </TouchableOpacity>
 
-        {/* Quick action chips (horizontal scroll) */}
+        {/* Quick action chips (ShopBack pill-shaped row) */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -258,14 +283,12 @@ export default function HomeScreen() {
           {QUICK_MENU.map((m) => (
             <TouchableOpacity
               key={m.key}
-              style={styles.quickChip}
+              style={[styles.quickChip, { backgroundColor: `${m.tint}1A`, borderColor: `${m.tint}33` }]}
               onPress={() => router.push(m.route as any)}
-              activeOpacity={0.7}
+              activeOpacity={0.75}
             >
-              <View style={[styles.quickChipIcon, { backgroundColor: `${m.tint}1A` }]}>
-                <Ionicons name={m.icon as any} size={22} color={m.tint} />
-              </View>
-              <Text style={styles.quickChipLabel}>{m.label}</Text>
+              <Ionicons name={m.icon as any} size={16} color={m.tint} />
+              <Text style={[styles.quickChipLabel, { color: m.tint }]}>{m.label}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -337,10 +360,10 @@ export default function HomeScreen() {
 
         <View style={styles.divider} />
 
-        {/* Daily cashback grid */}
+        {/* Popular cashback (ShopBack: day tabs + big mall cards) */}
         <View style={styles.sectionHead}>
           <View style={styles.sectionTitleGroup}>
-            <Text style={styles.sectionTitle}>일자별 인기 캐시백</Text>
+            <Text style={styles.sectionTitle}>인기 상향 캐시백</Text>
             <Text style={styles.sectionSub}>매일 새로 갱신</Text>
           </View>
           <TouchableOpacity style={styles.moreBtn} onPress={() => router.push('/categories' as any)}>
@@ -348,32 +371,53 @@ export default function HomeScreen() {
             <Ionicons name="chevron-forward" size={12} color={COLORS.ink[500]} />
           </TouchableOpacity>
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dailyScroll}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dayTabScroll}>
           {DAILY_LABELS.map((label, i) => {
-            const m = malls[i % Math.max(1, malls.length)];
-            if (!m) {
-              return (
-                <View key={label} style={dailyStyles.cell}>
-                  <View style={[dailyStyles.logoBox, { backgroundColor: COLORS.ink[100] }]} />
-                  <Text style={dailyStyles.dayLabel}>{label}</Text>
-                </View>
-              );
-            }
+            const active = i === dailyTabIdx;
             return (
               <TouchableOpacity
-                key={`${label}-${m.id}`}
-                style={dailyStyles.cell}
-                onPress={() => router.push(`/mall/${m.platform}` as any)}
-                activeOpacity={0.85}
+                key={label}
+                style={[styles.dayTab, active && styles.dayTabActive]}
+                onPress={() => setDailyTabIdx(i)}
+                activeOpacity={0.7}
               >
-                <View style={[dailyStyles.logoBox, { backgroundColor: m.color || COLORS.ink[600] }]}>
-                  <Text style={dailyStyles.logoText}>{m.name.slice(0, 1)}</Text>
-                </View>
-                <Text style={dailyStyles.rate}>최대 {Number(m.cashbackRate)}%</Text>
-                <Text style={dailyStyles.dayLabel}>{label}</Text>
+                <Text style={[styles.dayTabText, active && styles.dayTabTextActive]}>{label}</Text>
               </TouchableOpacity>
             );
           })}
+        </ScrollView>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={dailyStyles.scroll}>
+          {(() => {
+            // Rotate mall list per selected day so each day shows different ordering
+            const offset = dailyTabIdx;
+            const ordered = malls.length ? [...malls.slice(offset), ...malls.slice(0, offset)] : [];
+            return ordered.slice(0, 6).map((m) => {
+              const badge = m.promoBadge ? PROMO_BADGE_LABEL[m.promoBadge] : null;
+              const prev = m.previousCashbackRate != null ? Number(m.previousCashbackRate) : null;
+              return (
+                <TouchableOpacity
+                  key={m.id}
+                  style={dailyStyles.bigCard}
+                  onPress={() => router.push(`/mall/${m.platform}` as any)}
+                  activeOpacity={0.9}
+                >
+                  <View style={[dailyStyles.bigLogoBox, { backgroundColor: m.color || COLORS.ink[600] }]}>
+                    <Text style={dailyStyles.bigLogoText}>{m.name.slice(0, 1)}</Text>
+                    {badge ? (
+                      <View style={[dailyStyles.bigBadge, { backgroundColor: badge.bg }]}>
+                        <Text style={[dailyStyles.bigBadgeText, { color: badge.fg }]}>{badge.text}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text style={dailyStyles.bigName} numberOfLines={1}>{m.name}</Text>
+                  <View style={dailyStyles.bigRateRow}>
+                    <Text style={dailyStyles.bigRate}>최대 {Number(m.cashbackRate)}%</Text>
+                    {prev != null ? <Text style={dailyStyles.bigPrev}>{prev}%</Text> : null}
+                  </View>
+                </TouchableOpacity>
+              );
+            });
+          })()}
         </ScrollView>
 
         <View style={[styles.divider, { marginTop: 18 }]} />
@@ -492,6 +536,21 @@ const styles = StyleSheet.create({
   heroStatVal: { fontSize: 13, color: COLORS.white, fontWeight: '700' },
   heroStatSep: { width: StyleSheet.hairlineWidth, height: 14, backgroundColor: 'rgba(255,255,255,0.28)', marginHorizontal: 14 },
 
+  heroGuestCta: {
+    marginTop: 12,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingHorizontal: 16, paddingVertical: 14,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  heroGuestCtaTitle: { fontSize: 16, fontWeight: '800', color: COLORS.white, letterSpacing: -0.3 },
+  heroGuestCtaSub: { fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 4, fontWeight: '500' },
+  heroGuestCtaArrow: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: COLORS.white,
+    alignItems: 'center', justifyContent: 'center',
+  },
+
   guideBanner: {
     marginHorizontal: SPACING.xl,
     marginTop: 16,
@@ -515,13 +574,14 @@ const styles = StyleSheet.create({
   guideBannerSub: { fontSize: 11, color: COLORS.ink[500], marginTop: 2 },
 
 
-  quickChipScroll: { paddingHorizontal: SPACING.md, paddingVertical: 18, gap: 14 },
-  quickChip: { width: 64, alignItems: 'center', gap: 6 },
-  quickChipIcon: {
-    width: 48, height: 48, borderRadius: 16,
-    alignItems: 'center', justifyContent: 'center',
+  quickChipScroll: { paddingHorizontal: SPACING.xl, paddingVertical: 14, gap: 8 },
+  quickChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 12, paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
   },
-  quickChipLabel: { fontSize: 11, color: COLORS.ink[800], fontWeight: '500' },
+  quickChipLabel: { fontSize: 12, fontWeight: '700' },
 
   segmentRow: {
     flexDirection: 'row',
@@ -570,7 +630,15 @@ const styles = StyleSheet.create({
 
   divider: { height: 8, backgroundColor: COLORS.ink[50], marginTop: 24 },
 
-  dailyScroll: { paddingHorizontal: SPACING.xl, gap: 10, paddingBottom: 4 },
+  dayTabScroll: { paddingHorizontal: SPACING.xl, gap: 8, paddingBottom: 12 },
+  dayTab: {
+    paddingHorizontal: 14, paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: COLORS.ink[50],
+  },
+  dayTabActive: { backgroundColor: COLORS.ink[900] },
+  dayTabText: { fontSize: 12, fontWeight: '700', color: COLORS.ink[600] },
+  dayTabTextActive: { color: COLORS.white },
 
   dealScroll: { paddingHorizontal: SPACING.xl, gap: 12 },
   recGrid: {
@@ -582,14 +650,25 @@ const styles = StyleSheet.create({
 });
 
 const dailyStyles = StyleSheet.create({
-  cell: { width: 88, alignItems: 'center', gap: 6 },
-  logoBox: {
-    width: 72, height: 72, borderRadius: 18,
+  scroll: { paddingHorizontal: SPACING.xl, gap: 12, paddingBottom: 4 },
+  bigCard: { width: 132, gap: 8 },
+  bigLogoBox: {
+    width: 132, height: 132, borderRadius: 18,
     alignItems: 'center', justifyContent: 'center',
+    overflow: 'hidden',
+    position: 'relative',
   },
-  logoText: { fontSize: 22, fontWeight: '800', color: COLORS.white, letterSpacing: -0.5 },
-  rate: { fontSize: 12, fontWeight: '800', color: COLORS.ink[900] },
-  dayLabel: { fontSize: 11, color: COLORS.ink[600], fontWeight: '600' },
+  bigLogoText: { fontSize: 36, fontWeight: '800', color: COLORS.white, letterSpacing: -0.8 },
+  bigBadge: {
+    position: 'absolute', top: 8, left: 8,
+    paddingHorizontal: 7, paddingVertical: 3,
+    borderRadius: 6,
+  },
+  bigBadgeText: { fontSize: 10, fontWeight: '800' },
+  bigName: { fontSize: 13, fontWeight: '700', color: COLORS.ink[900] },
+  bigRateRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
+  bigRate: { fontSize: 14, fontWeight: '800', color: COLORS.primary, letterSpacing: -0.3 },
+  bigPrev: { fontSize: 11, color: COLORS.ink[400], textDecorationLine: 'line-through' },
 });
 
 const dealStyles = StyleSheet.create({

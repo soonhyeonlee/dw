@@ -19,6 +19,8 @@ import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { getCashbackHistory, getWithdrawalHistory } from '../../src/api/cashback';
 import { EmptyState } from '../../src/components/EmptyState';
+import { getMalls, type Mall } from '../../src/api/home';
+import { MallCard } from '../../src/components/MallCard';
 
 type Tab = 'history' | 'withdrawal';
 type Period = 'thisMonth' | 'lastMonth' | '3months' | 'all';
@@ -69,6 +71,87 @@ const TONE_COLORS: Record<string, { bg: string; fg: string }> = {
 };
 
 function fmt(v: number) { return v.toLocaleString(); }
+
+function GuestCashback({ router }: { router: ReturnType<typeof useRouter> }) {
+  const [malls, setMalls] = useState<Mall[]>([]);
+  useEffect(() => {
+    getMalls().then((d) => setMalls(d || [])).catch(() => setMalls([]));
+  }, []);
+  const STEPS = [
+    { n: 1, t: '쇼핑몰 선택', s: '더블윈에서 원하는 쇼핑몰을 골라요' },
+    { n: 2, t: '경유 쇼핑', s: '평소처럼 결제만 하면 끝!' },
+    { n: 3, t: '캐시백 적립', s: '구매 확정 후 평균 30일 이내 적립' },
+  ];
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <View style={styles.topbar}>
+        <Text style={styles.topTitle}>캐시백</Text>
+        <TouchableOpacity style={styles.helpBtn} onPress={() => router.push('/help/missing-cashback')}>
+          <Ionicons name="help-circle-outline" size={20} color={COLORS.ink[700]} />
+          <Text style={styles.helpText}>누락 캐시</Text>
+        </TouchableOpacity>
+      </View>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        <TouchableOpacity
+          style={guestStyles.cta}
+          activeOpacity={0.9}
+          onPress={() => router.push('/auth/register' as any)}
+        >
+          <View style={guestStyles.ctaIcon}>
+            <Ionicons name="gift" size={26} color={COLORS.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={guestStyles.ctaTitle}>지금 가입하고 5,000원 받기</Text>
+            <Text style={guestStyles.ctaSub}>이메일 인증만 하면 즉시 적립</Text>
+          </View>
+          <View style={guestStyles.ctaArrow}>
+            <Ionicons name="arrow-forward" size={18} color={COLORS.white} />
+          </View>
+        </TouchableOpacity>
+
+        <View style={guestStyles.howWrap}>
+          <Text style={guestStyles.howTitle}>캐시백 받는 방법</Text>
+          {STEPS.map((s) => (
+            <View key={s.n} style={guestStyles.howRow}>
+              <View style={guestStyles.howDot}>
+                <Text style={guestStyles.howNum}>{s.n}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={guestStyles.howStepTitle}>{s.t}</Text>
+                <Text style={guestStyles.howStepSub}>{s.s}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        <View style={guestStyles.divider} />
+
+        <View style={guestStyles.section}>
+          <Text style={guestStyles.sectionTitle}>인기 쇼핑몰 둘러보기</Text>
+          <Text style={guestStyles.sectionSub}>지금 어떤 캐시백이 있는지 미리 보세요</Text>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: SPACING.xl, gap: 14, paddingBottom: 8 }}>
+          {malls.slice(0, 8).map((m) => (
+            <MallCard
+              key={m.id}
+              mall={m}
+              variant="search"
+              onPress={() => router.push(`/mall/${m.platform}` as any)}
+            />
+          ))}
+        </ScrollView>
+
+        <TouchableOpacity
+          style={guestStyles.loginBtn}
+          onPress={() => router.push('/auth/login')}
+        >
+          <Text style={guestStyles.loginBtnText}>이미 회원이신가요? 로그인</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
 
 function dateLabel(s?: string) {
   if (!s) return '';
@@ -126,19 +209,7 @@ export default function CashbackScreen() {
   };
 
   if (!isAuthenticated) {
-    return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
-        <View style={styles.topbar}><Text style={styles.topTitle}>캐시백</Text></View>
-        <EmptyState
-          icon="wallet-outline"
-          title="로그인 후 이용할 수 있어요"
-          subtitle="로그인하고 적립한 캐시백을 확인하세요."
-          actionLabel="로그인"
-          onAction={() => router.push('/auth/login')}
-        />
-      </SafeAreaView>
-    );
+    return <GuestCashback router={router} />;
   }
 
   const sourceItems = tab === 'history' ? cashbackItems : withdrawalItems;
@@ -603,4 +674,50 @@ const sheetStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   closeText: { color: COLORS.white, fontSize: 15, fontWeight: '700' },
+});
+
+const guestStyles = StyleSheet.create({
+  cta: {
+    margin: SPACING.xl,
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    paddingHorizontal: 18, paddingVertical: 18,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.primarySoft,
+    borderWidth: 1, borderColor: COLORS.primary,
+  },
+  ctaIcon: {
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: COLORS.white,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  ctaTitle: { fontSize: 16, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.3 },
+  ctaSub: { fontSize: 12, color: COLORS.ink[700], marginTop: 4, fontWeight: '500' },
+  ctaArrow: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  howWrap: { paddingHorizontal: SPACING.xl, paddingTop: 4, paddingBottom: 8, gap: 12 },
+  howTitle: { fontSize: 15, fontWeight: '800', color: COLORS.ink[900], marginBottom: 4 },
+  howRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, paddingVertical: 8 },
+  howDot: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  howNum: { fontSize: 14, fontWeight: '800', color: COLORS.white },
+  howStepTitle: { fontSize: 14, fontWeight: '700', color: COLORS.ink[900] },
+  howStepSub: { fontSize: 12, color: COLORS.ink[600], marginTop: 2 },
+  divider: { height: 8, backgroundColor: COLORS.ink[50], marginTop: 12 },
+  section: { paddingHorizontal: SPACING.xl, paddingTop: 22, paddingBottom: 12 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.3 },
+  sectionSub: { fontSize: 12, color: COLORS.ink[500], marginTop: 3 },
+  loginBtn: {
+    marginHorizontal: SPACING.xl, marginTop: 24,
+    height: 48,
+    borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: COLORS.ink[200],
+    alignItems: 'center', justifyContent: 'center',
+  },
+  loginBtnText: { fontSize: 14, fontWeight: '700', color: COLORS.ink[800] },
 });

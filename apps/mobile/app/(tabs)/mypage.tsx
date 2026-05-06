@@ -205,43 +205,60 @@ export default function MyPageScreen() {
           );
         })()}
 
-        {/* Cashback card (홈과 동일 톤) */}
-        <View style={styles.cashcard}>
-          <View style={styles.cashcardRow}>
-            <Text style={styles.cashcardLabel}>내 캐시백</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/cashback')} style={styles.moreLinkRow}>
-              <Text style={styles.cashcardMore}>전체보기</Text>
-              <Ionicons name="chevron-forward" size={14} color="#D1D5DB" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.cashcardAmountRow}>
-            <Text style={styles.cashcardAmount}>{formatMoney(balance)}</Text>
-            <Text style={styles.cashcardUnit}>원</Text>
-          </View>
-          <View style={styles.cashcardStats}>
-            <View style={styles.stat}>
-              <Text style={styles.statKey}>이번 달 적립</Text>
-              <Text style={styles.statVal}>{formatMoney(monthEarned)}원</Text>
+        {/* Cashback card — 로그인 시 검정 카드, 비로그인 시 가입 유도 CTA */}
+        {isAuthenticated ? (
+          <View style={styles.cashcard}>
+            <View style={styles.cashcardRow}>
+              <Text style={styles.cashcardLabel}>내 캐시백</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/cashback')} style={styles.moreLinkRow}>
+                <Text style={styles.cashcardMore}>전체보기</Text>
+                <Ionicons name="chevron-forward" size={14} color="#D1D5DB" />
+              </TouchableOpacity>
             </View>
-            <View style={styles.statSep} />
-            <View style={styles.stat}>
-              <Text style={styles.statKey}>누적 적립</Text>
-              <Text style={styles.statVal}>{formatMoney(totalEarned)}원</Text>
+            <View style={styles.cashcardAmountRow}>
+              <Text style={styles.cashcardAmount}>{formatMoney(balance)}</Text>
+              <Text style={styles.cashcardUnit}>원</Text>
             </View>
-            <TouchableOpacity
-              style={styles.withdraw}
-              onPress={() => {
-                if (balance < 5000) {
-                  Alert.alert('환급 불가', '최소 환급 금액은 5,000원입니다.');
-                  return;
-                }
-                router.push('/cashback/withdraw');
-              }}
-            >
-              <Text style={styles.withdrawText}>환급하기</Text>
-            </TouchableOpacity>
+            <View style={styles.cashcardStats}>
+              <View style={styles.stat}>
+                <Text style={styles.statKey}>이번 달 적립</Text>
+                <Text style={styles.statVal}>{formatMoney(monthEarned)}원</Text>
+              </View>
+              <View style={styles.statSep} />
+              <View style={styles.stat}>
+                <Text style={styles.statKey}>누적 적립</Text>
+                <Text style={styles.statVal}>{formatMoney(totalEarned)}원</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.withdraw}
+                onPress={() => {
+                  if (balance < 5000) {
+                    Alert.alert('환급 불가', '최소 환급 금액은 5,000원입니다.');
+                    return;
+                  }
+                  router.push('/cashback/withdraw');
+                }}
+              >
+                <Text style={styles.withdrawText}>환급하기</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.guestCard}
+            activeOpacity={0.85}
+            onPress={() => router.push('/auth/register' as any)}
+          >
+            <View style={styles.guestCardIcon}>
+              <Ionicons name="gift-outline" size={22} color={COLORS.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.guestCardTitle}>지금 가입하고 5,000원 받기</Text>
+              <Text style={styles.guestCardSub}>이메일 인증만 하면 즉시 적립</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={COLORS.primary} />
+          </TouchableOpacity>
+        )}
 
         {/* Quick menu */}
         <View style={styles.quickmenu}>
@@ -447,6 +464,22 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
   },
   withdrawText: { color: COLORS.primary, fontSize: 12, fontWeight: '600' },
+
+  guestCard: {
+    marginHorizontal: SPACING.xl,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingHorizontal: 16, paddingVertical: 16,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.primarySoft,
+    borderWidth: 1, borderColor: COLORS.primary,
+  },
+  guestCardIcon: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: COLORS.white,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  guestCardTitle: { fontSize: 15, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.3 },
+  guestCardSub: { fontSize: 12, color: COLORS.ink[700], marginTop: 3 },
 
   quickmenu: {
     flexDirection: 'row',

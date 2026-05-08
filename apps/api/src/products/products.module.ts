@@ -7,10 +7,12 @@ import { MallWishlist } from './entities/mall-wishlist.entity';
 import { Mall } from '../blocks/entities/mall.entity';
 import { ProductsService } from './products.service';
 import { ProductsController } from './products.controller';
+import { UsersModule } from '../users/users.module';
+import { AdminGuard } from '../common/guards/admin.guard';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Product, ClickLog, Wishlist, MallWishlist, Mall])],
-  providers: [ProductsService],
+  imports: [TypeOrmModule.forFeature([Product, ClickLog, Wishlist, MallWishlist, Mall]), UsersModule],
+  providers: [ProductsService, AdminGuard],
   controllers: [ProductsController],
   exports: [ProductsService],
 })

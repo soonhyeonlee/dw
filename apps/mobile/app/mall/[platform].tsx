@@ -15,19 +15,46 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
-import {
-  MOCK_MALLS,
-  MOCK_DEAL_PRODUCTS,
-  MOCK_REC_PRODUCTS,
-  type MockProduct,
-} from '../../src/mock/feed';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { getMallDetail, type Mall as ApiMall } from '../../src/api/home';
-import { toggleMallWishlist } from '../../src/api/products';
+import { getProducts, toggleMallWishlist, type Product as ApiProduct } from '../../src/api/products';
+
+const PLATFORM_LABEL: Record<string, string> = {
+  coupang: '쿠팡',
+  naver: '네이버',
+  '11st': '11번가',
+  gmarket: 'G마켓',
+  ssg: 'SSG닷컴',
+  lotteon: '롯데ON',
+  wemakeprice: '위메프',
+  tmon: '티몬',
+};
+
+const PLATFORM_TINT: Record<string, { color: string; wordmark: string }> = {
+  coupang: { color: '#E4002B', wordmark: 'C' },
+  naver: { color: '#03C75A', wordmark: 'N' },
+  '11st': { color: '#FF0038', wordmark: '11' },
+  gmarket: { color: '#36B234', wordmark: 'G' },
+  ssg: { color: '#FF514E', wordmark: 'SSG' },
+  lotteon: { color: '#E4153A', wordmark: 'L' },
+  wemakeprice: { color: '#EC008C', wordmark: '위메프' },
+  tmon: { color: '#FF0000', wordmark: '티몬' },
+};
+
+type RowProduct = {
+  id: string;
+  title: string;
+  brand?: string;
+  price: number;
+  originalPrice?: number;
+  discountRate?: number;
+  cashbackRate: number;
+  imageUrl: string;
+};
 
 function fmt(v: number) { return v.toLocaleString(); }
 
-function ProductRow({ p, onPress }: { p: MockProduct; onPress: () => void }) {
+function ProductRow({ p, onPress }: { p: RowProduct; onPress: () => void }) {
   const cb = Math.round(p.price * p.cashbackRate / 100);
   return (
     <TouchableOpacity style={rowStyles.card} onPress={onPress} activeOpacity={0.85}>
@@ -36,7 +63,7 @@ function ProductRow({ p, onPress }: { p: MockProduct; onPress: () => void }) {
         {p.brand && <Text style={rowStyles.brand}>{p.brand}</Text>}
         <Text style={rowStyles.title} numberOfLines={2}>{p.title}</Text>
         <View style={rowStyles.priceRow}>
-          {p.discountRate ? <Text style={rowStyles.discount}>{p.discountRate}%</Text> : null}
+          {p.discountRate ? <Text style={rowStyles.discount}>{Math.round(p.discountRate)}%</Text> : null}
           <Text style={rowStyles.price}>{fmt(p.price)}원</Text>
         </View>
         <Text style={rowStyles.cb}>캐시백 {fmt(cb)}원 ({p.cashbackRate}%)</Text>
@@ -111,21 +138,42 @@ export default function MallDetailScreen() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
-  const mockMall = MOCK_MALLS.find((m) => m.platform === platform);
   const [apiMall, setApiMall] = useState<ApiMall | null>(null);
   const [wishlisted, setWishlisted] = useState(false);
   const [wishlistBusy, setWishlistBusy] = useState(false);
+  const [products, setProducts] = useState<RowProduct[]>([]);
 
   useEffect(() => {
     if (!platform) return;
     getMallDetail(platform).then(setApiMall).catch(() => setApiMall(null));
+    getProducts({ platform, limit: 20 })
+      .then((data) => {
+        const items: ApiProduct[] = data?.items || [];
+        setProducts(
+          items.map((p) => ({
+            id: p.id,
+            title: p.title,
+            price: Number(p.price),
+            originalPrice: p.originalPrice ? Number(p.originalPrice) : undefined,
+            discountRate: p.discountRate ? Number(p.discountRate) : undefined,
+            cashbackRate: Number(p.cashbackRate),
+            imageUrl: p.imageUrl,
+          })),
+        );
+      })
+      .catch(() => setProducts([]));
   }, [platform]);
 
-  const mall = mockMall;
-  const products = [
-    ...MOCK_DEAL_PRODUCTS.filter((p) => p.platform === platform),
-    ...MOCK_REC_PRODUCTS.filter((p) => p.platform === platform),
-  ];
+  const tint = PLATFORM_TINT[platform] || { color: '#FF6B35', wordmark: 'M' };
+  const mall = apiMall
+    ? {
+        platform: apiMall.platform,
+        name: apiMall.name,
+        cashbackRate: Number(apiMall.cashbackRate),
+        tintColor: apiMall.color || tint.color,
+        wordmark: tint.wordmark,
+      }
+    : null;
 
   const badge = apiMall?.promoBadge ? PROMO_BADGE_LABEL[apiMall.promoBadge] : null;
   const category = apiMall?.category || null;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
+  ActivityIndicator,
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,8 +16,25 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
-import { findProductById, type MockProduct } from '../../src/mock/feed';
+import {
+  getProduct,
+  clickProduct,
+  toggleWishlist as toggleWishlistApi,
+  type Product as ApiProduct,
+} from '../../src/api/products';
 import { useAuth } from '../../src/contexts/AuthContext';
+
+const PLATFORM_LABEL: Record<string, string> = {
+  coupang: '쿠팡',
+  naver: '네이버',
+  '11st': '11번가',
+  gmarket: 'G마켓',
+  ssg: 'SSG닷컴',
+  lotteon: '롯데ON',
+  wemakeprice: '위메프',
+  tmon: '티몬',
+  doublewin: '더블윈',
+};
 
 const { width } = Dimensions.get('window');
 
@@ -29,10 +47,30 @@ export default function ProductDetailScreen() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [wishlisted, setWishlisted] = useState(false);
+  const [product, setProduct] = useState<ApiProduct | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  const product: MockProduct | undefined = id ? findProductById(id) : undefined;
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    getProduct(id)
+      .then((p) => { setProduct(p); setNotFound(false); })
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false));
+  }, [id]);
 
-  if (!product) {
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.emptyBox}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!product || notFound) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.emptyBox}>
@@ -46,29 +84,42 @@ export default function ProductDetailScreen() {
     );
   }
 
-  const cashbackAmount = Math.round(product.price * product.cashbackRate / 100);
+  const mallLabel = PLATFORM_LABEL[product.platform] || product.platform;
+  const price = Number(product.price);
+  const cashbackRate = Number(product.cashbackRate);
+  const cashbackAmount = Math.round(price * cashbackRate / 100);
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     if (!isAuthenticated) {
       Alert.alert('로그인 필요', '로그인 후 이용할 수 있어요.');
       return;
     }
+    let url = product.affiliateUrl || product.productUrl;
+    try {
+      const r = await clickProduct(product.id);
+      if (r?.affiliateUrl) url = r.affiliateUrl;
+    } catch { /* fall through */ }
     router.push({
       pathname: '/activate-cashback',
       params: {
-        mall: product.mallLabel,
-        rate: String(product.cashbackRate),
-        url: `https://www.${product.platform}.com`,
+        mall: mallLabel,
+        rate: String(cashbackRate),
+        url,
       },
     } as any);
   };
 
-  const handleWishlist = () => {
+  const handleWishlist = async () => {
     if (!isAuthenticated) {
       Alert.alert('로그인 필요', '로그인 후 이용할 수 있어요.');
       return;
     }
-    setWishlisted(!wishlisted);
+    try {
+      const r = await toggleWishlistApi(product.id);
+      setWishlisted(!!r?.wishlisted);
+    } catch {
+      Alert.alert('오류', '관심 등록에 실패했습니다.');
+    }
   };
 
   return (
@@ -97,38 +148,32 @@ export default function ProductDetailScreen() {
         <View style={styles.imageWrap}>
           <Image source={{ uri: product.imageUrl }} style={styles.image} resizeMode="cover" />
           <View style={styles.mallBadge}>
-            <Text style={styles.mallBadgeText}>{product.mallLabel}</Text>
+            <Text style={styles.mallBadgeText}>{mallLabel}</Text>
           </View>
         </View>
 
         {/* Info */}
         <View style={styles.info}>
-          {product.brand && <Text style={styles.brand}>{product.brand}</Text>}
           <Text style={styles.title}>{product.title}</Text>
 
-          <View style={styles.ratingRow}>
-            <Ionicons name="star" size={14} color="#F59E0B" />
-            <Text style={styles.rating}>{product.rating ?? '-'}</Text>
-            <Text style={styles.review}>리뷰 {fmt(product.reviewCount ?? 0)}</Text>
-          </View>
+          {(product.rating != null || product.reviewCount != null) && (
+            <View style={styles.ratingRow}>
+              <Ionicons name="star" size={14} color="#F59E0B" />
+              <Text style={styles.rating}>{product.rating != null ? Number(product.rating).toFixed(1) : '-'}</Text>
+              <Text style={styles.review}>리뷰 {fmt(Number(product.reviewCount ?? 0))}</Text>
+            </View>
+          )}
 
           <View style={styles.priceRow}>
             {product.discountRate ? (
-              <Text style={styles.discount}>{product.discountRate}%</Text>
+              <Text style={styles.discount}>{Math.round(Number(product.discountRate))}%</Text>
             ) : null}
-            <Text style={styles.price}>{fmt(product.price)}</Text>
+            <Text style={styles.price}>{fmt(price)}</Text>
             <Text style={styles.priceUnit}>원</Text>
           </View>
-          {product.originalPrice && (
-            <Text style={styles.original}>{fmt(product.originalPrice)}원</Text>
-          )}
-
-          {product.shippingNote && (
-            <View style={styles.shipRow}>
-              <Ionicons name="cube-outline" size={14} color={COLORS.ink[600]} />
-              <Text style={styles.shipText}>{product.shippingNote}</Text>
-            </View>
-          )}
+          {product.originalPrice ? (
+            <Text style={styles.original}>{fmt(Number(product.originalPrice))}원</Text>
+          ) : null}
         </View>
 
         <View style={styles.divider} />
@@ -141,11 +186,11 @@ export default function ProductDetailScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.cbLabel}>더블윈 캐시백</Text>
-              <Text style={styles.cbSub}>{product.mallLabel} 경유 구매 시 적립</Text>
+              <Text style={styles.cbSub}>{mallLabel} 경유 구매 시 적립</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
               <Text style={styles.cbAmount}>{fmt(cashbackAmount)}원</Text>
-              <Text style={styles.cbRate}>{product.cashbackRate}% 적립</Text>
+              <Text style={styles.cbRate}>{cashbackRate}% 적립</Text>
             </View>
           </View>
           <View style={styles.cbNote}>
@@ -162,7 +207,7 @@ export default function ProductDetailScreen() {
           <Text style={styles.howtoTitle}>캐시백 받는 순서</Text>
           {[
             '구매하기 버튼을 눌러 제휴 쇼핑몰로 이동',
-            `${product.mallLabel}에서 정상 결제 완료`,
+            `${mallLabel}에서 정상 결제 완료`,
             '구매 확정 후 자동 캐시백 적립',
           ].map((t, i) => (
             <View key={i} style={styles.step}>

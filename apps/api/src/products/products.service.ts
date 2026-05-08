@@ -59,6 +59,51 @@ export class ProductsService {
     return product;
   }
 
+  // === Admin CRUD ===
+
+  async adminFindAll(query: {
+    platform?: string;
+    category?: string;
+    keyword?: string;
+    isActive?: boolean;
+    page?: number;
+    limit?: number;
+  }) {
+    const { platform, category, keyword, isActive, page = 1, limit = 50 } = query;
+    const qb = this.productRepo.createQueryBuilder('p');
+    if (platform) qb.andWhere('p.platform = :platform', { platform });
+    if (category) qb.andWhere('p.category = :category', { category });
+    if (keyword) qb.andWhere('LOWER(p.title) LIKE LOWER(:keyword)', { keyword: `%${keyword}%` });
+    if (typeof isActive === 'boolean') qb.andWhere('p.isActive = :isActive', { isActive });
+    const [items, total] = await qb
+      .orderBy('p.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async create(data: Partial<Product>): Promise<Product> {
+    const externalId =
+      data.externalId && data.externalId.trim().length > 0
+        ? data.externalId
+        : `admin-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const product = this.productRepo.create({ ...data, externalId });
+    return this.productRepo.save(product);
+  }
+
+  async update(id: string, data: Partial<Product>): Promise<Product> {
+    await this.findById(id);
+    const { id: _ignore, createdAt: _c, updatedAt: _u, ...patch } = data as any;
+    await this.productRepo.update(id, patch);
+    return this.findById(id);
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.findById(id);
+    await this.productRepo.delete(id);
+  }
+
   async logClick(userId: string, productId: string): Promise<ClickLog> {
     const product = await this.findById(productId);
     const log = this.clickLogRepo.create({

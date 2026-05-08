@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,34 +7,53 @@ import {
   TouchableOpacity,
   RefreshControl,
   Image,
+  ActivityIndicator,
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
-import {
-  MOCK_MARKET_FEATURED,
-  MOCK_MARKET_FLASH,
-  type MockProduct,
-} from '../../src/mock/feed';
+import { getProducts, type Product as ApiProduct } from '../../src/api/products';
 
 const CATS = [
-  { key: 'all',     label: '전체' },
-  { key: 'food',    label: '식품' },
-  { key: 'health',  label: '건강' },
-  { key: 'living',  label: '생활' },
-  { key: 'beauty',  label: '뷰티' },
-  { key: 'digital', label: '디지털' },
+  { key: 'all',     label: '전체',    apiKey: undefined },
+  { key: 'food',    label: '식품',    apiKey: '식품' },
+  { key: 'health',  label: '건강',    apiKey: '건강' },
+  { key: 'living',  label: '생활',    apiKey: '생활' },
+  { key: 'beauty',  label: '뷰티',    apiKey: '뷰티' },
+  { key: 'digital', label: '디지털',  apiKey: '디지털' },
 ];
 
+type MarketProduct = {
+  id: string;
+  title: string;
+  price: number;
+  originalPrice?: number;
+  discountRate?: number;
+  cashbackRate: number;
+  imageUrl: string;
+  rating?: number;
+  reviewCount?: number;
+};
+
 function fmt(v: number) { return v.toLocaleString(); }
-function pct(p: MockProduct) {
-  if (!p.limitQuantity || !p.soldCount) return 0;
-  return Math.round((p.soldCount / p.limitQuantity) * 100);
+
+function mapProduct(p: ApiProduct): MarketProduct {
+  return {
+    id: p.id,
+    title: p.title,
+    price: Number(p.price),
+    originalPrice: p.originalPrice ? Number(p.originalPrice) : undefined,
+    discountRate: p.discountRate ? Number(p.discountRate) : undefined,
+    cashbackRate: Number(p.cashbackRate),
+    imageUrl: p.imageUrl,
+    rating: p.rating != null ? Number(p.rating) : undefined,
+    reviewCount: p.reviewCount != null ? Number(p.reviewCount) : undefined,
+  };
 }
 
-function FeaturedCard({ p, onPress }: { p: MockProduct; onPress: () => void }) {
+function FeaturedCard({ p, onPress }: { p: MarketProduct; onPress: () => void }) {
   return (
     <TouchableOpacity style={fStyles.card} onPress={onPress} activeOpacity={0.85}>
       <View style={fStyles.imgBox}>
@@ -43,43 +62,42 @@ function FeaturedCard({ p, onPress }: { p: MockProduct; onPress: () => void }) {
           <Ionicons name="heart-outline" size={16} color={COLORS.ink[700]} />
         </TouchableOpacity>
       </View>
-      <Text style={fStyles.brand}>{p.brand}</Text>
       <Text style={fStyles.title} numberOfLines={2}>{p.title}</Text>
       <View style={fStyles.priceRow}>
-        {p.discountRate ? <Text style={fStyles.discount}>{p.discountRate}%</Text> : null}
+        {p.discountRate ? <Text style={fStyles.discount}>{Math.round(p.discountRate)}%</Text> : null}
         <Text style={fStyles.price}>{fmt(p.price)}원</Text>
       </View>
-      <View style={fStyles.metaRow}>
-        <Ionicons name="star" size={11} color="#F59E0B" />
-        <Text style={fStyles.rating}>{p.rating}</Text>
-        <Text style={fStyles.review}>({fmt(p.reviewCount ?? 0)})</Text>
-      </View>
+      {(p.rating != null || p.reviewCount != null) ? (
+        <View style={fStyles.metaRow}>
+          <Ionicons name="star" size={11} color="#F59E0B" />
+          <Text style={fStyles.rating}>{p.rating != null ? p.rating.toFixed(1) : '-'}</Text>
+          <Text style={fStyles.review}>({fmt(p.reviewCount ?? 0)})</Text>
+        </View>
+      ) : (
+        <Text style={fStyles.cb}>캐시백 {p.cashbackRate}%</Text>
+      )}
     </TouchableOpacity>
   );
 }
 
-function FlashCard({ p, onPress }: { p: MockProduct; onPress: () => void }) {
-  const percent = pct(p);
-  const hot = percent >= 90;
+function FlashCard({ p, onPress }: { p: MarketProduct; onPress: () => void }) {
+  const hot = (p.discountRate ?? 0) >= 30;
   return (
     <TouchableOpacity style={flStyles.card} onPress={onPress} activeOpacity={0.85}>
       <View style={flStyles.imgBox}>
         <Image source={{ uri: p.imageUrl }} style={flStyles.img} resizeMode="cover" />
         {hot && (
           <View style={flStyles.urgentBadge}>
-            <Text style={flStyles.urgentText}>마감임박</Text>
+            <Text style={flStyles.urgentText}>특가</Text>
           </View>
         )}
       </View>
       <Text style={flStyles.title} numberOfLines={2}>{p.title}</Text>
       <View style={flStyles.priceRow}>
-        {p.discountRate ? <Text style={flStyles.discount}>{p.discountRate}%</Text> : null}
+        {p.discountRate ? <Text style={flStyles.discount}>{Math.round(p.discountRate)}%</Text> : null}
         <Text style={flStyles.price}>{fmt(p.price)}원</Text>
       </View>
-      <View style={flStyles.progressBg}>
-        <View style={[flStyles.progressFill, { width: `${Math.min(percent, 100)}%` }]} />
-      </View>
-      <Text style={flStyles.sold}>{percent}% 판매 · {fmt(p.soldCount ?? 0)}개</Text>
+      <Text style={flStyles.sold}>캐시백 {p.cashbackRate}% 적립</Text>
     </TouchableOpacity>
   );
 }
@@ -88,13 +106,41 @@ export default function MarketScreen() {
   const router = useRouter();
   const [cat, setCat] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [featured, setFeatured] = useState<MarketProduct[]>([]);
+  const [flash, setFlash] = useState<MarketProduct[]>([]);
 
-  const onRefresh = useCallback(() => {
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const apiCat = CATS.find((c) => c.key === cat)?.apiKey;
+      const data = await getProducts({
+        platform: 'doublewin',
+        category: apiCat,
+        limit: 30,
+      });
+      const items: ApiProduct[] = data?.items || [];
+      const mapped = items.map(mapProduct);
+      const sorted = [...mapped].sort((a, b) => (b.discountRate ?? 0) - (a.discountRate ?? 0));
+      setFlash(sorted.slice(0, 6));
+      setFeatured(mapped);
+    } catch {
+      setFeatured([]);
+      setFlash([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [cat]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 500);
-  }, []);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
 
-  const hero = MOCK_MARKET_FEATURED[0];
+  const hero = featured[0];
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -150,49 +196,56 @@ export default function MarketScreen() {
               </View>
               <Text style={styles.heroTitle} numberOfLines={2}>{hero.title}</Text>
               <View style={styles.heroPriceRow}>
-                {hero.discountRate ? <Text style={styles.heroDiscount}>{hero.discountRate}%</Text> : null}
+                {hero.discountRate ? <Text style={styles.heroDiscount}>{Math.round(hero.discountRate)}%</Text> : null}
                 <Text style={styles.heroPrice}>{fmt(hero.price)}원</Text>
               </View>
             </View>
           </TouchableOpacity>
         )}
 
-        {/* Flash sale */}
-        <View style={styles.sectionHead}>
-          <View style={styles.titleGroup}>
-            <Text style={styles.sectionTitle}>한정수량 특가</Text>
-            <Text style={styles.timer}>13 : 24 : 07</Text>
+        {loading && featured.length === 0 ? (
+          <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 60 }} />
+        ) : featured.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Ionicons name="cube-outline" size={42} color={COLORS.ink[300]} />
+            <Text style={styles.emptyText}>등록된 페이백 상품이 없습니다</Text>
+            <Text style={styles.emptySub}>관리자 페이지에서 상품을 추가하면 이곳에 노출됩니다.</Text>
           </View>
-          <TouchableOpacity style={styles.moreBtn}>
-            <Text style={styles.moreText}>전체</Text>
-            <Ionicons name="chevron-forward" size={12} color={COLORS.ink[500]} />
-          </TouchableOpacity>
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.flashScroll}
-        >
-          {MOCK_MARKET_FLASH.map((p) => (
-            <FlashCard key={p.id} p={p} onPress={() => router.push(`/product/${p.id}`)} />
-          ))}
-        </ScrollView>
+        ) : (
+          <>
+            {/* Flash deals */}
+            {flash.length > 0 && (
+              <>
+                <View style={styles.sectionHead}>
+                  <View style={styles.titleGroup}>
+                    <Text style={styles.sectionTitle}>지금 특가</Text>
+                  </View>
+                </View>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.flashScroll}
+                >
+                  {flash.map((p) => (
+                    <FlashCard key={p.id} p={p} onPress={() => router.push(`/product/${p.id}`)} />
+                  ))}
+                </ScrollView>
 
-        <View style={styles.divider} />
+                <View style={styles.divider} />
+              </>
+            )}
 
-        {/* Featured grid */}
-        <View style={styles.sectionHead}>
-          <Text style={styles.sectionTitle}>이번 주 특가</Text>
-          <TouchableOpacity style={styles.moreBtn}>
-            <Text style={styles.moreText}>더보기</Text>
-            <Ionicons name="chevron-forward" size={12} color={COLORS.ink[500]} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.grid}>
-          {MOCK_MARKET_FEATURED.map((p) => (
-            <FeaturedCard key={p.id} p={p} onPress={() => router.push(`/product/${p.id}`)} />
-          ))}
-        </View>
+            {/* Featured grid */}
+            <View style={styles.sectionHead}>
+              <Text style={styles.sectionTitle}>이번 주 추천</Text>
+            </View>
+            <View style={styles.grid}>
+              {featured.map((p) => (
+                <FeaturedCard key={p.id} p={p} onPress={() => router.push(`/product/${p.id}`)} />
+              ))}
+            </View>
+          </>
+        )}
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -282,6 +335,14 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
   },
+
+  emptyBox: {
+    alignItems: 'center', justifyContent: 'center',
+    paddingHorizontal: SPACING.xl, paddingVertical: 60,
+    gap: 8,
+  },
+  emptyText: { fontSize: 14, fontWeight: '600', color: COLORS.ink[700] },
+  emptySub: { fontSize: 12, color: COLORS.ink[500], textAlign: 'center' },
 });
 
 const fStyles = StyleSheet.create({
@@ -300,7 +361,6 @@ const fStyles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.92)',
     alignItems: 'center', justifyContent: 'center',
   },
-  brand: { fontSize: 11, color: COLORS.ink[500], fontWeight: '600', marginTop: 2 },
   title: { fontSize: 13, color: COLORS.ink[800], lineHeight: 17 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
   discount: { fontSize: 14, fontWeight: '800', color: COLORS.primary },
@@ -308,6 +368,7 @@ const fStyles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   rating: { fontSize: 11, fontWeight: '700', color: COLORS.ink[800] },
   review: { fontSize: 11, color: COLORS.ink[500] },
+  cb: { fontSize: 11, color: COLORS.primary, fontWeight: '700' },
 });
 
 const flStyles = StyleSheet.create({

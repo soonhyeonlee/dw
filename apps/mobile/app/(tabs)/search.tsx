@@ -18,12 +18,6 @@ import { getProducts } from '../../src/api/products';
 import { getMalls, type Mall } from '../../src/api/home';
 import { MallCard } from '../../src/components/MallCard';
 
-const DEMO_PRODUCTS = [
-  { id: '1', platform: 'coupang', title: '나이키 에어맥스 270 남성 러닝화', price: 89000, originalPrice: 159000, imageUrl: 'https://via.placeholder.com/300x300/FF6B35/FFFFFF?text=NIKE', cashbackRate: 3, cashbackAmount: 2670 },
-  { id: '2', platform: 'naver', title: '애플 에어팟 프로 2세대 USB-C', price: 298000, originalPrice: 359000, imageUrl: 'https://via.placeholder.com/300x300/03C75A/FFFFFF?text=AirPods', cashbackRate: 2, cashbackAmount: 5960 },
-  { id: '3', platform: '11st', title: '삼성 갤럭시 버즈3 프로', price: 249000, originalPrice: 329000, imageUrl: 'https://via.placeholder.com/300x300/FF0038/FFFFFF?text=Galaxy', cashbackRate: 2.5, cashbackAmount: 6225 },
-];
-
 const POPULAR_KEYWORDS = ['에어팟', '나이키', '다이슨', '갤럭시', '아이패드', '무선충전기', '운동화', '맥북'];
 
 export default function SearchScreen() {
@@ -68,13 +62,11 @@ export default function SearchScreen() {
         setProducts(data.items);
         setHasMore(data.page < data.totalPages);
       } else {
-        setProducts(DEMO_PRODUCTS.filter((p) =>
-          p.title.toLowerCase().includes(kw.toLowerCase()),
-        ));
+        setProducts([]);
         setHasMore(false);
       }
     } catch {
-      setProducts(DEMO_PRODUCTS);
+      setProducts([]);
       setHasMore(false);
     } finally {
       setLoading(false);

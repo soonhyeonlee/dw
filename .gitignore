@@ -49,6 +49,8 @@ coverage/
 # QA captures (large screenshot folders, kept locally only)
 design-mockup/qa-*/
 apps/mobile/_uitest/
+_verify/
+apps/mobile/gradle-build*.log
 
 # Local tooling / agent state (not project source)
 .claude/

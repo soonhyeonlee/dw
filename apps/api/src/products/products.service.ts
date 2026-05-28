@@ -34,7 +34,17 @@ export class ProductsService {
       .createQueryBuilder('p')
       .where('p.isActive = :active', { active: true });
 
-    if (platform) qb.andWhere('p.platform = :platform', { platform });
+    if (platform) {
+      const parts = platform
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (parts.length > 1) {
+        qb.andWhere('p.platform IN (:...platforms)', { platforms: parts });
+      } else if (parts.length === 1) {
+        qb.andWhere('p.platform = :platform', { platform: parts[0] });
+      }
+    }
     if (category) qb.andWhere('p.category = :category', { category });
     if (keyword) qb.andWhere('LOWER(p.title) LIKE LOWER(:keyword)', { keyword: `%${keyword}%` });
 

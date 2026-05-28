@@ -115,7 +115,7 @@ export default function MarketScreen() {
     try {
       const apiCat = CATS.find((c) => c.key === cat)?.apiKey;
       const data = await getProducts({
-        platform: 'doublewin',
+        platform: 'doublewin,ihomemarket',
         category: apiCat,
         limit: 30,
       });

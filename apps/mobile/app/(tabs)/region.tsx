@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Alert,
   Image,
   StatusBar,
+  ActivityIndicator,
   ActionSheetIOS,
   Platform,
 } from 'react-native';
@@ -17,9 +18,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
-import { MOCK_ACADEMIES, MOCK_COUPONS, type MockAcademy, type MockCoupon } from '../../src/mock/feed';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { EmptyState } from '../../src/components/EmptyState';
+import {
+  getAcademies,
+  getCoupons,
+  downloadCoupon,
+  type Academy,
+  type Coupon,
+} from '../../src/api/region';
 
 const CATEGORIES = ['전체', '태권도', '영어', '수학', '피아노', '미술', '코딩'];
 
@@ -33,6 +40,13 @@ const SORT_OPTIONS = [
 type SortKey = typeof SORT_OPTIONS[number]['key'];
 
 type Tab = 'academies' | 'coupons';
+
+function fmtDate(iso?: string): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+}
 
 function showActionSheet(title: string, options: string[], onPick: (idx: number) => void) {
   if (Platform.OS === 'ios') {
@@ -58,20 +72,19 @@ function showActionSheet(title: string, options: string[], onPick: (idx: number)
   );
 }
 
-function CouponCard({ c }: { c: MockCoupon }) {
-  const type = c.couponType;
+function CouponCard({ c }: { c: Coupon }) {
   return (
     <View style={couponStyles.card}>
       <View style={couponStyles.leftBar} />
       <View style={couponStyles.body}>
         <View style={couponStyles.typeBadge}>
-          <Text style={couponStyles.typeText}>{type}</Text>
+          <Text style={couponStyles.typeText}>{c.couponType}</Text>
         </View>
         <Text style={couponStyles.title}>{c.title}</Text>
         <Text style={couponStyles.partner}>{c.partnerName}</Text>
         <View style={couponStyles.metaRow}>
           <Ionicons name="time-outline" size={11} color={COLORS.ink[500]} />
-          <Text style={couponStyles.meta}>~ {c.expireAt}</Text>
+          <Text style={couponStyles.meta}>~ {fmtDate(c.expireAt)}</Text>
           <View style={couponStyles.dotSep} />
           <Text style={couponStyles.remain}>잔여 {c.remainingQuantity}매</Text>
         </View>
@@ -83,18 +96,27 @@ function CouponCard({ c }: { c: MockCoupon }) {
   );
 }
 
-function AcademyCard({ a, onPress }: { a: MockAcademy; onPress: () => void }) {
+function AcademyCard({ a, onPress }: { a: Academy; onPress: () => void }) {
+  const thumb = a.photos && a.photos.length ? a.photos[0] : undefined;
   return (
     <TouchableOpacity style={aStyles.card} onPress={onPress} activeOpacity={0.8}>
-      <Image source={{ uri: a.thumbnail }} style={aStyles.img} resizeMode="cover" />
-      <View style={aStyles.body}>
-        <View style={aStyles.catBadge}>
-          <Text style={aStyles.catText}>{a.category}</Text>
+      {thumb ? (
+        <Image source={{ uri: thumb }} style={aStyles.img} resizeMode="cover" />
+      ) : (
+        <View style={[aStyles.img, aStyles.imgEmpty]}>
+          <Ionicons name="school-outline" size={32} color={COLORS.ink[300]} />
         </View>
+      )}
+      <View style={aStyles.body}>
+        {a.category ? (
+          <View style={aStyles.catBadge}>
+            <Text style={aStyles.catText}>{a.category}</Text>
+          </View>
+        ) : null}
         <Text style={aStyles.name} numberOfLines={1}>{a.name}</Text>
         <View style={aStyles.addrRow}>
           <Ionicons name="location-outline" size={12} color={COLORS.ink[500]} />
-          <Text style={aStyles.addr} numberOfLines={1}>{a.address}</Text>
+          <Text style={aStyles.addr} numberOfLines={1}>{a.address || a.region || ''}</Text>
         </View>
         <View style={aStyles.metaRow}>
           <Ionicons name="star" size={12} color="#F59E0B" />
@@ -102,18 +124,20 @@ function AcademyCard({ a, onPress }: { a: MockAcademy; onPress: () => void }) {
           <Text style={aStyles.review}>({a.reviewCount})</Text>
           <View style={aStyles.dot} />
           <Ionicons name="eye-outline" size={12} color={COLORS.ink[500]} />
-          <Text style={aStyles.stat}>{a.viewCount.toLocaleString()}</Text>
+          <Text style={aStyles.stat}>{(a.viewCount || 0).toLocaleString()}</Text>
           <View style={aStyles.dot} />
           <Ionicons name="heart" size={12} color={COLORS.primary} />
-          <Text style={aStyles.stat}>{a.heartCount}</Text>
+          <Text style={aStyles.stat}>{a.heartCount || 0}</Text>
         </View>
-        <View style={aStyles.tagRow}>
-          {a.tags.map((t) => (
-            <View key={t} style={aStyles.tag}>
-              <Text style={aStyles.tagText}>{t}</Text>
-            </View>
-          ))}
-        </View>
+        {a.tags && a.tags.length ? (
+          <View style={aStyles.tagRow}>
+            {a.tags.map((t) => (
+              <View key={t} style={aStyles.tag}>
+                <Text style={aStyles.tagText}>{t}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
       </View>
     </TouchableOpacity>
   );
@@ -126,28 +150,57 @@ export default function RegionScreen() {
   const [category, setCategory] = useState('전체');
   const [keyword, setKeyword] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [location, setLocation] = useState(LOCATION_OPTIONS[0]);
   const [sort, setSort] = useState<SortKey>('popular');
+  const [academies, setAcademies] = useState<Academy[]>([]);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 500);
+  const loadData = useCallback(async () => {
+    try {
+      const [ac, cp] = await Promise.all([
+        getAcademies({ limit: 50 } as any).catch(() => ({ items: [] as Academy[] })),
+        getCoupons().catch(() => ({ items: [] as Coupon[] })),
+      ]);
+      setAcademies((ac?.items as Academy[]) || []);
+      setCoupons((cp?.items as Coupon[]) || []);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const filteredAcademies = MOCK_ACADEMIES.filter((a) => {
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
+
+  const filteredAcademies = academies.filter((a) => {
     const matchCat = category === '전체' || a.category === category;
-    const matchKeyword = !keyword || a.name.includes(keyword) || a.address.includes(keyword);
+    const kw = keyword.trim();
+    const matchKeyword =
+      !kw || a.name.includes(kw) || (a.address || '').includes(kw) || (a.region || '').includes(kw);
     return matchCat && matchKeyword;
   });
 
   const sortLabel = SORT_OPTIONS.find((o) => o.key === sort)?.label ?? '인기순';
 
-  const handleDownload = (c: MockCoupon) => {
+  const handleDownload = async (c: Coupon) => {
     if (!isAuthenticated) {
       Alert.alert('로그인 필요', '쿠폰을 받으려면 로그인이 필요합니다.');
       return;
     }
-    Alert.alert('쿠폰 다운로드', `${c.title} 쿠폰이 다운로드되었습니다.`);
+    try {
+      await downloadCoupon(c.id);
+      Alert.alert('쿠폰 다운로드', `${c.title} 쿠폰이 다운로드되었습니다.`);
+      loadData();
+    } catch (e: any) {
+      Alert.alert('다운로드 실패', e?.message || '쿠폰을 받지 못했습니다.');
+    }
   };
 
   const handlePickLocation = () => {
@@ -179,20 +232,13 @@ export default function RegionScreen() {
         <View style={styles.topbar}>
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>우리지역</Text>
-            <TouchableOpacity
-              style={styles.locRow}
-              onPress={handlePickLocation}
-              activeOpacity={0.7}
-            >
+            <TouchableOpacity style={styles.locRow} onPress={handlePickLocation} activeOpacity={0.7}>
               <Ionicons name="location" size={14} color={COLORS.primary} />
               <Text style={styles.loc}>{location}</Text>
               <Ionicons name="chevron-down" size={14} color={COLORS.ink[500]} />
             </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => router.push('/(tabs)/search')}
-          >
+          <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/(tabs)/search')}>
             <Ionicons name="search-outline" size={22} color={COLORS.ink[800]} />
           </TouchableOpacity>
         </View>
@@ -203,21 +249,19 @@ export default function RegionScreen() {
             style={[styles.segItem, tab === 'academies' && styles.segItemActive]}
             onPress={() => setTab('academies')}
           >
-            <Text style={[styles.segText, tab === 'academies' && styles.segTextActive]}>
-              학원정보
-            </Text>
+            <Text style={[styles.segText, tab === 'academies' && styles.segTextActive]}>학원정보</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.segItem, tab === 'coupons' && styles.segItemActive]}
             onPress={() => setTab('coupons')}
           >
-            <Text style={[styles.segText, tab === 'coupons' && styles.segTextActive]}>
-              쿠폰북
-            </Text>
+            <Text style={[styles.segText, tab === 'coupons' && styles.segTextActive]}>쿠폰북</Text>
           </TouchableOpacity>
         </View>
 
-        {tab === 'academies' ? (
+        {loading ? (
+          <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 80 }} />
+        ) : tab === 'academies' ? (
           <>
             <View style={styles.searchBar}>
               <Ionicons name="search-outline" size={18} color={COLORS.ink[400]} />
@@ -236,11 +280,7 @@ export default function RegionScreen() {
               )}
             </View>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.catRow}
-            >
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catRow}>
               {CATEGORIES.map((cat) => {
                 const active = category === cat;
                 return (
@@ -265,7 +305,13 @@ export default function RegionScreen() {
               </TouchableOpacity>
             </View>
 
-            {filteredAcademies.length === 0 ? (
+            {academies.length === 0 ? (
+              <EmptyState
+                icon="school-outline"
+                title="등록된 학원이 없어요"
+                subtitle={'관리자 페이지에서 학원을 등록하면\n이곳에 노출됩니다.'}
+              />
+            ) : filteredAcademies.length === 0 ? (
               <EmptyState
                 icon="search-outline"
                 title="검색 결과가 없어요"
@@ -276,11 +322,7 @@ export default function RegionScreen() {
             ) : (
               <View style={styles.listWrap}>
                 {filteredAcademies.map((a) => (
-                  <AcademyCard
-                    key={a.id}
-                    a={a}
-                    onPress={() => router.push(`/region/${a.id}` as any)}
-                  />
+                  <AcademyCard key={a.id} a={a} onPress={() => router.push(`/region/${a.id}` as any)} />
                 ))}
               </View>
             )}
@@ -293,15 +335,13 @@ export default function RegionScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.couponHeroTitle}>파트너 전용 쿠폰</Text>
-                <Text style={styles.couponHeroSub}>
-                  지역 제휴처의 특별 혜택을 받아가세요
-                </Text>
+                <Text style={styles.couponHeroSub}>지역 제휴처의 특별 혜택을 받아가세요</Text>
               </View>
               <View style={styles.couponHeroBadge}>
-                <Text style={styles.couponHeroBadgeText}>{MOCK_COUPONS.length}</Text>
+                <Text style={styles.couponHeroBadgeText}>{coupons.length}</Text>
               </View>
             </View>
-            {MOCK_COUPONS.length === 0 ? (
+            {coupons.length === 0 ? (
               <EmptyState
                 icon="gift-outline"
                 title="아직 받을 수 있는 쿠폰이 없어요"
@@ -309,12 +349,8 @@ export default function RegionScreen() {
               />
             ) : (
               <View style={styles.listWrap}>
-                {MOCK_COUPONS.map((c) => (
-                  <TouchableOpacity
-                    key={c.id}
-                    activeOpacity={0.9}
-                    onPress={() => handleDownload(c)}
-                  >
+                {coupons.map((c) => (
+                  <TouchableOpacity key={c.id} activeOpacity={0.9} onPress={() => handleDownload(c)}>
                     <CouponCard c={c} />
                   </TouchableOpacity>
                 ))}
@@ -357,19 +393,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 4,
   },
-  segItem: {
-    flex: 1,
-    height: 36,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  segItem: { flex: 1, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   segItemActive: {
     backgroundColor: COLORS.white,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
+    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 },
     elevation: 1,
   },
   segText: { fontSize: 13, fontWeight: '600', color: COLORS.ink[500] },
@@ -390,17 +417,12 @@ const styles = StyleSheet.create({
 
   catRow: { paddingHorizontal: SPACING.xl, gap: 6, paddingVertical: 10 },
   catPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 12, paddingVertical: 6,
     borderRadius: 999,
     backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS.ink[200],
+    borderWidth: 1, borderColor: COLORS.ink[200],
   },
-  catPillActive: {
-    backgroundColor: COLORS.ink[900],
-    borderColor: COLORS.ink[900],
-  },
+  catPillActive: { backgroundColor: COLORS.ink[900], borderColor: COLORS.ink[900] },
   catText: { fontSize: 13, fontWeight: '500', color: COLORS.ink[700] },
   catTextActive: { color: COLORS.white, fontWeight: '600' },
 
@@ -456,12 +478,12 @@ const aStyles = StyleSheet.create({
     overflow: 'hidden',
   },
   img: { width: '100%', height: 140, backgroundColor: COLORS.ink[100] },
+  imgEmpty: { alignItems: 'center', justifyContent: 'center' },
   body: { padding: 14, gap: 4 },
   catBadge: {
     alignSelf: 'flex-start',
     backgroundColor: COLORS.primarySoft,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 8, paddingVertical: 3,
     borderRadius: 6,
     marginBottom: 4,
   },
@@ -472,19 +494,10 @@ const aStyles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 6 },
   rating: { fontSize: 12, fontWeight: '700', color: COLORS.ink[900] },
   review: { fontSize: 12, color: COLORS.ink[500] },
-  dot: {
-    width: 3, height: 3, borderRadius: 1.5,
-    backgroundColor: COLORS.ink[300],
-    marginHorizontal: 4,
-  },
+  dot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: COLORS.ink[300], marginHorizontal: 4 },
   stat: { fontSize: 11, color: COLORS.ink[600], fontWeight: '500' },
   tagRow: { flexDirection: 'row', gap: 6, marginTop: 10, flexWrap: 'wrap' },
-  tag: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    backgroundColor: COLORS.ink[100],
-  },
+  tag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: COLORS.ink[100] },
   tagText: { fontSize: 11, color: COLORS.ink[700], fontWeight: '500' },
 });
 
@@ -502,8 +515,7 @@ const couponStyles = StyleSheet.create({
   typeBadge: {
     alignSelf: 'flex-start',
     backgroundColor: COLORS.primarySoft,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 8, paddingVertical: 3,
     borderRadius: 6,
     marginBottom: 4,
   },

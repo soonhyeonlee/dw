@@ -3,57 +3,62 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 
-interface Product {
+interface Academy {
   id: string;
-  platform: string;
-  externalId: string;
-  title: string;
+  name: string;
+  category?: string;
   description?: string;
-  price: number;
-  originalPrice?: number;
-  discountRate?: number;
-  imageUrl: string;
-  productUrl: string;
-  affiliateUrl?: string;
-  category: string;
-  cashbackRate: number;
-  cashbackAmount?: number;
+  address?: string;
+  addressDetail?: string;
+  phone?: string;
+  region?: string;
+  photos?: string[];
+  tags?: string[];
+  curriculum?: string;
+  notice?: string;
+  parking?: string;
+  sns?: { kakao?: string; instagram?: string; facebook?: string; band?: string };
   rating?: number;
   reviewCount?: number;
+  viewCount?: number;
+  heartCount?: number;
   isActive: boolean;
   createdAt: string;
 }
 
-const PLATFORMS = ['doublewin', 'coupang', 'naver', '11st', 'gmarket', 'ssg', 'lotteon', 'wemakeprice', 'tmon'];
-const CATEGORIES = ['의류', '식품', '디지털', '뷰티', '생활', '도서', '여행', '스포츠', '유아동', '기타'];
+const CATEGORIES = ['태권도', '영어', '수학', '피아노', '미술', '코딩', '음악', '체육', '논술', '과학', '기타'];
 
 const emptyForm = {
-  platform: 'coupang',
-  externalId: '',
-  title: '',
+  name: '',
+  category: '태권도',
+  region: '',
+  address: '',
+  addressDetail: '',
+  phone: '',
   description: '',
-  price: '',
-  originalPrice: '',
-  discountRate: '',
-  imageUrl: '',
-  productUrl: '',
-  affiliateUrl: '',
-  category: '의류',
-  cashbackRate: '3',
+  curriculum: '',
+  notice: '',
+  parking: '',
+  photos: '',
+  tags: '',
+  snsKakao: '',
+  snsInstagram: '',
+  snsFacebook: '',
+  snsBand: '',
   rating: '',
   reviewCount: '',
   isActive: true,
 };
 
-export default function ProductsPage() {
-  const [items, setItems] = useState<Product[]>([]);
+export default function AcademiesPage() {
+  const [items, setItems] = useState<Academy[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState('');
-  const [platformFilter, setPlatformFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState<Product | null>(null);
+  const [editing, setEditing] = useState<Academy | null>(null);
   const [form, setForm] = useState<typeof emptyForm>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
 
@@ -66,12 +71,12 @@ export default function ProductsPage() {
     try {
       const qs = new URLSearchParams({ page: String(page), limit: '20' });
       if (keyword) qs.set('keyword', keyword);
-      if (platformFilter) qs.set('platform', platformFilter);
-      const res = await api(`/products/admin/all?${qs}`);
+      if (categoryFilter) qs.set('category', categoryFilter);
+      const res = await api(`/region/admin/academies?${qs}`);
       setItems(res.data?.items || []);
       setTotal(res.data?.total || 0);
     } catch (e: any) {
-      alert(e.message || '상품 목록을 불러올 수 없습니다');
+      alert(e.message || '학원 목록을 불러올 수 없습니다');
       setItems([]);
     } finally {
       setLoading(false);
@@ -84,58 +89,71 @@ export default function ProductsPage() {
     setShowModal(true);
   };
 
-  const openEdit = (p: Product) => {
-    setEditing(p);
+  const openEdit = (a: Academy) => {
+    setEditing(a);
     setForm({
-      platform: p.platform,
-      externalId: p.externalId,
-      title: p.title,
-      description: p.description || '',
-      price: String(p.price ?? ''),
-      originalPrice: p.originalPrice != null ? String(p.originalPrice) : '',
-      discountRate: p.discountRate != null ? String(p.discountRate) : '',
-      imageUrl: p.imageUrl,
-      productUrl: p.productUrl,
-      affiliateUrl: p.affiliateUrl || '',
-      category: p.category,
-      cashbackRate: String(p.cashbackRate ?? '3'),
-      rating: p.rating != null ? String(p.rating) : '',
-      reviewCount: p.reviewCount != null ? String(p.reviewCount) : '',
-      isActive: p.isActive,
+      name: a.name,
+      category: a.category || '태권도',
+      region: a.region || '',
+      address: a.address || '',
+      addressDetail: a.addressDetail || '',
+      phone: a.phone || '',
+      description: a.description || '',
+      curriculum: a.curriculum || '',
+      notice: a.notice || '',
+      parking: a.parking || '',
+      photos: (a.photos || []).join('\n'),
+      tags: (a.tags || []).join(', '),
+      snsKakao: a.sns?.kakao || '',
+      snsInstagram: a.sns?.instagram || '',
+      snsFacebook: a.sns?.facebook || '',
+      snsBand: a.sns?.band || '',
+      rating: a.rating != null ? String(a.rating) : '',
+      reviewCount: a.reviewCount != null ? String(a.reviewCount) : '',
+      isActive: a.isActive,
     });
     setShowModal(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim() || !form.imageUrl.trim() || !form.productUrl.trim()) {
-      alert('제목, 이미지 URL, 상품 URL은 필수입니다');
+    if (!form.name.trim()) {
+      alert('학원명은 필수입니다');
       return;
     }
+    const photos = form.photos.split('\n').map((s) => s.trim()).filter(Boolean);
+    const tags = form.tags.split(',').map((s) => s.trim()).filter(Boolean);
+    const sns: Record<string, string> = {};
+    if (form.snsKakao.trim()) sns.kakao = form.snsKakao.trim();
+    if (form.snsInstagram.trim()) sns.instagram = form.snsInstagram.trim();
+    if (form.snsFacebook.trim()) sns.facebook = form.snsFacebook.trim();
+    if (form.snsBand.trim()) sns.band = form.snsBand.trim();
+
     const payload: any = {
-      platform: form.platform,
-      title: form.title.trim(),
-      description: form.description.trim() || undefined,
-      price: Number(form.price) || 0,
-      originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
-      discountRate: form.discountRate ? Number(form.discountRate) : undefined,
-      imageUrl: form.imageUrl.trim(),
-      productUrl: form.productUrl.trim(),
-      affiliateUrl: form.affiliateUrl.trim() || undefined,
+      name: form.name.trim(),
       category: form.category,
-      cashbackRate: Number(form.cashbackRate) || 0,
+      region: form.region.trim() || undefined,
+      address: form.address.trim() || undefined,
+      addressDetail: form.addressDetail.trim() || undefined,
+      phone: form.phone.trim() || undefined,
+      description: form.description.trim() || undefined,
+      curriculum: form.curriculum.trim() || undefined,
+      notice: form.notice.trim() || undefined,
+      parking: form.parking.trim() || undefined,
+      photos,
+      tags,
+      sns: Object.keys(sns).length ? sns : undefined,
       rating: form.rating ? Number(form.rating) : undefined,
       reviewCount: form.reviewCount ? Number(form.reviewCount) : undefined,
       isActive: form.isActive,
     };
-    if (form.externalId.trim()) payload.externalId = form.externalId.trim();
 
     setSubmitting(true);
     try {
       if (editing) {
-        await api(`/products/${editing.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+        await api(`/region/admin/academies/${editing.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
       } else {
-        await api('/products', { method: 'POST', body: JSON.stringify(payload) });
+        await api('/region/admin/academies', { method: 'POST', body: JSON.stringify(payload) });
       }
       setShowModal(false);
       loadData();
@@ -146,21 +164,21 @@ export default function ProductsPage() {
     }
   };
 
-  const handleDelete = async (p: Product) => {
-    if (!confirm(`"${p.title}" 상품을 삭제하시겠습니까?`)) return;
+  const handleDelete = async (a: Academy) => {
+    if (!confirm(`"${a.name}" 학원을 삭제하시겠습니까?`)) return;
     try {
-      await api(`/products/${p.id}`, { method: 'DELETE' });
+      await api(`/region/admin/academies/${a.id}`, { method: 'DELETE' });
       loadData();
     } catch (e: any) {
       alert(e.message);
     }
   };
 
-  const handleToggleActive = async (p: Product) => {
+  const handleToggleActive = async (a: Academy) => {
     try {
-      await api(`/products/${p.id}`, {
+      await api(`/region/admin/academies/${a.id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ isActive: !p.isActive }),
+        body: JSON.stringify({ isActive: !a.isActive }),
       });
       loadData();
     } catch (e: any) {
@@ -171,27 +189,23 @@ export default function ProductsPage() {
   return (
     <div>
       <div style={styles.head}>
-        <h1 style={styles.title}>상품 관리</h1>
-        <button style={styles.addBtn} onClick={openCreate}>+ 상품 추가</button>
+        <h1 style={styles.title}>학원 관리</h1>
+        <button style={styles.addBtn} onClick={openCreate}>+ 학원 추가</button>
       </div>
 
       <form
         onSubmit={(e) => { e.preventDefault(); setPage(1); loadData(); }}
         style={styles.searchRow}
       >
-        <select
-          value={platformFilter}
-          onChange={(e) => setPlatformFilter(e.target.value)}
-          style={styles.searchSelect}
-        >
-          <option value="">모든 플랫폼</option>
-          {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+        <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} style={styles.searchSelect}>
+          <option value="">모든 카테고리</option>
+          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         <input
           type="text"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
-          placeholder="상품명 검색"
+          placeholder="학원명 검색"
           style={styles.searchInput}
         />
         <button type="submit" style={styles.searchBtn}>검색</button>
@@ -204,12 +218,11 @@ export default function ProductsPage() {
         <table style={styles.table}>
           <thead>
             <tr>
-              <th style={styles.th}>이미지</th>
-              <th style={styles.th}>플랫폼</th>
-              <th style={styles.th}>상품명</th>
+              <th style={styles.th}>사진</th>
+              <th style={styles.th}>학원명</th>
               <th style={styles.th}>카테고리</th>
-              <th style={styles.th}>가격</th>
-              <th style={styles.th}>캐시백</th>
+              <th style={styles.th}>지역</th>
+              <th style={styles.th}>평점</th>
               <th style={styles.th}>상태</th>
               <th style={styles.th}>관리</th>
             </tr>
@@ -217,45 +230,37 @@ export default function ProductsPage() {
           <tbody>
             {items.length === 0 ? (
               <tr>
-                <td colSpan={8} style={{ ...styles.td, textAlign: 'center', color: '#9ca3af', padding: '40px' }}>
-                  등록된 상품이 없습니다. 우측 상단 "+ 상품 추가"로 첫 상품을 등록해보세요.
+                <td colSpan={7} style={{ ...styles.td, textAlign: 'center', color: '#9ca3af', padding: '40px' }}>
+                  등록된 학원이 없습니다. 우측 상단 "+ 학원 추가"로 첫 학원을 등록해보세요.
                 </td>
               </tr>
             ) : (
-              items.map((p) => (
-                <tr key={p.id}>
+              items.map((a) => (
+                <tr key={a.id}>
                   <td style={styles.td}>
-                    {p.imageUrl ? (
-                      <img src={p.imageUrl} alt="" style={styles.thumb} />
+                    {a.photos && a.photos[0] ? (
+                      <img src={a.photos[0]} alt="" style={styles.thumb} />
                     ) : (
                       <div style={styles.thumbMissing}>?</div>
                     )}
                   </td>
                   <td style={styles.td}>
-                    <span style={styles.platformBadge}>{p.platform}</span>
+                    <div style={styles.titleCell} title={a.name}>{a.name}</div>
                   </td>
-                  <td style={styles.td}>
-                    <div style={styles.titleCell} title={p.title}>{p.title}</div>
-                  </td>
-                  <td style={styles.td}>{p.category}</td>
-                  <td style={styles.td}>
-                    {Number(p.price).toLocaleString()}원
-                    {p.discountRate ? (
-                      <span style={styles.discount}>{Number(p.discountRate)}%</span>
-                    ) : null}
-                  </td>
-                  <td style={styles.td}>{Number(p.cashbackRate)}%</td>
+                  <td style={styles.td}>{a.category || '-'}</td>
+                  <td style={styles.td}>{a.region || '-'}</td>
+                  <td style={styles.td}>★ {a.rating ?? 0} ({a.reviewCount ?? 0})</td>
                   <td style={styles.td}>
                     <button
-                      onClick={() => handleToggleActive(p)}
-                      style={p.isActive ? styles.activeBadge : styles.inactiveBadge}
+                      onClick={() => handleToggleActive(a)}
+                      style={a.isActive ? styles.activeBadge : styles.inactiveBadge}
                     >
-                      {p.isActive ? '활성' : '비활성'}
+                      {a.isActive ? '활성' : '비활성'}
                     </button>
                   </td>
                   <td style={styles.td}>
-                    <button onClick={() => openEdit(p)} style={styles.editBtn}>수정</button>
-                    <button onClick={() => handleDelete(p)} style={styles.delBtn}>삭제</button>
+                    <button onClick={() => openEdit(a)} style={styles.editBtn}>수정</button>
+                    <button onClick={() => handleDelete(a)} style={styles.delBtn}>삭제</button>
                   </td>
                 </tr>
               ))
@@ -274,18 +279,12 @@ export default function ProductsPage() {
 
       {showModal && (
         <div style={styles.modalBackdrop} onClick={() => !submitting && setShowModal(false)}>
-          <form
-            onSubmit={handleSubmit}
-            style={styles.modal}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 style={styles.modalTitle}>{editing ? '상품 수정' : '상품 추가'}</h2>
+          <form onSubmit={handleSubmit} style={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <h2 style={styles.modalTitle}>{editing ? '학원 수정' : '학원 추가'}</h2>
 
             <div style={styles.row}>
-              <Field label="플랫폼" required>
-                <select value={form.platform} onChange={(e) => setForm({ ...form, platform: e.target.value })} style={styles.input}>
-                  {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
-                </select>
+              <Field label="학원명" required>
+                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} style={styles.input} placeholder="예: 국제 태권도 아카데미" />
               </Field>
               <Field label="카테고리" required>
                 <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} style={styles.input}>
@@ -294,54 +293,67 @@ export default function ProductsPage() {
               </Field>
             </div>
 
-            <Field label="상품명" required>
-              <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} style={styles.input} placeholder="예: 나이키 에어맥스 270" />
+            <div style={styles.row}>
+              <Field label="지역">
+                <input type="text" value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })} style={styles.input} placeholder="예: 서울 강남구" />
+              </Field>
+              <Field label="전화번호">
+                <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} style={styles.input} placeholder="예: 02-123-4567" />
+              </Field>
+            </div>
+
+            <Field label="주소">
+              <input type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} style={styles.input} />
+            </Field>
+            <Field label="상세 주소">
+              <input type="text" value={form.addressDetail} onChange={(e) => setForm({ ...form, addressDetail: e.target.value })} style={styles.input} />
             </Field>
 
-            <Field label="설명">
-              <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} style={{ ...styles.input, minHeight: 60 }} />
+            <Field label="소개">
+              <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} style={{ ...styles.input, minHeight: 56 }} />
+            </Field>
+            <Field label="수업 내용">
+              <textarea value={form.curriculum} onChange={(e) => setForm({ ...form, curriculum: e.target.value })} style={{ ...styles.input, minHeight: 56 }} />
+            </Field>
+            <Field label="안내 및 유의사항">
+              <textarea value={form.notice} onChange={(e) => setForm({ ...form, notice: e.target.value })} style={{ ...styles.input, minHeight: 56 }} />
+            </Field>
+            <Field label="주차 안내">
+              <input type="text" value={form.parking} onChange={(e) => setForm({ ...form, parking: e.target.value })} style={styles.input} />
             </Field>
 
-            <Field label="이미지 URL" required>
-              <input type="url" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} style={styles.input} placeholder="https://..." />
-              {form.imageUrl ? <img src={form.imageUrl} alt="" style={styles.preview} /> : null}
+            <Field label="사진 URL (한 줄에 하나)">
+              <textarea value={form.photos} onChange={(e) => setForm({ ...form, photos: e.target.value })} style={{ ...styles.input, minHeight: 56 }} placeholder="https://...&#10;https://..." />
             </Field>
-
-            <Field label="상품 URL" required>
-              <input type="url" value={form.productUrl} onChange={(e) => setForm({ ...form, productUrl: e.target.value })} style={styles.input} placeholder="https://..." />
-            </Field>
-
-            <Field label="제휴 링크 URL (선택)">
-              <input type="url" value={form.affiliateUrl} onChange={(e) => setForm({ ...form, affiliateUrl: e.target.value })} style={styles.input} placeholder="https://... (없으면 상품 URL 사용)" />
+            <Field label="태그 (쉼표로 구분)">
+              <input type="text" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} style={styles.input} placeholder="체험수업, 셔틀운행, 소수정예" />
             </Field>
 
             <div style={styles.row}>
-              <Field label="가격 (원)" required>
-                <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} style={styles.input} />
+              <Field label="카카오톡 문의 링크">
+                <input type="url" value={form.snsKakao} onChange={(e) => setForm({ ...form, snsKakao: e.target.value })} style={styles.input} placeholder="http://pf.kakao.com/..." />
               </Field>
-              <Field label="원가 (선택)">
-                <input type="number" value={form.originalPrice} onChange={(e) => setForm({ ...form, originalPrice: e.target.value })} style={styles.input} />
+              <Field label="인스타그램">
+                <input type="url" value={form.snsInstagram} onChange={(e) => setForm({ ...form, snsInstagram: e.target.value })} style={styles.input} />
               </Field>
-              <Field label="할인율 % (선택)">
-                <input type="number" step="0.1" value={form.discountRate} onChange={(e) => setForm({ ...form, discountRate: e.target.value })} style={styles.input} />
+            </div>
+            <div style={styles.row}>
+              <Field label="페이스북">
+                <input type="url" value={form.snsFacebook} onChange={(e) => setForm({ ...form, snsFacebook: e.target.value })} style={styles.input} />
+              </Field>
+              <Field label="밴드">
+                <input type="url" value={form.snsBand} onChange={(e) => setForm({ ...form, snsBand: e.target.value })} style={styles.input} />
               </Field>
             </div>
 
             <div style={styles.row}>
-              <Field label="캐시백률 %" required>
-                <input type="number" step="0.1" value={form.cashbackRate} onChange={(e) => setForm({ ...form, cashbackRate: e.target.value })} style={styles.input} />
-              </Field>
-              <Field label="평점 (선택)">
+              <Field label="평점 (0~5)">
                 <input type="number" step="0.1" min="0" max="5" value={form.rating} onChange={(e) => setForm({ ...form, rating: e.target.value })} style={styles.input} />
               </Field>
-              <Field label="리뷰 수 (선택)">
+              <Field label="리뷰 수">
                 <input type="number" value={form.reviewCount} onChange={(e) => setForm({ ...form, reviewCount: e.target.value })} style={styles.input} />
               </Field>
             </div>
-
-            <Field label="외부 ID (선택, 비워두면 자동 생성)">
-              <input type="text" value={form.externalId} onChange={(e) => setForm({ ...form, externalId: e.target.value })} style={styles.input} disabled={!!editing} />
-            </Field>
 
             <label style={styles.checkRow}>
               <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
@@ -388,9 +400,7 @@ const styles: Record<string, React.CSSProperties> = {
   td: { padding: '12px 16px', fontSize: '14px', borderBottom: '1px solid #f3f4f6', verticalAlign: 'middle' },
   thumb: { width: 56, height: 56, objectFit: 'cover', borderRadius: 8, background: '#f3f4f6' },
   thumbMissing: { width: 56, height: 56, borderRadius: 8, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' },
-  platformBadge: { padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: '#f3f4f6', color: '#374151' },
   titleCell: { maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  discount: { marginLeft: 6, color: '#ff6b35', fontWeight: 700, fontSize: 12 },
   activeBadge: { padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, background: '#dcfce7', color: '#166534', cursor: 'pointer' },
   inactiveBadge: { padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, background: '#f3f4f6', color: '#6b7280', cursor: 'pointer' },
   editBtn: { padding: '6px 12px', borderRadius: 6, background: '#dbeafe', color: '#1e40af', fontSize: 12, fontWeight: 600, marginRight: 6 },
@@ -405,7 +415,6 @@ const styles: Record<string, React.CSSProperties> = {
   field: { display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 14, flex: 1 },
   label: { fontSize: 12, color: '#374151', fontWeight: 600 },
   input: { padding: '9px 11px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 14, width: '100%', boxSizing: 'border-box' },
-  preview: { marginTop: 8, maxWidth: 160, maxHeight: 160, borderRadius: 8, border: '1px solid #e5e7eb' },
   checkRow: { display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, marginBottom: 18, fontSize: 14 },
   modalActions: { display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12, paddingTop: 16, borderTop: '1px solid #f3f4f6' },
   cancelBtn: { padding: '10px 20px', borderRadius: 8, background: '#f3f4f6', color: '#374151', fontSize: 14, fontWeight: 600 },

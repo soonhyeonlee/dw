@@ -7,6 +7,8 @@ import { getToken, clearToken } from '@/lib/api';
 const NAV_ITEMS = [
   { href: '/dashboard', label: '대시보드', icon: '📊' },
   { href: '/dashboard/products', label: '상품 관리', icon: '🛍️' },
+  { href: '/dashboard/academies', label: '학원 관리', icon: '🏫' },
+  { href: '/dashboard/coupons', label: '쿠폰 관리', icon: '🎟️' },
   { href: '/dashboard/withdrawals', label: '출금 관리', icon: '💸' },
   { href: '/dashboard/cashback', label: '캐시백 관리', icon: '💰' },
   { href: '/dashboard/users', label: '유저 관리', icon: '👥' },

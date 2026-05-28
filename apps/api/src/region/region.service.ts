@@ -181,4 +181,98 @@ export class RegionService {
     });
     return this.couponRepo.save(coupon);
   }
+
+  // === 어드민 CRUD: 학원 ===
+
+  async adminListAcademies(query: {
+    region?: string;
+    category?: string;
+    keyword?: string;
+    isActive?: boolean;
+    page?: number;
+    limit?: number;
+  }) {
+    const { region, category, keyword, isActive, page = 1, limit = 50 } = query;
+    const qb = this.academyRepo.createQueryBuilder('a');
+    if (region) qb.andWhere('a.region = :region', { region });
+    if (category) qb.andWhere('a.category = :category', { category });
+    if (keyword) {
+      qb.andWhere('(LOWER(a.name) LIKE LOWER(:kw) OR LOWER(a.address) LIKE LOWER(:kw))', { kw: `%${keyword}%` });
+    }
+    if (typeof isActive === 'boolean') qb.andWhere('a.isActive = :isActive', { isActive });
+    const [items, total] = await qb
+      .orderBy('a.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async adminCreateAcademy(data: Partial<Academy>): Promise<Academy> {
+    const academy = this.academyRepo.create(data);
+    return this.academyRepo.save(academy);
+  }
+
+  async adminUpdateAcademy(id: string, data: Partial<Academy>): Promise<Academy> {
+    const academy = await this.academyRepo.findOne({ where: { id } });
+    if (!academy) throw new NotFoundException('학원 정보를 찾을 수 없습니다');
+    const { id: _i, createdAt: _c, updatedAt: _u, ...patch } = data as any;
+    await this.academyRepo.update(id, patch);
+    return this.academyRepo.findOne({ where: { id } }) as Promise<Academy>;
+  }
+
+  async adminRemoveAcademy(id: string): Promise<void> {
+    const academy = await this.academyRepo.findOne({ where: { id } });
+    if (!academy) throw new NotFoundException('학원 정보를 찾을 수 없습니다');
+    await this.academyRepo.delete(id);
+  }
+
+  // === 어드민 CRUD: 쿠폰 ===
+
+  async adminListCoupons(query: {
+    category?: string;
+    keyword?: string;
+    isActive?: boolean;
+    page?: number;
+    limit?: number;
+  }) {
+    const { category, keyword, isActive, page = 1, limit = 50 } = query;
+    const qb = this.couponRepo.createQueryBuilder('c');
+    if (category) qb.andWhere('c.category = :category', { category });
+    if (keyword) qb.andWhere('LOWER(c.title) LIKE LOWER(:kw)', { kw: `%${keyword}%` });
+    if (typeof isActive === 'boolean') qb.andWhere('c.isActive = :isActive', { isActive });
+    const [items, total] = await qb
+      .orderBy('c.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async adminCreateCoupon(adminId: string, data: Partial<Coupon>): Promise<Coupon> {
+    const serialNumber = `CP-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    const total = Number(data.totalQuantity) || 0;
+    const coupon = this.couponRepo.create({
+      ...data,
+      partnerId: data.partnerId || adminId,
+      serialNumber,
+      totalQuantity: total,
+      remainingQuantity: total,
+    });
+    return this.couponRepo.save(coupon);
+  }
+
+  async adminUpdateCoupon(id: string, data: Partial<Coupon>): Promise<Coupon> {
+    const coupon = await this.couponRepo.findOne({ where: { id } });
+    if (!coupon) throw new NotFoundException('쿠폰을 찾을 수 없습니다');
+    const { id: _i, serialNumber: _s, createdAt: _c, updatedAt: _u, ...patch } = data as any;
+    await this.couponRepo.update(id, patch);
+    return this.couponRepo.findOne({ where: { id } }) as Promise<Coupon>;
+  }
+
+  async adminRemoveCoupon(id: string): Promise<void> {
+    const coupon = await this.couponRepo.findOne({ where: { id } });
+    if (!coupon) throw new NotFoundException('쿠폰을 찾을 수 없습니다');
+    await this.couponRepo.delete(id);
+  }
 }

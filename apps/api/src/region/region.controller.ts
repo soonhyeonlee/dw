@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -11,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { RegionService } from './region.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { AdminGuard } from '../common/guards/admin.guard';
 
 @Controller('region')
 export class RegionController {
@@ -128,5 +130,91 @@ export class RegionController {
   async createCoupon(@Request() req, @Body() dto: any) {
     const data = await this.regionService.createCoupon(req.user.id, req.user.businessName || req.user.nickname, dto);
     return { success: true, data };
+  }
+
+  // === 어드민 CRUD: 학원 ===
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Get('admin/academies')
+  async adminListAcademies(
+    @Query('region') region?: string,
+    @Query('category') category?: string,
+    @Query('keyword') keyword?: string,
+    @Query('isActive') isActive?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    const data = await this.regionService.adminListAcademies({
+      region,
+      category,
+      keyword,
+      isActive: typeof isActive === 'string' ? isActive === 'true' : undefined,
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 50,
+    });
+    return { success: true, data };
+  }
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Post('admin/academies')
+  async adminCreateAcademy(@Body() body: any) {
+    const data = await this.regionService.adminCreateAcademy(body);
+    return { success: true, data };
+  }
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Patch('admin/academies/:id')
+  async adminUpdateAcademy(@Param('id') id: string, @Body() body: any) {
+    const data = await this.regionService.adminUpdateAcademy(id, body);
+    return { success: true, data };
+  }
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Delete('admin/academies/:id')
+  async adminRemoveAcademy(@Param('id') id: string) {
+    await this.regionService.adminRemoveAcademy(id);
+    return { success: true };
+  }
+
+  // === 어드민 CRUD: 쿠폰 ===
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Get('admin/coupons')
+  async adminListCoupons(
+    @Query('category') category?: string,
+    @Query('keyword') keyword?: string,
+    @Query('isActive') isActive?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    const data = await this.regionService.adminListCoupons({
+      category,
+      keyword,
+      isActive: typeof isActive === 'string' ? isActive === 'true' : undefined,
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 50,
+    });
+    return { success: true, data };
+  }
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Post('admin/coupons')
+  async adminCreateCoupon(@Request() req, @Body() body: any) {
+    const data = await this.regionService.adminCreateCoupon(req.user.id, body);
+    return { success: true, data };
+  }
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Patch('admin/coupons/:id')
+  async adminUpdateCoupon(@Param('id') id: string, @Body() body: any) {
+    const data = await this.regionService.adminUpdateCoupon(id, body);
+    return { success: true, data };
+  }
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Delete('admin/coupons/:id')
+  async adminRemoveCoupon(@Param('id') id: string) {
+    await this.regionService.adminRemoveCoupon(id);
+    return { success: true };
   }
 }

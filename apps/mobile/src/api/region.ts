@@ -4,15 +4,23 @@ export interface Academy {
   id: string;
   name: string;
   category?: string;
+  description?: string;
   address?: string;
+  addressDetail?: string;
   region?: string;
   phone?: string;
   photos?: string[];
+  tags?: string[];
+  curriculum?: string;
+  notice?: string;
+  parking?: string;
+  sns?: { kakao?: string; instagram?: string; facebook?: string; band?: string };
   rating: number;
   reviewCount: number;
   viewCount: number;
   momViewCount: number;
   heartCount: number;
+  isActive?: boolean;
 }
 
 export interface AcademyReview {

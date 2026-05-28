@@ -40,6 +40,21 @@ export class Academy {
   @Column({ type: 'simple-json', nullable: true })
   photos: string[]; // 사진 URL 배열
 
+  @Column({ type: 'simple-json', nullable: true })
+  tags: string[]; // 체험수업, 셔틀운행, 소수정예 등
+
+  @Column({ nullable: true, type: 'text' })
+  curriculum: string; // 수업 내용
+
+  @Column({ nullable: true, type: 'text' })
+  notice: string; // 안내 및 유의사항
+
+  @Column({ nullable: true, type: 'text' })
+  parking: string; // 주차 안내
+
+  @Column({ type: 'simple-json', nullable: true })
+  sns: { kakao?: string; instagram?: string; facebook?: string; band?: string }; // 카톡/SNS 링크
+
   @Column({ type: 'decimal', precision: 3, scale: 1, default: 0 })
   rating: number;
 

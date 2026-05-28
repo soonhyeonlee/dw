@@ -13,6 +13,7 @@ import { LlmModule } from './llm/llm.module';
 import { BlocksModule } from './blocks/blocks.module';
 import { MarketModule } from './market/market.module';
 import { RegionModule } from './region/region.module';
+import { SyncModule } from './sync/sync.module';
 import { CommonModule } from './common/common.module';
 import { AppController } from './app.controller';
 
@@ -64,6 +65,7 @@ import { AppController } from './app.controller';
     BlocksModule,
     MarketModule,
     RegionModule,
+    SyncModule,
   ],
   controllers: [AppController],
   providers: [

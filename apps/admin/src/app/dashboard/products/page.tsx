@@ -24,7 +24,7 @@ interface Product {
   createdAt: string;
 }
 
-const PLATFORMS = ['doublewin', 'coupang', 'naver', '11st', 'gmarket', 'ssg', 'lotteon', 'wemakeprice', 'tmon'];
+const PLATFORMS = ['doublewin', 'ihomemarket', 'coupang', 'naver', '11st', 'gmarket', 'ssg', 'lotteon', 'wemakeprice', 'tmon'];
 const CATEGORIES = ['의류', '식품', '디지털', '뷰티', '생활', '도서', '여행', '스포츠', '유아동', '기타'];
 
 const emptyForm = {

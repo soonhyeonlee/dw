@@ -48,4 +48,20 @@ coverage/
 
 # QA captures (large screenshot folders, kept locally only)
 design-mockup/qa-*/
+apps/mobile/_uitest/
+
+# Local tooling / agent state (not project source)
+.claude/
+.serena/
+
+# Sibling working directories used by other projects, not part of this repo
+.work-ihomemarket/
+aws-mining/
+vast-mining/
+
+# Local-only references and secrets
+계정.md
+KakaoTalk_*.jpg
+KakaoTalk_*.jpeg
+KakaoTalk_*.png
 

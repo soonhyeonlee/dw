@@ -16,13 +16,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
 import { getProducts, type Product as ApiProduct } from '../../src/api/products';
 
+// Mirrors the youngcart (g5_shop_category.ca_name) values that come
+// through the ihomemarket sync. Update when cafe24 admins add categories.
 const CATS = [
-  { key: 'all',     label: '전체',    apiKey: undefined },
-  { key: 'food',    label: '식품',    apiKey: '식품' },
-  { key: 'health',  label: '건강',    apiKey: '건강' },
-  { key: 'living',  label: '생활',    apiKey: '생활' },
-  { key: 'beauty',  label: '뷰티',    apiKey: '뷰티' },
-  { key: 'digital', label: '디지털',  apiKey: '디지털' },
+  { key: 'all',       label: '전체',         apiKey: undefined },
+  { key: 'feature',   label: '기획전',       apiKey: '기획전' },
+  { key: 'health',    label: '건강기능식품', apiKey: '건강기능식품' },
+  { key: 'food',      label: '식품',         apiKey: '식품' },
+  { key: 'fruit',     label: '과일',         apiKey: '과일' },
+  { key: 'kitchen',   label: '주방용품',     apiKey: '주방용품' },
+  { key: 'specialty', label: '특산품',       apiKey: '특산품' },
 ];
 
 type MarketProduct = {
@@ -115,7 +118,7 @@ export default function MarketScreen() {
     try {
       const apiCat = CATS.find((c) => c.key === cat)?.apiKey;
       const data = await getProducts({
-        platform: 'doublewin,ihomemarket',
+        platform: 'ihomemarket',
         category: apiCat,
         limit: 30,
       });
@@ -208,8 +211,8 @@ export default function MarketScreen() {
         ) : featured.length === 0 ? (
           <View style={styles.emptyBox}>
             <Ionicons name="cube-outline" size={42} color={COLORS.ink[300]} />
-            <Text style={styles.emptyText}>등록된 페이백 상품이 없습니다</Text>
-            <Text style={styles.emptySub}>관리자 페이지에서 상품을 추가하면 이곳에 노출됩니다.</Text>
+            <Text style={styles.emptyText}>이 분류에는 아직 상품이 없어요</Text>
+            <Text style={styles.emptySub}>다른 분류를 확인하거나 잠시 후 다시 시도해 주세요.</Text>
           </View>
         ) : (
           <>

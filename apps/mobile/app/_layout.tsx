@@ -70,6 +70,10 @@ export default function RootLayout() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name="region/[id]"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="mypage/wishlist"
           options={{ title: '찜한 상품' }}
         />

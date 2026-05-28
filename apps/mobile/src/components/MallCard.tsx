@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ViewStyle } from 'react-native';
 import { COLORS, RADIUS } from '../constants/theme';
 import type { Mall } from '../api/home';
+import { mallLogoSource } from '../lib/mallLogo';
 
 export type MallCardVariant = 'home' | 'category' | 'search';
 
@@ -22,16 +23,6 @@ const PROMO_BADGE: Record<string, { text: string; bg: string; fg: string }> = {
   welcome: { text: '웰컴', bg: '#FFE6DC', fg: '#FF6B35' },
 };
 
-function mallLogoUrl(baseUrl?: string): string | undefined {
-  if (!baseUrl) return undefined;
-  try {
-    const u = new URL(baseUrl);
-    return `https://logo.clearbit.com/${u.hostname}?size=160`;
-  } catch {
-    return undefined;
-  }
-}
-
 function formatCountdown(endsAt?: string | null): string | null {
   if (!endsAt) return null;
   const diff = new Date(endsAt).getTime() - Date.now();
@@ -50,8 +41,8 @@ interface Props {
 
 export function MallCard({ mall, variant = 'home', onPress, style }: Props) {
   const [imgFailed, setImgFailed] = useState(false);
-  const logoUrl = mallLogoUrl(mall.baseUrl);
-  const useImage = !!logoUrl && !imgFailed;
+  const logoSource = mallLogoSource(mall);
+  const useImage = !!logoSource && !imgFailed;
   const wordmark = WORDMARK_OVERRIDE[mall.platform] ?? mall.name.slice(0, 1);
   const badge = mall.promoBadge ? PROMO_BADGE[mall.promoBadge] : null;
   const countdown = formatCountdown(mall.promoEndsAt);
@@ -63,7 +54,7 @@ export function MallCard({ mall, variant = 'home', onPress, style }: Props) {
         <View style={catStyles.logoWrap}>
           <View style={[catStyles.logoBox, !useImage && { backgroundColor: mall.color || COLORS.ink[600] }]}>
             {useImage ? (
-              <Image source={{ uri: logoUrl }} style={catStyles.logoImg} resizeMode="contain" onError={() => setImgFailed(true)} />
+              <Image source={logoSource} style={catStyles.logoImg} resizeMode="contain" onError={() => setImgFailed(true)} />
             ) : (
               <Text style={catStyles.logoFallback}>{wordmark}</Text>
             )}
@@ -88,7 +79,7 @@ export function MallCard({ mall, variant = 'home', onPress, style }: Props) {
       <TouchableOpacity style={[searchStyles.card, style]} onPress={onPress} activeOpacity={0.85}>
         <View style={[searchStyles.logoBox, !useImage && { backgroundColor: mall.color || COLORS.ink[600] }]}>
           {useImage ? (
-            <Image source={{ uri: logoUrl }} style={searchStyles.logoImg} resizeMode="contain" onError={() => setImgFailed(true)} />
+            <Image source={logoSource} style={searchStyles.logoImg} resizeMode="contain" onError={() => setImgFailed(true)} />
           ) : (
             <Text style={searchStyles.logoFallback}>{wordmark}</Text>
           )}
@@ -99,13 +90,13 @@ export function MallCard({ mall, variant = 'home', onPress, style }: Props) {
     );
   }
 
-  // variant === 'home'
+  // variant === 'home'  — ShopBack 4-col mall card
   return (
-    <TouchableOpacity style={[homeStyles.item, style]} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity style={[homeStyles.item, style]} onPress={onPress} activeOpacity={0.8}>
       <View style={homeStyles.logoWrap}>
         <View style={[homeStyles.logoBox, !useImage && { backgroundColor: mall.color || COLORS.ink[600], borderColor: mall.color || COLORS.ink[600] }]}>
           {useImage ? (
-            <Image source={{ uri: logoUrl }} style={homeStyles.logoImg} resizeMode="contain" onError={() => setImgFailed(true)} />
+            <Image source={logoSource} style={homeStyles.logoImg} resizeMode="contain" onError={() => setImgFailed(true)} />
           ) : (
             <Text style={homeStyles.logoFallback}>{wordmark}</Text>
           )}
@@ -117,39 +108,36 @@ export function MallCard({ mall, variant = 'home', onPress, style }: Props) {
         ) : null}
       </View>
       <Text style={homeStyles.name} numberOfLines={1}>{mall.name}</Text>
-      <View style={homeStyles.rateRow}>
-        <Text style={homeStyles.rate}>최대 {Number(mall.cashbackRate)}%</Text>
-        {prevRate != null ? <Text style={homeStyles.prevRate}>{prevRate}%</Text> : null}
-      </View>
+      <Text style={homeStyles.rate}>최대 {Number(mall.cashbackRate)}%</Text>
+      {prevRate != null ? <Text style={homeStyles.prevRate}>{prevRate}%</Text> : null}
       {countdown ? <Text style={homeStyles.countdown}>{countdown}</Text> : null}
     </TouchableOpacity>
   );
 }
 
 const homeStyles = StyleSheet.create({
-  item: { width: '25%', alignItems: 'center', gap: 4, paddingHorizontal: 4 },
-  logoWrap: { position: 'relative' },
+  item: { width: '25%', alignItems: 'center', paddingHorizontal: 5 },
+  logoWrap: { width: '100%', position: 'relative' },
   logoBox: {
-    width: 64, height: 64, borderRadius: 18,
+    width: '100%', aspectRatio: 1, borderRadius: 14,
     backgroundColor: COLORS.white,
-    borderWidth: 1, borderColor: COLORS.ink[200],
+    borderWidth: 1, borderColor: COLORS.ink[100],
     alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 6,
+    padding: 12,
   },
-  logoImg: { width: 44, height: 44 },
-  logoFallback: { fontSize: 18, fontWeight: '800', color: COLORS.white, letterSpacing: -0.5 },
+  logoImg: { width: '100%', height: '100%' },
+  logoFallback: { fontSize: 22, fontWeight: '800', color: COLORS.white, letterSpacing: -0.5 },
   badge: {
     position: 'absolute',
-    top: -4, left: -4,
+    top: -5, left: -3,
     paddingHorizontal: 6, paddingVertical: 2,
     borderRadius: 6,
   },
-  badgeText: { fontSize: 9, fontWeight: '700' },
-  name: { fontSize: 12, fontWeight: '500', color: COLORS.ink[800], marginTop: 4 },
-  rateRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  rate: { fontSize: 11, fontWeight: '800', color: COLORS.ink[900] },
-  prevRate: { fontSize: 10, color: COLORS.ink[400], textDecorationLine: 'line-through' },
-  countdown: { fontSize: 9, color: COLORS.error, fontWeight: '600' },
+  badgeText: { fontSize: 9, fontWeight: '800' },
+  name: { fontSize: 11, fontWeight: '600', color: COLORS.ink[700], marginTop: 6, textAlign: 'center' },
+  rate: { fontSize: 12.5, fontWeight: '800', color: COLORS.ink[900], marginTop: 2 },
+  prevRate: { fontSize: 10, color: COLORS.ink[400], textDecorationLine: 'line-through', marginTop: 1 },
+  countdown: { fontSize: 9, color: COLORS.error, fontWeight: '700', marginTop: 2 },
 });
 
 const catStyles = StyleSheet.create({

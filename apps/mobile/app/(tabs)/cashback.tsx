@@ -256,23 +256,23 @@ export default function CashbackScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Mini stats */}
+        {/* Mini stats — 환급 가능 / 적립(대기중) / 환급 완료 */}
         <View style={styles.miniRow}>
           <View style={styles.miniItem}>
-            <Text style={styles.miniLabel}>총 적립</Text>
+            <Text style={styles.miniLabel}>환급 가능 캐쉬</Text>
             <Text style={styles.miniVal}>{fmt(totalEarned)}원</Text>
           </View>
           <View style={styles.miniSep} />
           <View style={styles.miniItem}>
-            <Text style={styles.miniLabel}>총 환급</Text>
-            <Text style={styles.miniVal}>{fmt(totalWithdrawn)}원</Text>
-          </View>
-          <View style={styles.miniSep} />
-          <View style={styles.miniItem}>
-            <Text style={styles.miniLabel}>처리 중</Text>
+            <Text style={styles.miniLabel}>적립캐쉬{'\n'}(확인 대기중)</Text>
             <Text style={[styles.miniVal, { color: COLORS.primary }]}>
               {fmt(withdrawalItems.filter((w) => w.status === 'requested' || w.status === 'processing').reduce((a, b) => a + Number(b.amount || 0), 0))}원
             </Text>
+          </View>
+          <View style={styles.miniSep} />
+          <View style={styles.miniItem}>
+            <Text style={styles.miniLabel}>환급 완료 캐쉬</Text>
+            <Text style={styles.miniVal}>{fmt(totalWithdrawn)}원</Text>
           </View>
         </View>
 
@@ -534,7 +534,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   miniItem: { flex: 1, alignItems: 'center', gap: 4 },
-  miniLabel: { fontSize: 11, color: COLORS.ink[500], fontWeight: '500' },
+  miniLabel: { fontSize: 11, color: COLORS.ink[500], fontWeight: '500', textAlign: 'center', lineHeight: 14, minHeight: 28 },
   miniVal: { fontSize: 14, color: COLORS.ink[900], fontWeight: '800' },
   miniSep: { width: 1, height: 28, backgroundColor: COLORS.ink[100] },
 

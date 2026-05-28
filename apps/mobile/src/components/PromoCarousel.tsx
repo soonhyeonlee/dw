@@ -19,7 +19,8 @@ export interface PromoSlide {
   badge?: string;
   title: string;
   subtitle?: string;
-  imageUrl?: string;
+  image?: any;        // require()'d 로컬 에셋 — 풀블리드 배너
+  imageUrl?: string;  // 원격 이미지 (연한 배경, 레거시)
   bg?: [string, string];
   fg?: string;
   onPress?: () => void;
@@ -68,8 +69,10 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
         contentContainerStyle={{ paddingHorizontal: SPACING.xl }}
       >
         {slides.map((s, i) => {
-          const fg = s.fg || COLORS.white;
+          const hasImage = !!s.image;
+          const fg = hasImage ? COLORS.ink[900] : (s.fg || COLORS.white);
           const bg = s.bg || [COLORS.primary, COLORS.primaryDark];
+          const isLight = !hasImage && !!s.fg && s.fg !== COLORS.white;
           return (
             <TouchableOpacity
               key={s.id}
@@ -77,24 +80,30 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
               onPress={s.onPress}
               style={[styles.slide, { width: SLIDE_W, marginRight: i === slides.length - 1 ? 0 : SLIDE_GAP }]}
             >
-              <LinearGradient
-                colors={bg}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
-              {s.imageUrl ? (
-                <Image source={{ uri: s.imageUrl }} style={styles.image} resizeMode="cover" />
-              ) : null}
+              {hasImage ? (
+                <Image source={s.image} style={StyleSheet.absoluteFill} resizeMode="cover" />
+              ) : (
+                <>
+                  <LinearGradient
+                    colors={bg}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  {s.imageUrl ? (
+                    <Image source={{ uri: s.imageUrl }} style={styles.image} resizeMode="cover" />
+                  ) : null}
+                </>
+              )}
               <View style={styles.content}>
                 {s.badge ? (
-                  <View style={[styles.badge, { backgroundColor: 'rgba(255,255,255,0.22)' }]}>
+                  <View style={[styles.badge, { backgroundColor: hasImage || isLight ? COLORS.white : 'rgba(255,255,255,0.22)' }]}>
                     <Text style={[styles.badgeText, { color: fg }]}>{s.badge}</Text>
                   </View>
                 ) : null}
-                <Text style={[styles.title, { color: fg }]} numberOfLines={2}>{s.title}</Text>
+                <Text style={[styles.title, { color: fg }, hasImage && styles.imgText]} numberOfLines={2}>{s.title}</Text>
                 {s.subtitle ? (
-                  <Text style={[styles.subtitle, { color: fg, opacity: 0.85 }]} numberOfLines={1}>{s.subtitle}</Text>
+                  <Text style={[styles.subtitle, { color: fg, opacity: 0.9 }, hasImage && styles.imgText]} numberOfLines={1}>{s.subtitle}</Text>
                 ) : null}
               </View>
               <Ionicons name="chevron-forward" size={18} color={fg} style={styles.chev} />
@@ -120,7 +129,7 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
 const styles = StyleSheet.create({
   wrap: { marginTop: 4 },
   slide: {
-    height: 132,
+    height: SLIDE_W / 2,
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     justifyContent: 'center',
@@ -135,8 +144,20 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   badgeText: { fontSize: 10, fontWeight: '700' },
-  title: { fontSize: 18, fontWeight: '800', letterSpacing: -0.4 },
-  subtitle: { fontSize: 12, fontWeight: '500' },
+  title: {
+    fontSize: 18, fontWeight: '800', letterSpacing: -0.4,
+    textShadowColor: 'rgba(0,0,0,0.35)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  subtitle: {
+    fontSize: 12, fontWeight: '500',
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  // 밝은 이미지 배너용 — 어두운 텍스트에 흰 글로우
+  imgText: { textShadowColor: 'rgba(255,255,255,0.9)', textShadowRadius: 5 },
   chev: {
     position: 'absolute',
     right: 14,

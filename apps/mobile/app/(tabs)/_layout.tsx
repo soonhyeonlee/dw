@@ -46,6 +46,7 @@ export default function TabsLayout() {
         headerShadowVisible: false,
       }}
     >
+      {/* === 하단 네비게이션: 홈 / 카테고리 / 관심목록 / 쿠폰 / 마이계정 === */}
       <Tabs.Screen
         name="index"
         options={{
@@ -55,27 +56,27 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="market"
+        name="categories"
         options={{
-          title: '번개장터',
+          title: '카테고리',
           headerShown: false,
-          tabBarIcon: tabIcon('flash-outline', 'flash'),
+          tabBarIcon: tabIcon('grid-outline', 'grid'),
         }}
       />
       <Tabs.Screen
-        name="cashback"
+        name="wishlist"
         options={{
-          title: '캐시백',
-          headerShown: false,
-          tabBarIcon: tabIcon('wallet-outline', 'wallet'),
+          title: '관심목록',
+          headerShown: true,
+          tabBarIcon: tabIcon('heart-outline', 'heart'),
         }}
       />
       <Tabs.Screen
-        name="region"
+        name="coupons"
         options={{
-          title: '우리지역',
+          title: '쿠폰',
           headerShown: false,
-          tabBarIcon: tabIcon('location-outline', 'location'),
+          tabBarIcon: tabIcon('ticket-outline', 'ticket'),
         }}
       />
       <Tabs.Screen
@@ -86,15 +87,12 @@ export default function TabsLayout() {
           tabBarIcon: tabIcon('person-outline', 'person'),
         }}
       />
-      <Tabs.Screen
-        name="search"
-        options={{
-          title: '검색',
-          headerShown: false,
-          tabBarIcon: tabIcon('search-outline', 'search'),
-          href: null,
-        }}
-      />
+
+      {/* === 탭바에서 숨김 (라우트는 유지 — 홈 폴더탭/마이 등에서 사용) === */}
+      <Tabs.Screen name="market" options={{ headerShown: false, href: null }} />
+      <Tabs.Screen name="cashback" options={{ headerShown: false, href: null }} />
+      <Tabs.Screen name="region" options={{ headerShown: false, href: null }} />
+      <Tabs.Screen name="search" options={{ headerShown: false, href: null }} />
     </Tabs>
   );
 }

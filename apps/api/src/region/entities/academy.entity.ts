@@ -45,12 +45,12 @@ export class Academy {
   longitude: number | null;
 
   // Google Places place_id (자동 수집 데이터 중복 방지용 유니크 키)
-  @Column({ nullable: true, unique: true })
+  @Column({ type: 'varchar', length: 255, nullable: true, unique: true })
   @Index()
   googlePlaceId: string | null;
 
   // 데이터 출처: 'manual' (어드민/파트너 직접 입력) | 'google_maps' (크롤러)
-  @Column({ default: 'manual' })
+  @Column({ type: 'varchar', length: 20, default: 'manual' })
   @Index()
   source: 'manual' | 'google_maps';
 

@@ -39,6 +39,12 @@
           "icon": "./assets/icon.png",
           "color": "#FF6B35"
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "내 주변 학원·어린이집을 보여드리기 위해 위치 정보를 사용합니다."
+        }
       ]
     ],
     "extra": {

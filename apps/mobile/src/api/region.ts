@@ -9,6 +9,10 @@ export interface Academy {
   addressDetail?: string;
   region?: string;
   phone?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  googlePlaceId?: string | null;
+  source?: 'manual' | 'google_maps';
   photos?: string[];
   tags?: string[];
   curriculum?: string;
@@ -21,6 +25,8 @@ export interface Academy {
   momViewCount: number;
   heartCount: number;
   isActive?: boolean;
+  /** /region/academies?lat=&lng= 호출 시에만 응답에 포함 */
+  distanceKm?: number;
 }
 
 export interface AcademyReview {
@@ -46,12 +52,27 @@ export interface Coupon {
   expireAt: string;
 }
 
-export async function getAcademies(opts?: { region?: string; category?: string; keyword?: string; page?: number }) {
+export async function getAcademies(opts?: {
+  region?: string;
+  category?: string;
+  keyword?: string;
+  source?: 'manual' | 'google_maps';
+  lat?: number;
+  lng?: number;
+  radiusKm?: number;
+  page?: number;
+  limit?: number;
+}) {
   const params = new URLSearchParams();
   if (opts?.region) params.set('region', opts.region);
   if (opts?.category) params.set('category', opts.category);
   if (opts?.keyword) params.set('keyword', opts.keyword);
+  if (opts?.source) params.set('source', opts.source);
+  if (opts?.lat != null) params.set('lat', String(opts.lat));
+  if (opts?.lng != null) params.set('lng', String(opts.lng));
+  if (opts?.radiusKm != null) params.set('radiusKm', String(opts.radiusKm));
   if (opts?.page) params.set('page', String(opts.page));
+  if (opts?.limit) params.set('limit', String(opts.limit));
   const res = await api(`/region/academies?${params}`);
   return res.data;
 }

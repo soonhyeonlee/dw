@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,8 @@ import { getHomeData, type Mall as ApiMall } from '../../src/api/home';
 import { getProducts, type Product as ApiProduct } from '../../src/api/products';
 import { PromoCarousel, type PromoSlide } from '../../src/components/PromoCarousel';
 import { MallLogo } from '../../src/components/MallLogo';
+import { MarketContent } from '../../src/components/home/MarketContent';
+import { RegionContent } from '../../src/components/home/RegionContent';
 
 function mallLabel(malls: ApiMall[], platform: string): string {
   return malls.find((m) => m.platform === platform)?.name || platform;
@@ -33,14 +35,15 @@ const QUICK_MENU = [
   { key: 'support', emoji: '💬', label: '고객센터',       route: '/(tabs)/mypage'  },
 ] as const;
 
-// 홈 상단 폴더형 탭. shop/travel 은 홈 내부에서 콘텐츠 교체,
-// market/region 은 해당 화면으로 이동.
+// 홈 상단 폴더형 탭. 모두 홈 내부에서 콘텐츠 교체.
+// 탭 누르면 탭 윗단이 화면 상단에 붙도록 스크롤 (sticky tab).
 const FOLDER_TABS = [
-  { key: 'shop',   label: '쇼핑',     route: null as string | null },
-  { key: 'market', label: '번개장터', route: '/(tabs)/market' },
-  { key: 'region', label: '우리지역', route: '/(tabs)/region' },
-  { key: 'travel', label: '여행',     route: null as string | null },
+  { key: 'shop',   label: '쇼핑' },
+  { key: 'market', label: '번개장터' },
+  { key: 'region', label: '우리지역' },
+  { key: 'travel', label: '여행' },
 ] as const;
+type FolderTabKey = typeof FOLDER_TABS[number]['key'];
 
 const DAILY_LABELS = ['실시간', '오늘', '+1일', '+2일', '+3일', '+4일'] as const;
 
@@ -152,7 +155,9 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [malls, setMalls] = useState<ApiMall[]>([]);
-  const [homeTab, setHomeTab] = useState<'shop' | 'travel'>('shop');
+  const [homeTab, setHomeTab] = useState<FolderTabKey>('shop');
+  const scrollRef = useRef<ScrollView>(null);
+  const tabBarYRef = useRef(0);
   const [dailyTabIdx, setDailyTabIdx] = useState(0);
   const [dealProducts, setDealProducts] = useState<ApiProduct[]>([]);
   const [recProducts, setRecProducts] = useState<ApiProduct[]>([]);
@@ -218,8 +223,10 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
       <ScrollView
+        ref={scrollRef}
         style={styles.container}
         showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[2]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
         }
@@ -261,16 +268,20 @@ export default function HomeScreen() {
         </View>
 
         {/* Folder-style tabs: 쇼핑 / 번개장터 / 우리지역 / 여행 */}
-        <View style={styles.segmentBar}>
+        <View
+          style={styles.segmentBar}
+          onLayout={(e) => { tabBarYRef.current = e.nativeEvent.layout.y; }}
+        >
           {FOLDER_TABS.map((t) => {
-            const active = (t.key === 'shop' || t.key === 'travel') && homeTab === t.key;
+            const active = homeTab === t.key;
             return (
               <View key={t.key} style={styles.segmentCell}>
                 <TouchableOpacity
                   style={[styles.segmentTab, active ? styles.segmentTabActive : styles.segmentTabIdle]}
                   onPress={() => {
-                    if (t.route) router.push(t.route as any);
-                    else setHomeTab(t.key as 'shop' | 'travel');
+                    setHomeTab(t.key);
+                    // 탭 윗단을 화면 상단에 붙이기 위해 탭바 y로 스크롤 (sticky 와 함께 ShopBack 느낌)
+                    scrollRef.current?.scrollTo({ y: tabBarYRef.current, animated: true });
                   }}
                   activeOpacity={0.8}
                 >
@@ -297,6 +308,12 @@ export default function HomeScreen() {
               항공·숙소·투어 캐시백 혜택을{'\n'}곧 만나보실 수 있어요.
             </Text>
           </View>
+        ) : homeTab === 'market' ? (
+          /* 번개장터 탭 — 인라인 콘텐츠 */
+          <MarketContent />
+        ) : homeTab === 'region' ? (
+          /* 우리지역 탭 — 인라인 콘텐츠 */
+          <RegionContent />
         ) : (
           /* 쇼핑 탭 */
           <>

@@ -37,6 +37,23 @@ export class Academy {
   @Index()
   region: string; // 서울 강남구, 서울 서초구 등
 
+  // 위치 (Google Places 기반 자동 수집/수동 입력 둘 다 가능)
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+  latitude: number | null;
+
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+  longitude: number | null;
+
+  // Google Places place_id (자동 수집 데이터 중복 방지용 유니크 키)
+  @Column({ nullable: true, unique: true })
+  @Index()
+  googlePlaceId: string | null;
+
+  // 데이터 출처: 'manual' (어드민/파트너 직접 입력) | 'google_maps' (크롤러)
+  @Column({ default: 'manual' })
+  @Index()
+  source: 'manual' | 'google_maps';
+
   @Column({ type: 'simple-json', nullable: true })
   photos: string[]; // 사진 URL 배열
 

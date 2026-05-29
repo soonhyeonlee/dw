@@ -48,6 +48,20 @@ def run_all_crawlers():
     logger.info("=" * 50)
 
 
+def run_google_places():
+    """Google Places (학원/어린이집) 1회 수집. API 비용 발생하므로 수동/주기 트리거."""
+    from crawlers.google_places import GooglePlacesCrawler
+    logger.info("=" * 50)
+    logger.info("Google Places 수집 시작")
+    logger.info("=" * 50)
+    try:
+        collected, saved = GooglePlacesCrawler().run()
+        logger.info(f"Google Places 완료: 수집 {collected}건, 저장 {saved}건")
+    except Exception as e:
+        logger.error(f"Google Places 크롤링 실패: {e}")
+    logger.info("=" * 50)
+
+
 def main():
     logger.info("DoubleWin Crawler 시작")
 
@@ -61,9 +75,15 @@ def main():
 
         schedule.every(interval).hours.do(run_all_crawlers)
 
+        # Google Places 는 비용 보호 위해 주 1회만
+        schedule.every().monday.at('03:00').do(run_google_places)
+
         while True:
             schedule.run_pending()
             time.sleep(60)
+    elif mode == 'places_once':
+        logger.info("Google Places 1회 실행 모드")
+        run_google_places()
     else:
         logger.info("1회 실행 모드")
         run_all_crawlers()

@@ -6,6 +6,16 @@ import { AcademyReview } from './entities/academy-review.entity';
 import { Coupon } from './entities/coupon.entity';
 import { UserCoupon } from './entities/user-coupon.entity';
 
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+
 @Injectable()
 export class RegionService {
   constructor(
@@ -21,23 +31,59 @@ export class RegionService {
 
   // === 학원 ===
 
-  async getAcademies(opts: { region?: string; category?: string; keyword?: string; page?: number; limit?: number }) {
-    const { region, category, keyword, page = 1, limit = 20 } = opts;
+  async getAcademies(opts: {
+    region?: string;
+    category?: string;
+    keyword?: string;
+    source?: 'manual' | 'google_maps';
+    lat?: number;
+    lng?: number;
+    radiusKm?: number;
+    page?: number;
+    limit?: number;
+  }) {
+    const { region, category, keyword, source, lat, lng, radiusKm, page = 1, limit = 20 } = opts;
     const qb = this.academyRepo.createQueryBuilder('a').where('a.isActive = :active', { active: true });
 
     if (region) qb.andWhere('a.region = :region', { region });
     if (category) qb.andWhere('a.category = :category', { category });
+    if (source) qb.andWhere('a.source = :source', { source });
     if (keyword) {
       qb.andWhere('(LOWER(a.name) LIKE LOWER(:kw) OR LOWER(a.address) LIKE LOWER(:kw))', { kw: `%${keyword}%` });
     }
 
-    const [items, total] = await qb
-      .orderBy('a.rating', 'DESC')
-      .addOrderBy('a.heartCount', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getManyAndCount();
+    const hasGeo = lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng);
 
+    if (hasGeo) {
+      // Bounding-box 사전 필터(DB 종속성 없음). 위도 1도 ≈ 111km, 경도 1도 ≈ 111*cos(lat) km.
+      const radius = radiusKm != null && Number.isFinite(radiusKm) && radiusKm > 0 ? radiusKm : 10;
+      const latDelta = radius / 111;
+      const lngDelta = radius / (111 * Math.cos((lat! * Math.PI) / 180) || 1);
+      qb.andWhere('a.latitude IS NOT NULL AND a.longitude IS NOT NULL');
+      qb.andWhere('a.latitude BETWEEN :latMin AND :latMax', {
+        latMin: lat! - latDelta,
+        latMax: lat! + latDelta,
+      });
+      qb.andWhere('a.longitude BETWEEN :lngMin AND :lngMax', {
+        lngMin: lng! - lngDelta,
+        lngMax: lng! + lngDelta,
+      });
+
+      // 박스 내 후보 전부 가져온 뒤 Haversine 정확 거리로 재정렬·페이지네이션.
+      const candidates = await qb.getMany();
+      const withDist = candidates
+        .map((a) => ({ ...a, distanceKm: haversineKm(lat!, lng!, Number(a.latitude), Number(a.longitude)) }))
+        .filter((a) => a.distanceKm <= radius)
+        .sort((x, y) => x.distanceKm - y.distanceKm);
+
+      const total = withDist.length;
+      const items = withDist.slice((page - 1) * limit, page * limit);
+      return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+    }
+
+    qb.orderBy('a.rating', 'DESC').addOrderBy('a.heartCount', 'DESC');
+    qb.skip((page - 1) * limit).take(limit);
+    const [items, total] = await qb.getManyAndCount();
     return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 

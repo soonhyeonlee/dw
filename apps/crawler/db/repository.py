@@ -84,3 +84,73 @@ def save_products(products: list[dict], default_cashback_rate: float = 2.5) -> i
         conn.close()
 
     return saved
+
+
+ACADEMY_UPSERT_SQL = """
+INSERT INTO academies (
+    name, category, address, phone, region,
+    latitude, longitude, "googlePlaceId", source,
+    rating, "reviewCount", photos,
+    "isActive", "createdAt", "updatedAt"
+) VALUES (
+    %(name)s, %(category)s, %(address)s, %(phone)s, %(region)s,
+    %(latitude)s, %(longitude)s, %(google_place_id)s, 'google_maps',
+    %(rating)s, %(review_count)s, %(photos)s::json,
+    true, NOW(), NOW()
+)
+ON CONFLICT ("googlePlaceId") DO UPDATE SET
+    name = EXCLUDED.name,
+    address = EXCLUDED.address,
+    phone = EXCLUDED.phone,
+    region = EXCLUDED.region,
+    latitude = EXCLUDED.latitude,
+    longitude = EXCLUDED.longitude,
+    rating = EXCLUDED.rating,
+    "reviewCount" = EXCLUDED."reviewCount",
+    photos = EXCLUDED.photos,
+    "updatedAt" = NOW()
+"""
+
+
+def save_academies(academies: list[dict]) -> int:
+    """Google Places 학원/어린이집 데이터 UPSERT. googlePlaceId 가 충돌 키."""
+    if not academies:
+        return 0
+
+    conn = get_connection()
+    saved = 0
+
+    try:
+        import json
+        cur = conn.cursor()
+        for a in academies:
+            params = {
+                'name': (a.get('name') or '')[:200],
+                'category': (a.get('category') or '')[:50],
+                'address': (a.get('address') or '')[:500],
+                'phone': (a.get('phone') or '')[:50],
+                'region': (a.get('region') or '')[:100],
+                'latitude': a.get('latitude'),
+                'longitude': a.get('longitude'),
+                'google_place_id': a.get('google_place_id'),
+                'rating': a.get('rating'),
+                'review_count': a.get('review_count') or 0,
+                'photos': json.dumps(a.get('photos') or []),
+            }
+            try:
+                cur.execute(ACADEMY_UPSERT_SQL, params)
+                saved += 1
+            except Exception as e:
+                logger.warning(f"학원 저장 실패 [{params['name'][:30]}]: {e}")
+                conn.rollback()
+                continue
+
+        conn.commit()
+        logger.info(f"학원 DB 저장 완료: {saved}/{len(academies)}건")
+    except Exception as e:
+        logger.error(f"학원 DB 저장 에러: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
+
+    return saved

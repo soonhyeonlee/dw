@@ -25,11 +25,18 @@ export class RegionController {
     @Query('region') region?: string,
     @Query('category') category?: string,
     @Query('keyword') keyword?: string,
+    @Query('lat') lat?: string,
+    @Query('lng') lng?: string,
+    @Query('radiusKm') radiusKm?: string,
+    @Query('source') source?: 'manual' | 'google_maps',
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
     const data = await this.regionService.getAcademies({
-      region, category, keyword,
+      region, category, keyword, source,
+      lat: lat != null ? Number(lat) : undefined,
+      lng: lng != null ? Number(lng) : undefined,
+      radiusKm: radiusKm != null ? Number(radiusKm) : undefined,
       page: page ? Number(page) : 1,
       limit: limit ? Number(limit) : 20,
     });

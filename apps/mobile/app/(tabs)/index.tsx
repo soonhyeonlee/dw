@@ -267,34 +267,34 @@ export default function HomeScreen() {
           <PromoCarousel slides={PROMO_SLIDES(router)} />
         </View>
 
-        {/* Folder-style tabs: 쇼핑 / 번개장터 / 우리지역 / 여행 */}
-        <View
-          style={styles.segmentBar}
-          onLayout={(e) => { tabBarYRef.current = e.nativeEvent.layout.y; }}
-        >
-          {FOLDER_TABS.map((t) => {
-            const active = homeTab === t.key;
-            return (
-              <View key={t.key} style={styles.segmentCell}>
-                <TouchableOpacity
-                  style={[styles.segmentTab, active ? styles.segmentTabActive : styles.segmentTabIdle]}
-                  onPress={() => {
-                    setHomeTab(t.key);
-                    // 탭 윗단을 화면 상단에 붙이기 위해 탭바 y로 스크롤 (sticky 와 함께 ShopBack 느낌)
-                    scrollRef.current?.scrollTo({ y: tabBarYRef.current, animated: true });
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Text
-                    style={[styles.segmentTabText, active && styles.segmentTabTextActive]}
-                    numberOfLines={1}
+        {/* Folder-style tabs: 쇼핑 / 번개장터 / 우리지역 / 여행
+            ⚠️ stickyHeaderIndices 가 직접 자식 View 의 flexDirection 을 무시하는 RN 버그가
+            있어 wrapper View 로 감싸고 안쪽 segmentBar 에 flex 를 적용. */}
+        <View onLayout={(e) => { tabBarYRef.current = e.nativeEvent.layout.y; }}>
+          <View style={styles.segmentBar}>
+            {FOLDER_TABS.map((t) => {
+              const active = homeTab === t.key;
+              return (
+                <View key={t.key} style={styles.segmentCell}>
+                  <TouchableOpacity
+                    style={[styles.segmentTab, active ? styles.segmentTabActive : styles.segmentTabIdle]}
+                    onPress={() => {
+                      setHomeTab(t.key);
+                      scrollRef.current?.scrollTo({ y: tabBarYRef.current, animated: true });
+                    }}
+                    activeOpacity={0.8}
                   >
-                    {t.label}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            );
-          })}
+                    <Text
+                      style={[styles.segmentTabText, active && styles.segmentTabTextActive]}
+                      numberOfLines={1}
+                    >
+                      {t.label}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+          </View>
         </View>
 
         {homeTab === 'travel' ? (

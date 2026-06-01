@@ -70,6 +70,12 @@ export default function CategoriesScreen() {
     return map;
   }, [malls]);
 
+  // 실제로 상품(몰)이 들어와 있는 카테고리만 노출 — 데이터에 따라 생기고 사라진다.
+  const visibleTiles = useMemo(
+    () => CAT_TILES.filter((t) => (grouped.get(t.key)?.length ?? 0) > 0),
+    [grouped],
+  );
+
   const selectedTile = selectedCat ? CAT_TILES.find((t) => t.key === selectedCat) : null;
   const selectedItems = selectedCat ? grouped.get(selectedCat) || [] : [];
 
@@ -101,34 +107,43 @@ export default function CategoriesScreen() {
           <PromoCarousel slides={CAT_PROMO_SLIDES} />
         </View>
 
-        {/* Category tile grid */}
-        <Text style={styles.gridTitle}>전체 카테고리</Text>
-        <View style={styles.tileGrid}>
-          {CAT_TILES.map((t) => {
-            const active = selectedCat === t.key;
-            return (
-              <TouchableOpacity
-                key={t.key}
-                style={styles.tile}
-                onPress={() => setSelectedCat(active ? null : t.key)}
-                activeOpacity={0.75}
-              >
-                <View style={[styles.tileIcon, active && styles.tileIconActive]}>
-                  <Text style={styles.tileEmoji}>{t.emoji}</Text>
-                </View>
-                <Text style={[styles.tileLabel, active && styles.tileLabelActive]} numberOfLines={1}>
-                  {t.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        {/* Category tile grid — 상품이 들어와 있는 카테고리만 */}
+        {visibleTiles.length > 0 && (
+          <>
+            <Text style={styles.gridTitle}>전체 카테고리</Text>
+            <View style={styles.tileGrid}>
+              {visibleTiles.map((t) => {
+                const active = selectedCat === t.key;
+                return (
+                  <TouchableOpacity
+                    key={t.key}
+                    style={styles.tile}
+                    onPress={() => setSelectedCat(active ? null : t.key)}
+                    activeOpacity={0.75}
+                  >
+                    <View style={[styles.tileIcon, active && styles.tileIconActive]}>
+                      <Text style={styles.tileEmoji}>{t.emoji}</Text>
+                    </View>
+                    <Text style={[styles.tileLabel, active && styles.tileLabelActive]} numberOfLines={1}>
+                      {t.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
-        <View style={styles.gridDivider} />
+            <View style={styles.gridDivider} />
+          </>
+        )}
 
         {/* Sections */}
         {loading && malls.length === 0 ? (
           <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 60 }} />
+        ) : visibleTiles.length === 0 ? (
+          <View style={[styles.emptyCat, { marginTop: 40 }]}>
+            <Ionicons name="storefront-outline" size={34} color={COLORS.ink[300]} />
+            <Text style={styles.emptyCatText}>등록된 상품 카테고리가 없습니다</Text>
+          </View>
         ) : selectedTile ? (
           /* 선택된 카테고리만 */
           <View style={styles.section}>
@@ -158,10 +173,9 @@ export default function CategoriesScreen() {
             )}
           </View>
         ) : (
-          /* 전체 — 카테고리별 미리보기 */
-          CAT_TILES.map((t) => {
+          /* 전체 — 카테고리별 미리보기 (상품 있는 카테고리만) */
+          visibleTiles.map((t) => {
             const items = grouped.get(t.key) || [];
-            if (items.length === 0) return null;
             return (
               <View key={t.key} style={styles.section}>
                 <View style={styles.sectionHead}>

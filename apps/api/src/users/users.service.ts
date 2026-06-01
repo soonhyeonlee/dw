@@ -168,4 +168,15 @@ export class UsersService {
     await this.userRepo.decrement({ id: userId }, 'cashbackBalance', amount);
     await this.userRepo.increment({ id: userId }, 'totalWithdrawn', amount);
   }
+
+  // === 번개장터 전용 포인트 (인출 불가, 번개장터에서만 사용) ===
+  async addMarketPoint(userId: string, amount: number): Promise<void> {
+    if (!(amount > 0)) return;
+    await this.userRepo.increment({ id: userId }, 'marketPointBalance', amount);
+  }
+
+  async spendMarketPoint(userId: string, amount: number): Promise<void> {
+    if (!(amount > 0)) return;
+    await this.userRepo.decrement({ id: userId }, 'marketPointBalance', amount);
+  }
 }

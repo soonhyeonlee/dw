@@ -13,6 +13,7 @@ interface User {
   cashbackBalance: number;
   totalEarned: number;
   totalWithdrawn: number;
+  marketPointBalance: number;
   associationName?: string;
   businessName?: string;
   businessCategory?: string;

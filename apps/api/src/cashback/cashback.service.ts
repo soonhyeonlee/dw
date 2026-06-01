@@ -44,8 +44,16 @@ export class CashbackService {
     tx.confirmedAt = new Date();
     await this.txRepo.save(tx);
 
-    // 사용자 잔액에 캐시백 추가
-    await this.usersService.updateBalance(tx.userId, tx.cashbackAmount);
+    // 번개장터(아이홈마켓) 구매는 인출 불가한 번개장터 전용 포인트로,
+    // 그 외 플랫폼은 인출 가능한 캐시백 잔액으로 적립.
+    const isMarket = ['ihomemarket', 'market'].includes(
+      (tx.platform || '').toLowerCase(),
+    );
+    if (isMarket) {
+      await this.usersService.addMarketPoint(tx.userId, tx.cashbackAmount);
+    } else {
+      await this.usersService.updateBalance(tx.userId, tx.cashbackAmount);
+    }
 
     tx.status = 'paid';
     tx.paidAt = new Date();
@@ -54,9 +62,9 @@ export class CashbackService {
     // 푸시 알림 발송
     this.pushService?.sendToUser(
       tx.userId,
-      '캐시백 적립 완료!',
-      `${Number(tx.cashbackAmount).toLocaleString()}원이 적립되었습니다`,
-      { type: 'cashback', txId: tx.id },
+      isMarket ? '번개장터 포인트 적립!' : '캐시백 적립 완료!',
+      `${Number(tx.cashbackAmount).toLocaleString()}${isMarket ? 'P가 적립되었습니다 (번개장터 전용)' : '원이 적립되었습니다'}`,
+      { type: isMarket ? 'market_point' : 'cashback', txId: tx.id },
     );
   }
 

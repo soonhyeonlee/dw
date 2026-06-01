@@ -44,6 +44,13 @@ export class MarketOrder {
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   totalPrice: number;
 
+  // 이 주문에 사용한 번개장터 포인트(현금 차감액) / 이 주문으로 적립된 포인트.
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  usedPoint: number;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  pointEarned: number;
+
   @Column({ type: 'varchar', default: OrderStatus.PENDING })
   status: OrderStatus;
 

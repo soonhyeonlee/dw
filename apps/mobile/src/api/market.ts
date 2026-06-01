@@ -68,6 +68,7 @@ export async function createOrder(dto: {
   addressDetail?: string;
   zipCode: string;
   deliveryMemo?: string;
+  usePoint?: number; // 번개장터 포인트 사용액 (번개장터 전용)
 }) {
   const res = await api('/market/orders', {
     method: 'POST',

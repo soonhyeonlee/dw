@@ -98,6 +98,12 @@ export class User {
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
   totalWithdrawn: number;
 
+  // === 번개장터 전용 포인트 ===
+  // 번개장터(아이홈마켓) 구매로만 적립되고 번개장터에서만 사용 가능.
+  // 현금 인출(withdrawal) 대상이 아니며 cashbackBalance 와 완전히 분리된다.
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  marketPointBalance: number;
+
   @Column({ nullable: true })
   bankName: string;
 

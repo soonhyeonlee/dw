@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThanOrEqual, MoreThanOrEqual, IsNull, Not } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { MarketProduct, MarketBlockType } from './entities/market-product.entity';
 import { Exhibition } from './entities/exhibition.entity';
 import { MarketOrder, OrderStatus } from './entities/market-order.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class MarketService {
@@ -14,7 +16,14 @@ export class MarketService {
     private readonly exhibitionRepo: Repository<Exhibition>,
     @InjectRepository(MarketOrder)
     private readonly orderRepo: Repository<MarketOrder>,
+    private readonly usersService: UsersService,
+    private readonly config: ConfigService,
   ) {}
+
+  // 번개장터 적립률(%) — 기본 2%. 결제 현금액 기준으로 적립.
+  private marketPointRate(): number {
+    return this.config.get<number>('MARKET_POINT_RATE_PERCENT', 2) / 100;
+  }
 
   // === 메인 페이지 데이터 ===
 
@@ -105,6 +114,7 @@ export class MarketService {
     addressDetail?: string;
     zipCode: string;
     deliveryMemo?: string;
+    usePoint?: number;
   }) {
     const product = await this.getProduct(dto.productId);
 
@@ -118,16 +128,31 @@ export class MarketService {
 
     const totalPrice = Number(product.price) * dto.quantity;
 
-    const { productId, quantity, ...shippingInfo } = dto;
+    // 번개장터 포인트 사용 — 보유 잔액과 주문 금액 안에서만.
+    const user = await this.usersService.findById(userId);
+    const balance = Number(user.marketPointBalance) || 0;
+    const usedPoint = Math.max(0, Math.min(Number(dto.usePoint) || 0, balance, totalPrice));
+    const payable = totalPrice - usedPoint;
+
+    // 적립 — 실제 현금 결제액 기준.
+    const pointEarned = Math.floor(payable * this.marketPointRate());
+
+    const { productId, quantity, usePoint, ...shippingInfo } = dto;
     const order = this.orderRepo.create({
       userId,
       productId,
       quantity,
       totalPrice,
+      usedPoint,
+      pointEarned,
       ...shippingInfo,
     });
 
     const saved = await this.orderRepo.save(order);
+
+    // 포인트 차감(사용) 후 적립 — 둘 다 번개장터 전용 지갑만 변동.
+    if (usedPoint > 0) await this.usersService.spendMarketPoint(userId, usedPoint);
+    if (pointEarned > 0) await this.usersService.addMarketPoint(userId, pointEarned);
 
     // 판매수/재고 업데이트
     await this.productRepo.update(dto.productId, {
@@ -194,6 +219,19 @@ export class MarketService {
   }
 
   async updateOrderStatus(id: string, status: OrderStatus, trackingNumber?: string) {
+    const order = await this.orderRepo.findOne({ where: { id } });
+    if (!order) throw new NotFoundException('주문을 찾을 수 없습니다');
+
+    // 취소/환불로 전환될 때 포인트 원복 (한 번만).
+    const wasReversed = [OrderStatus.CANCELLED, OrderStatus.REFUNDED].includes(order.status);
+    const willReverse = [OrderStatus.CANCELLED, OrderStatus.REFUNDED].includes(status);
+    if (willReverse && !wasReversed) {
+      const used = Number(order.usedPoint) || 0;
+      const earned = Number(order.pointEarned) || 0;
+      if (used > 0) await this.usersService.addMarketPoint(order.userId, used); // 사용분 환급
+      if (earned > 0) await this.usersService.spendMarketPoint(order.userId, earned); // 적립분 회수
+    }
+
     const update: any = { status };
     if (trackingNumber) update.trackingNumber = trackingNumber;
     await this.orderRepo.update(id, update);

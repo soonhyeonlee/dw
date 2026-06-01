@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS } from '../../constants/theme';
 import { getProducts, getProductCategories, type Product as ApiProduct } from '../../api/products';
+import { useAuth } from '../../contexts/AuthContext';
 
 // 칩은 고정 목록이 아니라, 실제 들어와 있는 ihomemarket 상품의 카테고리에서
 // 동적으로 생성된다(카페24에서 카테고리 추가/삭제 시 자동 반영).
@@ -101,6 +102,8 @@ export type MarketContentHandle = {
 
 export const MarketContent = forwardRef<MarketContentHandle>((_props, ref) => {
   const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
+  const marketPoint = isAuthenticated ? Number(user?.marketPointBalance || 0) : 0;
   const [cat, setCat] = useState('all');
   const [chips, setChips] = useState<Chip[]>([ALL_CHIP]);
   const [loading, setLoading] = useState(true);
@@ -149,6 +152,20 @@ export const MarketContent = forwardRef<MarketContentHandle>((_props, ref) => {
 
   return (
     <View>
+      {/* 번개장터 전용 포인트 — 구매로 적립, 번개장터에서만 사용(현금화 불가) */}
+      {isAuthenticated && (
+        <View style={styles.pointCard}>
+          <View style={styles.pointIcon}>
+            <Ionicons name="flash" size={18} color={COLORS.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.pointLabel}>번개장터 포인트</Text>
+            <Text style={styles.pointSub}>구매하면 적립 · 번개장터에서만 사용</Text>
+          </View>
+          <Text style={styles.pointValue}>{fmt(Math.floor(marketPoint))}P</Text>
+        </View>
+      )}
+
       {/* Category chips */}
       <ScrollView
         horizontal
@@ -240,6 +257,26 @@ export const MarketContent = forwardRef<MarketContentHandle>((_props, ref) => {
 MarketContent.displayName = 'MarketContent';
 
 const styles = StyleSheet.create({
+  pointCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginHorizontal: SPACING.xl,
+    marginTop: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: COLORS.primarySoft,
+    borderRadius: RADIUS.lg,
+  },
+  pointIcon: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: COLORS.white,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  pointLabel: { fontSize: 14, fontWeight: '800', color: COLORS.ink[900] },
+  pointSub: { fontSize: 11, color: COLORS.ink[600], marginTop: 1 },
+  pointValue: { fontSize: 20, fontWeight: '900', color: COLORS.primary, letterSpacing: -0.3 },
+
   chips: { paddingHorizontal: SPACING.xl, gap: 8, paddingVertical: 12 },
   chip: {
     paddingHorizontal: 14,

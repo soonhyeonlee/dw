@@ -82,12 +82,6 @@ const MOCK_NOTIS: Noti[] = [
     createdAt: NOW - 1 * DAY - 4 * HOUR,
   },
   {
-    id: 'n6', type: 'promo', read: true,
-    title: '친구 초대 이벤트 시작',
-    body: '친구 한 명당 5,000원! 지금 초대하고 캐시 받으세요.',
-    createdAt: NOW - 3 * DAY,
-  },
-  {
     id: 'n7', type: 'cashback', read: true,
     title: '캐시백 적립 완료',
     body: 'G마켓 주문에서 2,400원이 적립됐어요.',

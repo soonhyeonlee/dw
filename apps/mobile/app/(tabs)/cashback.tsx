@@ -102,8 +102,8 @@ function GuestCashback({ router }: { router: ReturnType<typeof useRouter> }) {
             <Ionicons name="gift" size={26} color={COLORS.primary} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={guestStyles.ctaTitle}>지금 가입하고 5,000원 받기</Text>
-            <Text style={guestStyles.ctaSub}>이메일 인증만 하면 즉시 적립</Text>
+            <Text style={guestStyles.ctaTitle}>지금 가입하고 캐시백 시작하기</Text>
+            <Text style={guestStyles.ctaSub}>이메일 인증만 하면 바로 적립</Text>
           </View>
           <View style={guestStyles.ctaArrow}>
             <Ionicons name="arrow-forward" size={18} color={COLORS.white} />

@@ -9,6 +9,7 @@ import {
   StatusBar,
   Image,
   ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -30,7 +31,6 @@ function mallLabel(malls: ApiMall[], platform: string): string {
 const QUICK_MENU = [
   { key: 'welcome', emoji: '✨', label: '웰컴 혜택',     route: '/guide',          highlight: true },
   { key: 'travel',  emoji: '✈️', label: '여행 특가',     route: '/(tabs)/search'  },
-  { key: 'invite',  emoji: '❤️', label: '친구초대 보너스', route: '/(tabs)/mypage'  },
   { key: 'history', emoji: '🧾', label: '적립내역',       route: '/(tabs)/cashback' },
   { key: 'support', emoji: '💬', label: '고객센터',       route: '/(tabs)/mypage'  },
 ] as const;
@@ -70,14 +70,6 @@ function PROMO_SLIDES(router: ReturnType<typeof useRouter>): PromoSlide[] {
       subtitle: '쇼핑하기 딱 좋은 5월 · 매일 캐시백 적립',
       image: require('../../assets/images/banner-guide.jpg'),
       onPress: () => router.push('/guide'),
-    },
-    {
-      id: 'signup5k',
-      badge: '회원가입 혜택',
-      title: '가입 즉시 5,000원 적립',
-      subtitle: '이메일 인증만 완료하면 OK',
-      image: require('../../assets/images/banner-signup.jpg'),
-      onPress: () => router.push('/auth/register' as any),
     },
     {
       id: 'tier-up',
@@ -151,6 +143,7 @@ function RecCard({ p, label, onPress }: { p: ApiProduct; label: string; onPress:
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { height: windowH } = useWindowDimensions();
   const { user, isAuthenticated } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -280,7 +273,11 @@ export default function HomeScreen() {
                     style={[styles.segmentTab, active ? styles.segmentTabActive : styles.segmentTabIdle]}
                     onPress={() => {
                       setHomeTab(t.key);
-                      scrollRef.current?.scrollTo({ y: tabBarYRef.current, animated: true });
+                      // 콘텐츠 교체 후 레이아웃이 반영된 다음 프레임에 스크롤해야
+                      // 짧은 탭(여행/로딩 중)도 탭바가 상단에 정확히 고정됨
+                      requestAnimationFrame(() => {
+                        scrollRef.current?.scrollTo({ y: tabBarYRef.current, animated: true });
+                      });
                     }}
                     activeOpacity={0.8}
                   >
@@ -297,6 +294,9 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {/* 탭 콘텐츠 영역. minHeight 로 화면 높이만큼 스크롤 여유를 확보해야
+            콘텐츠가 짧은 탭에서도 위 탭바가 화면 상단에 고정될 수 있음 */}
+        <View style={{ minHeight: windowH }}>
         {homeTab === 'travel' ? (
           /* 여행 탭 — 준비 중 */
           <View style={styles.comingSoon}>
@@ -502,6 +502,7 @@ export default function HomeScreen() {
             </View>
           </>
         )}
+        </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>

@@ -38,7 +38,6 @@ const GROUPS: Group[] = [
     items: [
       { key: 'promo_mall',  icon: 'megaphone-outline',  label: '쇼핑몰 프로모션', sub: '내가 자주 쓰는 쇼핑몰 캐시백 상향', defaultOn: true },
       { key: 'promo_event', icon: 'gift-outline',       label: '이벤트·쿠폰',     sub: '추첨·다운로드 쿠폰 안내', defaultOn: true },
-      { key: 'promo_invite',icon: 'person-add-outline', label: '친구 초대 보상',   sub: '내가 초대한 친구 활동 안내', defaultOn: true },
     ],
   },
   {

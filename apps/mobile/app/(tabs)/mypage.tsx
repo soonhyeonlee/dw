@@ -91,7 +91,6 @@ export default function MyPageScreen() {
   const notReady = () => Alert.alert('준비 중', '해당 기능은 준비 중입니다.');
 
   const supportItems: MenuItem[] = [
-    { icon: 'gift-outline',                label: '친구 초대하고 5,000원 받기', onPress: notReady, badge: 'HOT' },
     { icon: 'help-circle-outline',         label: '고객센터',            route: '/help' },
     { icon: 'help-buoy-outline',           label: '누락 캐시 도움 요청',  route: '/help/missing-cashback' },
     { icon: 'chatbubble-ellipses-outline', label: '더블윈 봇 (1:1 문의)', onPress: notReady },
@@ -253,8 +252,8 @@ export default function MyPageScreen() {
               <Ionicons name="gift-outline" size={22} color={COLORS.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.guestCardTitle}>지금 가입하고 5,000원 받기</Text>
-              <Text style={styles.guestCardSub}>이메일 인증만 하면 즉시 적립</Text>
+              <Text style={styles.guestCardTitle}>지금 가입하고 캐시백 시작하기</Text>
+              <Text style={styles.guestCardSub}>이메일 인증만 하면 바로 적립</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={COLORS.primary} />
           </TouchableOpacity>

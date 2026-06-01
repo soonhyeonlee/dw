@@ -68,6 +68,15 @@ export class AuthController {
     return { success: true, data };
   }
 
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  @Post('ihome-social')
+  async ihomeSocialLogin(
+    @Body() dto: { provider: string; accessToken: string },
+  ) {
+    const data = await this.authService.ihomeSocialLogin(dto);
+    return { success: true, data };
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('change-password')
   async changePassword(

@@ -231,6 +231,63 @@ export class AuthService {
     });
   }
 
+  /**
+   * 앱 네이티브 소셜 로그인(현재 카카오, 모델 A). 앱이 네이티브 SDK 로 받은
+   * 소셜 access token 을 카페24 social_verify.php 로 보내 검증 + 그누보드
+   * 회원 매핑(g5_member_social_profiles)까지 끝낸 서명 신원을 받아, 기존
+   * ihomeLogin() 으로 페더레이션해 JWT 를 발급한다. 아이홈마켓 웹 소셜과 동일
+   * 회원으로 통합된다(같은 카카오 앱 → 같은 identifier).
+   */
+  async ihomeSocialLogin(payload: { provider: string; accessToken: string }) {
+    const secret = this.config.get<string>('IHOME_SYNC_SECRET');
+    if (!secret) throw new UnauthorizedException('SSO가 구성되지 않았습니다');
+    const provider = payload?.provider?.trim().toLowerCase();
+    const accessToken = payload?.accessToken;
+    if (!provider || !accessToken) {
+      throw new UnauthorizedException('잘못된 소셜 로그인 요청입니다');
+    }
+
+    const verifyUrl =
+      this.config.get<string>('IHOME_SOCIAL_VERIFY_URL') ||
+      'https://i-homemarket.co.kr/doublewin/social_verify.php';
+
+    const ts = String(Math.floor(Date.now() / 1000));
+    const reqSig = this._ihomeSign(
+      { access_token: accessToken, provider, ts },
+      secret,
+    );
+
+    let body: any;
+    try {
+      const resp = await fetch(verifyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          provider,
+          access_token: accessToken,
+          ts,
+          sig: reqSig,
+        }).toString(),
+        signal: AbortSignal.timeout(12000),
+      });
+      body = await resp.json();
+    } catch {
+      throw new UnauthorizedException('소셜 인증 서버에 연결할 수 없습니다');
+    }
+
+    if (!body?.ok) {
+      throw new UnauthorizedException(body?.err || '소셜 로그인에 실패했습니다');
+    }
+
+    return this.ihomeLogin({
+      mbId: body.mb_id,
+      email: body.email,
+      nickname: body.nick,
+      ts: body.ts,
+      sig: body.sig,
+    });
+  }
+
   // ihome-sync.service.ts 의 sign() 과 동일 규칙: sig 제외, 키 정렬,
   // URLSearchParams(=PHP http_build_query 기본) 직렬화 후 HMAC-SHA256 hex.
   private _ihomeSign(params: Record<string, string>, secret: string): string {

@@ -11,3 +11,10 @@ const DEV_FALLBACK_URL =
   Platform.OS === 'android' ? 'http://10.0.2.2:4000' : 'http://localhost:4000';
 
 export const API_URL = ENV_API_URL || (__DEV__ ? DEV_FALLBACK_URL : PROD_API_URL);
+
+// 아이홈마켓 계정 공유 SSO 브리지 (그누보드 측 PHP).
+// 앱은 이 URL을 웹뷰로 열어 아이홈마켓 로그인/가입을 거친 뒤
+// doublewin://auth 딥링크로 서명된 신원 정보를 돌려받는다.
+export const IHOME_SSO_URL =
+  process.env.EXPO_PUBLIC_IHOME_SSO_URL ||
+  'https://i-homemarket.co.kr/doublewin/sso.php';

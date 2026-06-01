@@ -1,0 +1,2 @@
+# 실제 시크릿이 든 config 는 트래킹 금지 (sample 만 커밋)
+doublewin/sso_config.php

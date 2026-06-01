@@ -4,6 +4,8 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { createHmac, timingSafeEqual } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { MemberType } from '../users/entities/user.entity';
@@ -13,6 +15,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly config: ConfigService,
   ) {}
 
   async register(dto: {
@@ -117,6 +120,81 @@ export class AuthService {
     const token = this._generateToken(user.id, user.email);
     const { password: _, ...userData } = user;
     return { user: userData, token };
+  }
+
+  /**
+   * 아이홈마켓(그누보드) 계정 공유 SSO.
+   * 그누보드 측 sso.php 가 IHOME_SYNC_SECRET 으로 HMAC 서명한 신원 정보를
+   * 검증한 뒤, socialLogin 페더레이션 흐름을 재사용해 더블윈 계정/JWT 로 매핑한다.
+   */
+  async ihomeLogin(payload: {
+    mbId: string;
+    email?: string;
+    nickname?: string;
+    ts: string | number;
+    sig: string;
+  }) {
+    const secret = this.config.get<string>('IHOME_SYNC_SECRET');
+    if (!secret) {
+      throw new UnauthorizedException('SSO가 구성되지 않았습니다');
+    }
+    if (!payload?.mbId || !payload?.sig || payload?.ts == null) {
+      throw new UnauthorizedException('잘못된 인증 요청입니다');
+    }
+
+    // 1) ts 신선도 (±300s) — 리플레이 방지
+    const ts = parseInt(String(payload.ts), 10);
+    const now = Math.floor(Date.now() / 1000);
+    if (!Number.isFinite(ts) || Math.abs(now - ts) > 300) {
+      throw new UnauthorizedException('인증 정보가 만료되었습니다');
+    }
+
+    // 2) HMAC 검증 — sso.php 와 동일하게 ASCII 필드 {email, mb_id, ts} 만 서명한다.
+    //    (nickname 은 한글 멀티바이트라 PHP/JS 인코딩 차이로 서명이 깨질 수 있어 제외 —
+    //     표시용일 뿐 신원·페더레이션 키가 아니므로 미서명 무방. email 은 계정 매칭
+    //     키이므로 반드시 서명해 타인 이메일 주입을 차단.)
+    const signed: Record<string, string> = {
+      email: payload.email ?? '',
+      mb_id: payload.mbId,
+      ts: String(ts),
+    };
+    const expected = this._ihomeSign(signed, secret);
+    if (!this._safeEqualHex(expected, payload.sig)) {
+      throw new UnauthorizedException('인증 서명이 올바르지 않습니다');
+    }
+
+    // 3) 페더레이션 — provider='ihomemarket', providerId=mb_id
+    //    그누보드 이메일이 없으면 mb_id 기반 합성 이메일로 unique 충돌 회피.
+    const email = payload.email?.trim() || `${payload.mbId}@ihomemarket.local`;
+    const nickname = payload.nickname?.trim() || payload.mbId;
+    return this.socialLogin({
+      provider: 'ihomemarket',
+      providerId: payload.mbId,
+      email,
+      nickname,
+    });
+  }
+
+  // ihome-sync.service.ts 의 sign() 과 동일 규칙: sig 제외, 키 정렬,
+  // URLSearchParams(=PHP http_build_query 기본) 직렬화 후 HMAC-SHA256 hex.
+  private _ihomeSign(params: Record<string, string>, secret: string): string {
+    const usp = new URLSearchParams();
+    Object.keys(params)
+      .filter((k) => k !== 'sig')
+      .sort()
+      .forEach((k) => usp.append(k, params[k]));
+    return createHmac('sha256', secret).update(usp.toString()).digest('hex');
+  }
+
+  private _safeEqualHex(a: string, b: string): boolean {
+    if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) {
+      return false;
+    }
+    try {
+      return timingSafeEqual(Buffer.from(a, 'hex'), Buffer.from(b, 'hex'));
+    } catch {
+      return false;
+    }
   }
 
   async changePassword(userId: string, currentPassword: string, newPassword: string) {

@@ -75,6 +75,23 @@ export async function socialLogin(data: {
   return res.data;
 }
 
+export async function ihomeLogin(data: {
+  mbId: string;
+  email: string;
+  nickname: string;
+  ts: string;
+  sig: string;
+}) {
+  const res = await api('/auth/ihome', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  if (res.data?.token) {
+    await setToken(res.data.token);
+  }
+  return res.data;
+}
+
 export async function updatePushToken(pushToken: string) {
   const res = await api('/auth/push-token', {
     method: 'POST',

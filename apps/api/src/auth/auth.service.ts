@@ -175,6 +175,62 @@ export class AuthService {
     });
   }
 
+  /**
+   * 네이티브 ID/PW 로그인. 앱이 보낸 아이홈마켓 자격증명을 카페24 verify.php 로
+   * 서버-투-서버 검증(요청을 HMAC 서명해 호출자 인증)한 뒤, 돌아온 서명 신원을
+   * 기존 ihomeLogin() 으로 재검증·페더레이션해 JWT 를 발급한다. 앱은 아이홈마켓
+   * 웹 UI 를 거치지 않는다(소셜 로그인만 웹뷰 사용).
+   */
+  async ihomePasswordLogin(payload: { mbId: string; password: string }) {
+    const secret = this.config.get<string>('IHOME_SYNC_SECRET');
+    if (!secret) throw new UnauthorizedException('SSO가 구성되지 않았습니다');
+    const mbId = payload?.mbId?.trim();
+    const password = payload?.password ?? '';
+    if (!mbId || !password) {
+      throw new UnauthorizedException('아이디와 비밀번호를 입력해주세요');
+    }
+
+    const verifyUrl =
+      this.config.get<string>('IHOME_VERIFY_URL') ||
+      'https://i-homemarket.co.kr/doublewin/verify.php';
+
+    // 요청 인증 서명 — verify.php 가 {mb_id, ts} 로 동일 검증.
+    const ts = String(Math.floor(Date.now() / 1000));
+    const reqSig = this._ihomeSign({ mb_id: mbId, ts }, secret);
+
+    let body: any;
+    try {
+      const resp = await fetch(verifyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          mb_id: mbId,
+          mb_password: password,
+          ts,
+          sig: reqSig,
+        }).toString(),
+        signal: AbortSignal.timeout(10000),
+      });
+      body = await resp.json();
+    } catch {
+      throw new UnauthorizedException('아이홈마켓 인증 서버에 연결할 수 없습니다');
+    }
+
+    if (!body?.ok) {
+      // verify.php 가 내려준 사용자용 메시지(틀린 비번/미승인 등)를 그대로 노출.
+      throw new UnauthorizedException(body?.err || '로그인에 실패했습니다');
+    }
+
+    // 돌아온 서명 신원을 기존 경로로 재검증 + 페더레이션 (단일 진실 소스).
+    return this.ihomeLogin({
+      mbId: body.mb_id,
+      email: body.email,
+      nickname: body.nick,
+      ts: body.ts,
+      sig: body.sig,
+    });
+  }
+
   // ihome-sync.service.ts 의 sign() 과 동일 규칙: sig 제외, 키 정렬,
   // URLSearchParams(=PHP http_build_query 기본) 직렬화 후 HMAC-SHA256 hex.
   private _ihomeSign(params: Record<string, string>, secret: string): string {

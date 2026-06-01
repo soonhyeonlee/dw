@@ -92,6 +92,17 @@ export async function ihomeLogin(data: {
   return res.data;
 }
 
+export async function ihomePasswordLogin(mbId: string, password: string) {
+  const res = await api('/auth/ihome-login', {
+    method: 'POST',
+    body: JSON.stringify({ mbId, password }),
+  });
+  if (res.data?.token) {
+    await setToken(res.data.token);
+  }
+  return res.data;
+}
+
 export async function updatePushToken(pushToken: string) {
   const res = await api('/auth/push-token', {
     method: 'POST',

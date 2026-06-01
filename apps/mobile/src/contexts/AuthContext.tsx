@@ -34,6 +34,7 @@ interface AuthContextType {
   register: (data: RegisterData) => Promise<void>;
   socialLogin: (data: SocialLoginData) => Promise<void>;
   ihomeLogin: (data: { mbId: string; email: string; nickname: string; ts: string; sig: string }) => Promise<void>;
+  ihomePasswordLogin: (mbId: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -46,6 +47,7 @@ const AuthContext = createContext<AuthContextType>({
   register: async () => {},
   socialLogin: async () => {},
   ihomeLogin: async () => {},
+  ihomePasswordLogin: async () => {},
   logout: async () => {},
   refreshProfile: async () => {},
 });
@@ -98,6 +100,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(res.user);
   };
 
+  const handleIhomePasswordLogin = async (mbId: string, password: string) => {
+    const res = await authApi.ihomePasswordLogin(mbId, password);
+    setUser(res.user);
+  };
+
   const logout = async () => {
     await authApi.logout();
     setUser(null);
@@ -123,6 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         socialLogin: handleSocialLogin,
         ihomeLogin: handleIhomeLogin,
+        ihomePasswordLogin: handleIhomePasswordLogin,
         logout,
         refreshProfile,
       }}

@@ -59,6 +59,15 @@ export class AuthController {
     return { success: true, data };
   }
 
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  @Post('ihome-login')
+  async ihomePasswordLogin(
+    @Body() dto: { mbId: string; password: string },
+  ) {
+    const data = await this.authService.ihomePasswordLogin(dto);
+    return { success: true, data };
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('change-password')
   async changePassword(

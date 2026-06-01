@@ -63,6 +63,39 @@ export class ProductsService {
     };
   }
 
+  /**
+   * 활성 상품이 실제로 들어와 있는 distinct 카테고리 + 개수.
+   * 상품이 들어오고 빠짐에 따라 목록이 바뀌므로, 클라이언트는 이걸로
+   * 카테고리 탭/칩을 동적으로 구성한다(고정 목록 X).
+   */
+  async getCategories(platform?: string) {
+    const qb = this.productRepo
+      .createQueryBuilder('p')
+      .select('p.category', 'category')
+      .addSelect('COUNT(*)', 'count')
+      .where('p.isActive = :active', { active: true })
+      .andWhere("p.category IS NOT NULL AND p.category <> ''");
+
+    if (platform) {
+      const parts = platform
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (parts.length > 1) {
+        qb.andWhere('p.platform IN (:...platforms)', { platforms: parts });
+      } else if (parts.length === 1) {
+        qb.andWhere('p.platform = :platform', { platform: parts[0] });
+      }
+    }
+
+    const rows = await qb
+      .groupBy('p.category')
+      .orderBy('count', 'DESC')
+      .getRawMany();
+
+    return rows.map((r) => ({ category: r.category, count: Number(r.count) }));
+  }
+
   async findById(id: string): Promise<Product> {
     const product = await this.productRepo.findOne({ where: { id } });
     if (!product) throw new NotFoundException('상품을 찾을 수 없습니다');

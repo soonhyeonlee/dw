@@ -36,6 +36,18 @@ export async function getProducts(params?: {
   return res.data;
 }
 
+export interface ProductCategory {
+  category: string;
+  count: number;
+}
+
+/** 실제 활성 상품이 있는 카테고리만 (개수 포함). platform 미지정 시 전체. */
+export async function getProductCategories(platform?: string): Promise<ProductCategory[]> {
+  const qs = platform ? `?platform=${encodeURIComponent(platform)}` : '';
+  const res = await api(`/products/categories${qs}`);
+  return (res.data as ProductCategory[]) || [];
+}
+
 export async function getProduct(id: string) {
   const res = await api(`/products/${id}`);
   return res.data;

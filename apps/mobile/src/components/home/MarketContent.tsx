@@ -11,19 +11,12 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS } from '../../constants/theme';
-import { getProducts, type Product as ApiProduct } from '../../api/products';
+import { getProducts, getProductCategories, type Product as ApiProduct } from '../../api/products';
 
-// Mirrors the youngcart (g5_shop_category.ca_name) values that come
-// through the ihomemarket sync. Update when cafe24 admins add categories.
-const CATS = [
-  { key: 'all',       label: '전체',         apiKey: undefined },
-  { key: 'feature',   label: '기획전',       apiKey: '기획전' },
-  { key: 'health',    label: '건강기능식품', apiKey: '건강기능식품' },
-  { key: 'food',      label: '식품',         apiKey: '식품' },
-  { key: 'fruit',     label: '과일',         apiKey: '과일' },
-  { key: 'kitchen',   label: '주방용품',     apiKey: '주방용품' },
-  { key: 'specialty', label: '특산품',       apiKey: '특산품' },
-];
+// 칩은 고정 목록이 아니라, 실제 들어와 있는 ihomemarket 상품의 카테고리에서
+// 동적으로 생성된다(카페24에서 카테고리 추가/삭제 시 자동 반영).
+type Chip = { key: string; label: string };
+const ALL_CHIP: Chip = { key: 'all', label: '전체' };
 
 type MarketProduct = {
   id: string;
@@ -109,14 +102,28 @@ export type MarketContentHandle = {
 export const MarketContent = forwardRef<MarketContentHandle>((_props, ref) => {
   const router = useRouter();
   const [cat, setCat] = useState('all');
+  const [chips, setChips] = useState<Chip[]>([ALL_CHIP]);
   const [loading, setLoading] = useState(true);
   const [featured, setFeatured] = useState<MarketProduct[]>([]);
   const [flash, setFlash] = useState<MarketProduct[]>([]);
 
+  // 들어와 있는 상품 카테고리로 칩 동적 구성. chip.key = 카테고리명(=apiKey).
+  useEffect(() => {
+    getProductCategories('ihomemarket')
+      .then((cats) => {
+        setChips([ALL_CHIP, ...cats.map((c) => ({ key: c.category, label: c.category }))]);
+        // 선택돼 있던 카테고리가 사라졌으면 전체로 리셋
+        setCat((prev) =>
+          prev === 'all' || cats.some((c) => c.category === prev) ? prev : 'all',
+        );
+      })
+      .catch(() => {});
+  }, []);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const apiCat = CATS.find((c) => c.key === cat)?.apiKey;
+      const apiCat = cat === 'all' ? undefined : cat;
       const data = await getProducts({
         platform: 'ihomemarket',
         category: apiCat,
@@ -148,7 +155,7 @@ export const MarketContent = forwardRef<MarketContentHandle>((_props, ref) => {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.chips}
       >
-        {CATS.map((c) => {
+        {chips.map((c) => {
           const active = c.key === cat;
           return (
             <TouchableOpacity

@@ -36,6 +36,13 @@ export class ProductsController {
     return { success: true, data };
   }
 
+  // 주의: ':id' 라우트보다 위에 둬야 'categories' 가 id 로 잡히지 않음.
+  @Get('categories')
+  async getCategories(@Query('platform') platform?: string) {
+    const data = await this.productsService.getCategories(platform);
+    return { success: true, data };
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('user/wishlist')
   async getWishlist(

@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
 import { getMarketProduct, type MarketProduct } from '../../src/api/market';
@@ -19,6 +21,7 @@ const PURPLE = '#6633CC';
 export default function MarketProductDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { isAuthenticated } = useAuth();
   const [product, setProduct] = useState<MarketProduct | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,19 +76,23 @@ export default function MarketProductDetail() {
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
+        <View style={[styles.header, { paddingTop: insets.top + SPACING.sm }]}>
+          <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
             <Ionicons name="arrow-back" size={24} color={COLORS.gray[900]} />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity hitSlop={8}>
             <Ionicons name="share-outline" size={22} color={COLORS.gray[700]} />
           </TouchableOpacity>
         </View>
 
-        {/* Image Placeholder */}
-        <View style={styles.imagePlaceholder}>
-          <Text style={{ fontSize: 64 }}>📦</Text>
-        </View>
+        {/* Image */}
+        {product.imageUrl ? (
+          <Image source={{ uri: product.imageUrl }} style={styles.image} resizeMode="cover" />
+        ) : (
+          <View style={styles.imagePlaceholder}>
+            <Text style={{ fontSize: 64 }}>📦</Text>
+          </View>
+        )}
 
         {/* Product Info */}
         <View style={styles.infoSection}>
@@ -185,6 +192,11 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.md,
   },
 
+  image: {
+    width: '100%',
+    height: 300,
+    backgroundColor: COLORS.gray[100],
+  },
   imagePlaceholder: {
     width: '100%',
     height: 300,

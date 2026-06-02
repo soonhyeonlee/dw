@@ -10,6 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
 import {
@@ -55,6 +56,7 @@ function MarketSearchCard({ p, onPress }: { p: MarketProduct; onPress: () => voi
 
 export default function MarketSearch() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [keyword, setKeyword] = useState('');
   const [cats, setCats] = useState<MarketCategory[]>([]);
   const [results, setResults] = useState<MarketProduct[]>([]);
@@ -129,8 +131,8 @@ export default function MarketSearch() {
   return (
     <View style={styles.container}>
       {/* Search bar */}
-      <View style={styles.topbar}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+      <View style={[styles.topbar, { paddingTop: insets.top + SPACING.sm }]}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color={COLORS.gray[900]} />
         </TouchableOpacity>
         <View style={styles.searchBar}>

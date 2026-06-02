@@ -12,6 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
 import { getMarketProduct, createOrder, type MarketProduct } from '../../src/api/market';
@@ -23,6 +24,7 @@ const POINT_RATE = 0.02; // 번개장터 적립률 2% (백엔드 MARKET_POINT_RA
 export default function MarketCheckout() {
   const { id, qty } = useLocalSearchParams<{ id: string; qty?: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, refreshProfile } = useAuth();
 
   const [product, setProduct] = useState<MarketProduct | null>(null);
@@ -141,8 +143,8 @@ export default function MarketCheckout() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+      <View style={[styles.header, { paddingTop: insets.top + SPACING.sm }]}>
+        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color={COLORS.gray[900]} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>주문/결제</Text>

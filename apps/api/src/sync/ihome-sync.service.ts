@@ -10,6 +10,7 @@ import { Repository } from 'typeorm';
 import { createHmac } from 'crypto';
 import { Product } from '../products/entities/product.entity';
 import { IhomeSyncState } from './entities/ihome-sync-state.entity';
+import { MarketProduct } from '../market/entities/market-product.entity';
 
 const PLATFORM = 'ihomemarket';
 const ITEM_BASE_URL = 'https://i-homemarket.co.kr';
@@ -56,6 +57,8 @@ export class IhomeSyncService
     private readonly products: Repository<Product>,
     @InjectRepository(IhomeSyncState)
     private readonly stateRepo: Repository<IhomeSyncState>,
+    @InjectRepository(MarketProduct)
+    private readonly market: Repository<MarketProduct>,
   ) {}
 
   onApplicationBootstrap(): void {
@@ -226,6 +229,35 @@ export class IhomeSyncService
       await this.products.update({ id: existing.id }, next);
     } else {
       await this.products.save(this.products.create(next));
+    }
+
+    // 번개장터 직접판매 카탈로그 미러 — 같은 아이홈마켓 상품을 market_products 에도 upsert.
+    // (번개장터는 market 시스템=체크아웃+포인트를 쓰므로 실제 상품이 여기로 들어와야 한다.)
+    const stock = this.asInt(row.it_stock_qty);
+    const mp: Partial<MarketProduct> = {
+      externalId: row.it_id,
+      title: next.title,
+      description: next.description,
+      price: next.price,
+      originalPrice: next.originalPrice,
+      discountRate: next.discountRate,
+      imageUrl: next.imageUrl,
+      category: next.category,
+      rating: next.rating,
+      reviewCount: next.reviewCount,
+      isActive: next.isActive,
+      // youngcart it_stock_qty: 0 은 재고 무제한 취급 → 큰 값으로.
+      stockQuantity: stock > 0 ? stock : 9999,
+      freeDelivery: true,
+    };
+    const existingMp = await this.market.findOne({
+      where: { externalId: row.it_id },
+    });
+    if (existingMp) {
+      // 카탈로그 필드만 갱신, soldCount 등 운영 누적값은 보존.
+      await this.market.update({ id: existingMp.id }, mp);
+    } else {
+      await this.market.save(this.market.create(mp));
     }
   }
 

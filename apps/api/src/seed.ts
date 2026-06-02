@@ -193,7 +193,9 @@ async function seed() {
   const exhibitionRepo = dataSource.getRepository('Exhibition');
   const marketCount = await marketProductRepo.count();
 
-  if (marketCount === 0) {
+  // 번개장터 직접판매 카탈로그는 실제 아이홈마켓 상품을 ihome-sync 가 채운다.
+  // 더미 상품은 명시적으로 SEED_DUMMY_MARKET=true 일 때만(로컬 데모용) 생성.
+  if (marketCount === 0 && process.env.SEED_DUMMY_MARKET === 'true') {
     // 기획전 생성
     const ex1 = await exhibitionRepo.save({
       title: '제주 산지직송 특가',

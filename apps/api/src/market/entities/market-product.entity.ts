@@ -21,6 +21,11 @@ export class MarketProduct {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  // 외부 소스(아이홈마켓 등) 동기화 식별자 — sync upsert 디둡용. 직접 등록 상품은 null.
+  @Column({ type: 'varchar', nullable: true })
+  @Index()
+  externalId: string;
+
   @Column()
   title: string;
 

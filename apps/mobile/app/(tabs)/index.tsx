@@ -64,11 +64,11 @@ function calcCashback(price: number, rate: number) {
 function PROMO_SLIDES(router: ReturnType<typeof useRouter>): PromoSlide[] {
   return [
     {
-      id: 'guide5',
-      badge: '5월 쇼핑 가이드',
-      title: '한정 보너스 챙겨왔어요!',
-      subtitle: '쇼핑하기 딱 좋은 5월 · 매일 캐시백 적립',
-      image: require('../../assets/images/banner-guide.jpg'),
+      id: 'payback',
+      badge: '페이백',
+      title: '쇼핑하고 페이백 받기',
+      subtitle: '더블윈 경유 시 캐시 적립',
+      image: require('../../assets/images/banner-payback.png'),
       onPress: () => router.push('/guide'),
     },
     {
@@ -76,7 +76,7 @@ function PROMO_SLIDES(router: ReturnType<typeof useRouter>): PromoSlide[] {
       badge: '협회 회원',
       title: '협회 회원 캐시백 +1%',
       subtitle: '모든 쇼핑몰에서 추가 적립',
-      image: require('../../assets/images/banner-tier.jpg'),
+      image: require('../../assets/images/banner-association.png'),
       onPress: () => router.push('/(tabs)/mypage'),
     },
   ];

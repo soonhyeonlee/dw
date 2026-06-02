@@ -101,7 +101,7 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
                     <Text style={[styles.badgeText, { color: fg }]}>{s.badge}</Text>
                   </View>
                 ) : null}
-                <Text style={[styles.title, { color: fg }, hasImage && styles.imgText]} numberOfLines={2}>{s.title}</Text>
+                <Text style={[styles.title, { color: fg }, hasImage && styles.imgText]} numberOfLines={hasImage ? 1 : 2}>{s.title}</Text>
                 {s.subtitle ? (
                   <Text style={[styles.subtitle, { color: fg, opacity: 0.9 }, hasImage && styles.imgText]} numberOfLines={1}>{s.subtitle}</Text>
                 ) : null}
@@ -129,23 +129,24 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
 const styles = StyleSheet.create({
   wrap: { marginTop: 4 },
   slide: {
-    height: SLIDE_W / 2,
+    // 배너 이미지 비율(약 4:1)에 맞춰 풀배너가 잘리지 않게 표시.
+    height: Math.round(SLIDE_W / 4),
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     justifyContent: 'center',
     paddingHorizontal: 18,
-    paddingVertical: 16,
+    paddingVertical: 10,
   },
   image: { ...StyleSheet.absoluteFillObject, opacity: 0.18 },
-  content: { gap: 6 },
+  content: { gap: 4 },
   badge: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 8, paddingVertical: 3,
+    paddingHorizontal: 8, paddingVertical: 2,
     borderRadius: 999,
   },
   badgeText: { fontSize: 10, fontWeight: '700' },
   title: {
-    fontSize: 18, fontWeight: '800', letterSpacing: -0.4,
+    fontSize: 16, fontWeight: '800', letterSpacing: -0.4,
     textShadowColor: 'rgba(0,0,0,0.35)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,

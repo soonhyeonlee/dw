@@ -84,7 +84,8 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
               style={[styles.slide, { width: SLIDE_W, marginRight: i === slides.length - 1 ? 0 : SLIDE_GAP }]}
             >
               {hasImage ? (
-                <Image source={s.image} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                /* 배너 전체가 잘리지 않도록 고유 비율 박스로 렌더(슬라이드 높이를 이미지가 결정) */
+                <Image source={s.image} style={styles.bannerImage} resizeMode="cover" />
               ) : (
                 <LinearGradient
                   colors={bg}
@@ -97,8 +98,8 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
                 <Image source={{ uri: s.imageUrl }} style={styles.image} resizeMode="cover" />
               ) : null}
 
-              {/* 텍스트 오버레이 — 이미지 배너에서도 그래픽을 피해 표시 */}
-              <View style={[styles.content, right && styles.contentRight]}>
+              {/* 텍스트 오버레이 — 이미지 위에 절대배치, 그래픽 반대편 정렬 */}
+              <View style={[styles.contentOverlay, right && styles.contentRight]}>
                 {s.badge ? (
                   <View style={[styles.badge, { backgroundColor: hasImage || isLight ? COLORS.white : 'rgba(255,255,255,0.22)' }]}>
                     <Text style={[styles.badgeText, { color: fg }]}>{s.badge}</Text>
@@ -141,16 +142,25 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
 const styles = StyleSheet.create({
   wrap: { marginTop: 4 },
   slide: {
-    // 배너 이미지 비율(약 4:1)에 맞춰 풀배너가 잘리지 않게 표시.
-    height: Math.round(SLIDE_W / 4),
+    // 이미지 배너는 bannerImage 의 aspectRatio 가 높이를 결정(전체 표시, 잘림 없음).
+    // minHeight 는 이미지 없는 그라데이션 슬라이드용 폴백.
+    minHeight: Math.round(SLIDE_W / 4),
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     justifyContent: 'center',
+  },
+  // 배너 원본 비율(≈4.1:1)로 폭 100% 채움 → 그래픽 포함 전체가 보임.
+  bannerImage: { width: '100%', aspectRatio: 1705 / 414 },
+  image: { ...StyleSheet.absoluteFillObject, opacity: 0.18 },
+  contentOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    justifyContent: 'center',
     paddingHorizontal: 18,
     paddingVertical: 10,
+    gap: 4,
+    alignItems: 'flex-start',
   },
-  image: { ...StyleSheet.absoluteFillObject, opacity: 0.18 },
-  content: { gap: 4, alignItems: 'flex-start' },
   contentRight: { alignItems: 'flex-end' },
   textRight: { textAlign: 'right' },
   badge: {

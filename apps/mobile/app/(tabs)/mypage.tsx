@@ -32,7 +32,7 @@ const MEMBER_TYPE_LABEL: Record<string, string> = {
 
 const QUICK_MENU: { key: string; icon: IconName; label: string; route?: string }[] = [
   { key: 'orders',  icon: 'bag-handle-outline', label: '주문내역',  route: '/market/orders' },
-  { key: 'coupon',  icon: 'ticket-outline',  label: '내 쿠폰',     route: '/mypage/coupons' },
+  { key: 'coupon',  icon: 'ticket-outline',  label: '내 쿠폰',     route: '/(tabs)/coupons' },
   { key: 'history', icon: 'receipt-outline', label: '적립내역',    route: '/(tabs)/cashback' },
   { key: 'recent',  icon: 'time-outline',    label: '최근 본 상품', route: '/mypage/recent' },
   { key: 'wish',    icon: 'heart-outline',   label: '찜한 상품',   route: '/mypage/wishlist' },

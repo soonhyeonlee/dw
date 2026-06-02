@@ -11,12 +11,60 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
-import ProductCard from '../../src/components/ProductCard';
+import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
 import { EmptyState } from '../../src/components/EmptyState';
 import { getWishlist, getMallWishlist } from '../../src/api/products';
+import { getMarketWishlist } from '../../src/api/market';
 
 type Tab = 'products' | 'malls';
+
+const POINT_RATE = 0.02;
+
+// 찜 상품(번개장터 직접판매 + 제휴) 통합 표시용.
+type WishProduct = {
+  id: string;
+  title: string;
+  price: number;
+  originalPrice?: number;
+  discountRate?: number;
+  imageUrl?: string;
+  cashbackRate?: number;
+  source: 'market' | 'product';
+};
+
+function WishCard({ p, onPress }: { p: WishProduct; onPress: () => void }) {
+  const price = Number(p.price);
+  const orig = p.originalPrice ? Number(p.originalPrice) : undefined;
+  const discount =
+    p.discountRate != null
+      ? Math.round(Number(p.discountRate))
+      : orig && orig > price
+        ? Math.round(((orig - price) / orig) * 100)
+        : 0;
+  return (
+    <TouchableOpacity style={wcStyles.card} onPress={onPress} activeOpacity={0.85}>
+      <View style={wcStyles.imgBox}>
+        {p.imageUrl ? (
+          <Image source={{ uri: p.imageUrl }} style={wcStyles.img} resizeMode="cover" />
+        ) : (
+          <View style={[wcStyles.img, wcStyles.imgPlaceholder]}>
+            <Text style={{ fontSize: 34 }}>📦</Text>
+          </View>
+        )}
+      </View>
+      <Text style={wcStyles.title} numberOfLines={2}>{p.title}</Text>
+      <View style={wcStyles.priceRow}>
+        {discount > 0 && <Text style={wcStyles.discount}>{discount}%</Text>}
+        <Text style={wcStyles.price}>{price.toLocaleString()}원</Text>
+      </View>
+      {p.source === 'product' && p.cashbackRate ? (
+        <Text style={wcStyles.cashback}>캐시백 {p.cashbackRate}%</Text>
+      ) : (
+        <Text style={wcStyles.point}>{Math.floor(price * POINT_RATE).toLocaleString()}P 적립</Text>
+      )}
+    </TouchableOpacity>
+  );
+}
 
 interface MallItem {
   id: string;
@@ -54,18 +102,31 @@ function MallRow({ m, onPress }: { m: MallItem; onPress: () => void }) {
 export default function WishlistScreen() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('products');
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<WishProduct[]>([]);
   const [malls, setMalls] = useState<MallItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
-      const [p, m] = await Promise.all([
+      const [mk, p, m] = await Promise.all([
+        getMarketWishlist().catch(() => ({ items: [], ids: [] })),
         getWishlist().catch(() => ({ items: [] })),
         getMallWishlist().catch(() => ({ items: [] })),
       ]);
-      setProducts(p?.items || []);
+      const market: WishProduct[] = (mk?.items || []).map((x: any) => ({
+        id: x.id, title: x.title, price: Number(x.price),
+        originalPrice: x.originalPrice != null ? Number(x.originalPrice) : undefined,
+        discountRate: x.discountRate != null ? Number(x.discountRate) : undefined,
+        imageUrl: x.imageUrl, source: 'market',
+      }));
+      const affiliate: WishProduct[] = (p?.items || []).map((x: any) => ({
+        id: x.id, title: x.title, price: Number(x.price),
+        originalPrice: x.originalPrice != null ? Number(x.originalPrice) : undefined,
+        discountRate: x.discountRate != null ? Number(x.discountRate) : undefined,
+        imageUrl: x.imageUrl, cashbackRate: x.cashbackRate, source: 'product',
+      }));
+      setProducts([...market, ...affiliate]);
       setMalls((m?.items || []) as MallItem[]);
     } finally {
       setLoading(false);
@@ -142,7 +203,14 @@ export default function WishlistScreen() {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
             }
             renderItem={({ item }) => (
-              <ProductCard {...item} onPress={(id) => router.push(`/product/${id}`)} />
+              <WishCard
+                p={item}
+                onPress={() =>
+                  router.push(
+                    item.source === 'market' ? `/market/${item.id}` : `/product/${item.id}`,
+                  )
+                }
+              />
             )}
           />
         )
@@ -232,4 +300,22 @@ const mallStyles = StyleSheet.create({
   rate: { fontSize: 12, color: COLORS.ink[600], marginTop: 2 },
   rateStrong: { color: COLORS.primary, fontWeight: '800' },
   platform: { fontSize: 12, color: COLORS.ink[500], marginTop: 2 },
+});
+
+const wcStyles = StyleSheet.create({
+  card: { width: '48%', marginBottom: SPACING.lg },
+  imgBox: {
+    width: '100%', aspectRatio: 1,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.ink[100],
+    overflow: 'hidden',
+  },
+  img: { width: '100%', height: '100%' },
+  imgPlaceholder: { alignItems: 'center', justifyContent: 'center' },
+  title: { fontSize: FONT.sizes.sm, color: COLORS.ink[800], lineHeight: 18, marginTop: 6 },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 4 },
+  discount: { fontSize: FONT.sizes.md, fontWeight: '800', color: '#FF4040' },
+  price: { fontSize: FONT.sizes.md, fontWeight: '800', color: COLORS.black },
+  cashback: { fontSize: FONT.sizes.xs, color: COLORS.primary, fontWeight: '700', marginTop: 3 },
+  point: { fontSize: FONT.sizes.xs, color: '#6633CC', fontWeight: '700', marginTop: 3 },
 });

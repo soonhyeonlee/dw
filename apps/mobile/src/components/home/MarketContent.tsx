@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +15,8 @@ import { COLORS, SPACING, RADIUS } from '../../constants/theme';
 import {
   getMarketProducts,
   getMarketCategories,
+  getMarketWishlist,
+  toggleMarketWishlist,
   type MarketProduct as ApiMarketProduct,
 } from '../../api/market';
 import { useAuth } from '../../contexts/AuthContext';
@@ -53,7 +56,17 @@ function mapProduct(p: ApiMarketProduct): MarketProduct {
   };
 }
 
-function FeaturedCard({ p, onPress }: { p: MarketProduct; onPress: () => void }) {
+function FeaturedCard({
+  p,
+  onPress,
+  liked,
+  onToggleLike,
+}: {
+  p: MarketProduct;
+  onPress: () => void;
+  liked?: boolean;
+  onToggleLike?: () => void;
+}) {
   return (
     <TouchableOpacity style={fStyles.card} onPress={onPress} activeOpacity={0.85}>
       <View style={fStyles.imgBox}>
@@ -64,8 +77,12 @@ function FeaturedCard({ p, onPress }: { p: MarketProduct; onPress: () => void })
             <Text style={{ fontSize: 36 }}>📦</Text>
           </View>
         )}
-        <TouchableOpacity style={fStyles.likeBtn}>
-          <Ionicons name="heart-outline" size={16} color={COLORS.ink[700]} />
+        <TouchableOpacity style={fStyles.likeBtn} onPress={onToggleLike} hitSlop={8}>
+          <Ionicons
+            name={liked ? 'heart' : 'heart-outline'}
+            size={16}
+            color={liked ? '#FF4040' : COLORS.ink[700]}
+          />
         </TouchableOpacity>
       </View>
       <Text style={fStyles.title} numberOfLines={2}>{p.title}</Text>
@@ -114,6 +131,7 @@ export const MarketContent = forwardRef<MarketContentHandle>((_props, ref) => {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   const marketPoint = isAuthenticated ? Number(user?.marketPointBalance || 0) : 0;
+  const [wishIds, setWishIds] = useState<Set<string>>(new Set());
   const [cat, setCat] = useState('all');
   const [chips, setChips] = useState<Chip[]>([ALL_CHIP]);
   const [loading, setLoading] = useState(true);
@@ -153,6 +171,40 @@ export const MarketContent = forwardRef<MarketContentHandle>((_props, ref) => {
 
   useEffect(() => { loadData(); }, [loadData]);
   useImperativeHandle(ref, () => ({ reload: loadData }), [loadData]);
+
+  // 찜 상태 로드(로그인 시)
+  useEffect(() => {
+    if (!isAuthenticated) { setWishIds(new Set()); return; }
+    getMarketWishlist()
+      .then((w) => setWishIds(new Set(w.ids || [])))
+      .catch(() => {});
+  }, [isAuthenticated]);
+
+  const handleToggleLike = useCallback((productId: string) => {
+    if (!isAuthenticated) {
+      Alert.alert('로그인 필요', '찜하려면 로그인이 필요합니다', [
+        { text: '취소' },
+        { text: '로그인', onPress: () => router.push('/auth/login') },
+      ]);
+      return;
+    }
+    // 낙관적 토글
+    setWishIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(productId)) next.delete(productId);
+      else next.add(productId);
+      return next;
+    });
+    toggleMarketWishlist(productId).catch(() => {
+      // 실패 시 롤백
+      setWishIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(productId)) next.delete(productId);
+        else next.add(productId);
+        return next;
+      });
+    });
+  }, [isAuthenticated, router]);
 
   const hero = featured[0];
 
@@ -258,7 +310,13 @@ export const MarketContent = forwardRef<MarketContentHandle>((_props, ref) => {
           </View>
           <View style={styles.grid}>
             {featured.map((p) => (
-              <FeaturedCard key={p.id} p={p} onPress={() => router.push(`/market/${p.id}`)} />
+              <FeaturedCard
+                key={p.id}
+                p={p}
+                liked={wishIds.has(p.id)}
+                onToggleLike={() => handleToggleLike(p.id)}
+                onPress={() => router.push(`/market/${p.id}`)}
+              />
             ))}
           </View>
         </>

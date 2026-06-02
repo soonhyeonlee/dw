@@ -19,7 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
-import { getAcademy, getCoupons, type Academy, type Coupon } from '../../src/api/region';
+import { getAcademy, getCoupons, downloadCoupon, type Academy, type Coupon } from '../../src/api/region';
 import { useAuth } from '../../src/contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
@@ -144,6 +144,23 @@ export default function AcademyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+
+  const handleDownloadCoupon = async (c: Coupon) => {
+    if (!isAuthenticated) {
+      Alert.alert('로그인 필요', '쿠폰을 받으려면 로그인이 필요합니다', [
+        { text: '취소' },
+        { text: '로그인', onPress: () => router.push('/auth/login') },
+      ]);
+      return;
+    }
+    try {
+      await downloadCoupon(c.id);
+      Alert.alert('쿠폰 다운로드', `'${c.title}' 쿠폰을 받았어요. 쿠폰함에서 확인하세요.`);
+    } catch (e: any) {
+      Alert.alert('다운로드 실패', e?.message || '쿠폰을 받지 못했습니다.');
+    }
+  };
+
   const [tab, setTab] = useState<Tab>('info');
   const [hearted, setHearted] = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
@@ -488,7 +505,7 @@ export default function AcademyDetailScreen() {
                 <TouchableOpacity
                   key={c.id}
                   style={styles.couponCard}
-                  onPress={() => Alert.alert('쿠폰 다운로드', `${c.title} 쿠폰이 다운로드되었습니다.`)}
+                  onPress={() => handleDownloadCoupon(c)}
                   activeOpacity={0.85}
                 >
                   <View style={styles.couponLeftBar} />

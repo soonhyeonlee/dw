@@ -13,7 +13,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
-import { getMarketProduct, type MarketProduct } from '../../src/api/market';
+import {
+  getMarketProduct,
+  toggleMarketWishlist,
+  getMarketWishlist,
+  type MarketProduct,
+} from '../../src/api/market';
 import { useAuth } from '../../src/contexts/AuthContext';
 
 const PURPLE = '#6633CC';
@@ -25,10 +30,19 @@ export default function MarketProductDetail() {
   const { isAuthenticated } = useAuth();
   const [product, setProduct] = useState<MarketProduct | null>(null);
   const [loading, setLoading] = useState(true);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [wishBusy, setWishBusy] = useState(false);
 
   useEffect(() => {
     loadProduct();
   }, [id]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !id) return;
+    getMarketWishlist()
+      .then((w) => setWishlisted((w.ids || []).includes(id)))
+      .catch(() => {});
+  }, [isAuthenticated, id]);
 
   const loadProduct = async () => {
     try {
@@ -38,6 +52,28 @@ export default function MarketProductDetail() {
       // error
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleWish = async () => {
+    if (!isAuthenticated) {
+      Alert.alert('로그인 필요', '찜하려면 로그인이 필요합니다', [
+        { text: '취소' },
+        { text: '로그인', onPress: () => router.push('/auth/login') },
+      ]);
+      return;
+    }
+    if (wishBusy) return;
+    setWishBusy(true);
+    const prev = wishlisted;
+    setWishlisted(!prev); // 낙관적
+    try {
+      const r = await toggleMarketWishlist(id!);
+      setWishlisted(!!r?.wishlisted);
+    } catch {
+      setWishlisted(prev); // 롤백
+    } finally {
+      setWishBusy(false);
     }
   };
 
@@ -167,8 +203,12 @@ export default function MarketProductDetail() {
 
       {/* CTA */}
       <View style={styles.ctaBar}>
-        <TouchableOpacity style={styles.heartBtn}>
-          <Ionicons name="heart-outline" size={24} color={COLORS.gray[600]} />
+        <TouchableOpacity style={styles.heartBtn} onPress={handleWish} disabled={wishBusy}>
+          <Ionicons
+            name={wishlisted ? 'heart' : 'heart-outline'}
+            size={24}
+            color={wishlisted ? '#FF4040' : COLORS.gray[600]}
+          />
         </TouchableOpacity>
         <TouchableOpacity style={styles.buyBtn} onPress={handleBuy} activeOpacity={0.8}>
           <Text style={styles.buyText}>구매하기</Text>

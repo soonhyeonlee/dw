@@ -75,6 +75,25 @@ export class MarketController {
     return { success: true, data };
   }
 
+  // === 찜 (로그인 필요) ===
+
+  @UseGuards(JwtAuthGuard)
+  @Get('wishlist')
+  async getWishlist(@Request() req) {
+    const [data, ids] = await Promise.all([
+      this.marketService.getWishlist(req.user.id),
+      this.marketService.getWishlistedIds(req.user.id),
+    ]);
+    return { success: true, data: { ...data, ids } };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('products/:id/wishlist')
+  async toggleWishlist(@Request() req, @Param('id') id: string) {
+    const data = await this.marketService.toggleWishlist(req.user.id, id);
+    return { success: true, data };
+  }
+
   // === 주문 (로그인 필요) ===
 
   @UseGuards(JwtAuthGuard)

@@ -146,3 +146,16 @@ export async function getMyOrders(page = 1): Promise<MarketOrderList> {
   const res = await api(`/market/orders?page=${page}`);
   return res.data;
 }
+
+// === 찜 (번개장터 직접판매) ===
+
+export async function toggleMarketWishlist(productId: string): Promise<{ wishlisted: boolean }> {
+  const res = await api(`/market/products/${productId}/wishlist`, { method: 'POST' });
+  return res.data;
+}
+
+/** 내 번개장터 찜 — items(상품 목록) + ids(찜한 상품 id 집합용). */
+export async function getMarketWishlist(): Promise<{ items: MarketProduct[]; ids: string[] }> {
+  const res = await api('/market/wishlist');
+  return res.data;
+}

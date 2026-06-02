@@ -116,7 +116,21 @@ export async function downloadCoupon(couponId: string) {
   return res.data;
 }
 
-export async function getMyCoupons() {
+export interface MyCoupon {
+  id: string; // userCoupon id
+  couponId: string;
+  isUsed: boolean;
+  usedAt?: string;
+  downloadedAt: string;
+  coupon: Coupon;
+}
+
+export async function getMyCoupons(): Promise<MyCoupon[]> {
   const res = await api('/region/my-coupons');
+  return res.data;
+}
+
+export async function useCoupon(userCouponId: string) {
+  const res = await api(`/region/my-coupons/${userCouponId}/use`, { method: 'POST' });
   return res.data;
 }

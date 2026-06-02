@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThanOrEqual, MoreThanOrEqual, IsNull, Not } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { MarketProduct, MarketBlockType } from './entities/market-product.entity';
+import { MarketWishlist } from './entities/market-wishlist.entity';
 import { Exhibition } from './entities/exhibition.entity';
 import { MarketOrder, OrderStatus } from './entities/market-order.entity';
 import { UsersService } from '../users/users.service';
@@ -16,9 +17,41 @@ export class MarketService {
     private readonly exhibitionRepo: Repository<Exhibition>,
     @InjectRepository(MarketOrder)
     private readonly orderRepo: Repository<MarketOrder>,
+    @InjectRepository(MarketWishlist)
+    private readonly wishlistRepo: Repository<MarketWishlist>,
     private readonly usersService: UsersService,
     private readonly config: ConfigService,
   ) {}
+
+  // === 찜 (번개장터 직접판매 상품) ===
+
+  async toggleWishlist(userId: string, productId: string): Promise<{ wishlisted: boolean }> {
+    await this.getProduct(productId); // 존재 검증(없으면 404)
+    const existing = await this.wishlistRepo.findOne({ where: { userId, productId } });
+    if (existing) {
+      await this.wishlistRepo.remove(existing);
+      return { wishlisted: false };
+    }
+    await this.wishlistRepo.save(this.wishlistRepo.create({ userId, productId }));
+    return { wishlisted: true };
+  }
+
+  async getWishlist(userId: string) {
+    const items = await this.wishlistRepo.find({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
+    // product 는 eager 로딩됨. 활성 상품만 반환.
+    return { items: items.map((w) => w.product).filter((p) => p && p.isActive) };
+  }
+
+  async getWishlistedIds(userId: string): Promise<string[]> {
+    const items = await this.wishlistRepo.find({
+      where: { userId },
+      select: { productId: true },
+    });
+    return items.map((w) => w.productId);
+  }
 
   // 번개장터 적립률(%) — 기본 2%. 결제 현금액 기준으로 적립.
   private marketPointRate(): number {

@@ -11,11 +11,18 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS } from '../../constants/theme';
-import { getProducts, getProductCategories, type Product as ApiProduct } from '../../api/products';
+import {
+  getMarketProducts,
+  getMarketCategories,
+  type MarketProduct as ApiMarketProduct,
+} from '../../api/market';
 import { useAuth } from '../../contexts/AuthContext';
 
-// 칩은 고정 목록이 아니라, 실제 들어와 있는 ihomemarket 상품의 카테고리에서
-// 동적으로 생성된다(카페24에서 카테고리 추가/삭제 시 자동 반영).
+// 번개장터 = 더블윈 직접판매(위탁판매). 구매하면 번개장터 포인트 2% 적립.
+const POINT_RATE = 0.02; // 백엔드 MARKET_POINT_RATE_PERCENT 기본값과 동기
+
+// 칩은 고정 목록이 아니라, 실제 들어와 있는 직접판매 상품의 카테고리에서
+// 동적으로 생성된다(상품 추가/삭제 시 자동 반영).
 type Chip = { key: string; label: string };
 const ALL_CHIP: Chip = { key: 'all', label: '전체' };
 
@@ -25,22 +32,21 @@ type MarketProduct = {
   price: number;
   originalPrice?: number;
   discountRate?: number;
-  cashbackRate: number;
-  imageUrl: string;
+  imageUrl?: string;
   rating?: number;
   reviewCount?: number;
 };
 
 function fmt(v: number) { return v.toLocaleString(); }
+function pointEarn(price: number) { return Math.floor(price * POINT_RATE); }
 
-function mapProduct(p: ApiProduct): MarketProduct {
+function mapProduct(p: ApiMarketProduct): MarketProduct {
   return {
     id: p.id,
     title: p.title,
     price: Number(p.price),
     originalPrice: p.originalPrice ? Number(p.originalPrice) : undefined,
     discountRate: p.discountRate ? Number(p.discountRate) : undefined,
-    cashbackRate: Number(p.cashbackRate),
     imageUrl: p.imageUrl,
     rating: p.rating != null ? Number(p.rating) : undefined,
     reviewCount: p.reviewCount != null ? Number(p.reviewCount) : undefined,
@@ -51,7 +57,13 @@ function FeaturedCard({ p, onPress }: { p: MarketProduct; onPress: () => void })
   return (
     <TouchableOpacity style={fStyles.card} onPress={onPress} activeOpacity={0.85}>
       <View style={fStyles.imgBox}>
-        <Image source={{ uri: p.imageUrl }} style={fStyles.img} resizeMode="cover" />
+        {p.imageUrl ? (
+          <Image source={{ uri: p.imageUrl }} style={fStyles.img} resizeMode="cover" />
+        ) : (
+          <View style={[fStyles.img, fStyles.imgPlaceholder]}>
+            <Text style={{ fontSize: 36 }}>📦</Text>
+          </View>
+        )}
         <TouchableOpacity style={fStyles.likeBtn}>
           <Ionicons name="heart-outline" size={16} color={COLORS.ink[700]} />
         </TouchableOpacity>
@@ -61,15 +73,7 @@ function FeaturedCard({ p, onPress }: { p: MarketProduct; onPress: () => void })
         {p.discountRate ? <Text style={fStyles.discount}>{Math.round(p.discountRate)}%</Text> : null}
         <Text style={fStyles.price}>{fmt(p.price)}원</Text>
       </View>
-      {(p.rating != null || p.reviewCount != null) ? (
-        <View style={fStyles.metaRow}>
-          <Ionicons name="star" size={11} color="#F59E0B" />
-          <Text style={fStyles.rating}>{p.rating != null ? p.rating.toFixed(1) : '-'}</Text>
-          <Text style={fStyles.review}>({fmt(p.reviewCount ?? 0)})</Text>
-        </View>
-      ) : (
-        <Text style={fStyles.cb}>캐시백 {p.cashbackRate}%</Text>
-      )}
+      <Text style={fStyles.cb}>{fmt(pointEarn(p.price))}P 적립</Text>
     </TouchableOpacity>
   );
 }
@@ -79,7 +83,13 @@ function FlashCard({ p, onPress }: { p: MarketProduct; onPress: () => void }) {
   return (
     <TouchableOpacity style={flStyles.card} onPress={onPress} activeOpacity={0.85}>
       <View style={flStyles.imgBox}>
-        <Image source={{ uri: p.imageUrl }} style={flStyles.img} resizeMode="cover" />
+        {p.imageUrl ? (
+          <Image source={{ uri: p.imageUrl }} style={flStyles.img} resizeMode="cover" />
+        ) : (
+          <View style={[flStyles.img, flStyles.imgPlaceholder]}>
+            <Text style={{ fontSize: 32 }}>📦</Text>
+          </View>
+        )}
         {hot && (
           <View style={flStyles.urgentBadge}>
             <Text style={flStyles.urgentText}>특가</Text>
@@ -91,7 +101,7 @@ function FlashCard({ p, onPress }: { p: MarketProduct; onPress: () => void }) {
         {p.discountRate ? <Text style={flStyles.discount}>{Math.round(p.discountRate)}%</Text> : null}
         <Text style={flStyles.price}>{fmt(p.price)}원</Text>
       </View>
-      <Text style={flStyles.sold}>캐시백 {p.cashbackRate}% 적립</Text>
+      <Text style={flStyles.sold}>{fmt(pointEarn(p.price))}P 적립</Text>
     </TouchableOpacity>
   );
 }
@@ -110,9 +120,9 @@ export const MarketContent = forwardRef<MarketContentHandle>((_props, ref) => {
   const [featured, setFeatured] = useState<MarketProduct[]>([]);
   const [flash, setFlash] = useState<MarketProduct[]>([]);
 
-  // 들어와 있는 상품 카테고리로 칩 동적 구성. chip.key = 카테고리명(=apiKey).
+  // 들어와 있는 직접판매 상품 카테고리로 칩 동적 구성. chip.key = 카테고리명.
   useEffect(() => {
-    getProductCategories('ihomemarket')
+    getMarketCategories()
       .then((cats) => {
         setChips([ALL_CHIP, ...cats.map((c) => ({ key: c.category, label: c.category }))]);
         // 선택돼 있던 카테고리가 사라졌으면 전체로 리셋
@@ -127,12 +137,8 @@ export const MarketContent = forwardRef<MarketContentHandle>((_props, ref) => {
     setLoading(true);
     try {
       const apiCat = cat === 'all' ? undefined : cat;
-      const data = await getProducts({
-        platform: 'ihomemarket',
-        category: apiCat,
-        limit: 30,
-      });
-      const items: ApiProduct[] = data?.items || [];
+      const data = await getMarketProducts({ category: apiCat, limit: 30 });
+      const items: ApiMarketProduct[] = data?.items || [];
       const mapped = items.map(mapProduct);
       const sorted = [...mapped].sort((a, b) => (b.discountRate ?? 0) - (a.discountRate ?? 0));
       setFlash(sorted.slice(0, 6));
@@ -190,10 +196,16 @@ export const MarketContent = forwardRef<MarketContentHandle>((_props, ref) => {
       {hero && (
         <TouchableOpacity
           style={styles.hero}
-          onPress={() => router.push(`/product/${hero.id}`)}
+          onPress={() => router.push(`/market/${hero.id}`)}
           activeOpacity={0.9}
         >
-          <Image source={{ uri: hero.imageUrl }} style={styles.heroImg} resizeMode="cover" />
+          {hero.imageUrl ? (
+            <Image source={{ uri: hero.imageUrl }} style={styles.heroImg} resizeMode="cover" />
+          ) : (
+            <View style={[styles.heroImg, styles.heroPlaceholder]}>
+              <Text style={{ fontSize: 56 }}>📦</Text>
+            </View>
+          )}
           <View style={styles.heroOverlay} />
           <View style={styles.heroContent}>
             <View style={styles.heroBadge}>
@@ -232,7 +244,7 @@ export const MarketContent = forwardRef<MarketContentHandle>((_props, ref) => {
                 contentContainerStyle={styles.flashScroll}
               >
                 {flash.map((p) => (
-                  <FlashCard key={p.id} p={p} onPress={() => router.push(`/product/${p.id}`)} />
+                  <FlashCard key={p.id} p={p} onPress={() => router.push(`/market/${p.id}`)} />
                 ))}
               </ScrollView>
 
@@ -246,7 +258,7 @@ export const MarketContent = forwardRef<MarketContentHandle>((_props, ref) => {
           </View>
           <View style={styles.grid}>
             {featured.map((p) => (
-              <FeaturedCard key={p.id} p={p} onPress={() => router.push(`/product/${p.id}`)} />
+              <FeaturedCard key={p.id} p={p} onPress={() => router.push(`/market/${p.id}`)} />
             ))}
           </View>
         </>
@@ -297,6 +309,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   heroImg: { width: '100%', height: '100%' },
+  heroPlaceholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.ink[100] },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.35)',
@@ -360,6 +373,7 @@ const fStyles = StyleSheet.create({
     position: 'relative',
   },
   img: { width: '100%', height: '100%' },
+  imgPlaceholder: { alignItems: 'center', justifyContent: 'center' },
   likeBtn: {
     position: 'absolute', top: 6, right: 6,
     width: 28, height: 28, borderRadius: 14,
@@ -386,6 +400,7 @@ const flStyles = StyleSheet.create({
     position: 'relative',
   },
   img: { width: '100%', height: '100%' },
+  imgPlaceholder: { alignItems: 'center', justifyContent: 'center' },
   urgentBadge: {
     position: 'absolute', top: 8, left: 8,
     backgroundColor: COLORS.primary,

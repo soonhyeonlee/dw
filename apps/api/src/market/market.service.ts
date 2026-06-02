@@ -83,6 +83,33 @@ export class MarketService {
     });
   }
 
+  // 활성 상품이 실제로 들어있는 카테고리만(개수 포함) — 동적 칩 구성용.
+  async getCategories(): Promise<{ category: string; count: number }[]> {
+    const rows = await this.productRepo
+      .createQueryBuilder('p')
+      .select('p.category', 'category')
+      .addSelect('COUNT(*)', 'count')
+      .where('p.isActive = :active', { active: true })
+      .andWhere('p.category IS NOT NULL')
+      .andWhere("p.category <> ''")
+      .groupBy('p.category')
+      .orderBy('count', 'DESC')
+      .getRawMany();
+    return rows.map((r) => ({ category: r.category, count: Number(r.count) }));
+  }
+
+  // 평면 상품 목록(선택 카테고리) — 번개장터 진열(직접판매)용.
+  async listProducts(category?: string, limit = 30): Promise<{ items: MarketProduct[] }> {
+    const where: any = { isActive: true };
+    if (category) where.category = category;
+    const items = await this.productRepo.find({
+      where,
+      order: { sortOrder: 'ASC', createdAt: 'DESC' },
+      take: limit,
+    });
+    return { items };
+  }
+
   async getProductsByCategory(category: string, page = 1, limit = 20) {
     const [items, total] = await this.productRepo.findAndCount({
       where: { category, isActive: true },

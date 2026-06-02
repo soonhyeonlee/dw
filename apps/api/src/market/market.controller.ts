@@ -26,6 +26,25 @@ export class MarketController {
     return { success: true, data };
   }
 
+  // 정적 경로(products, categories)를 :id 보다 먼저 선언해 라우트 충돌 방지.
+  @Get('categories')
+  async getCategories() {
+    const data = await this.marketService.getCategories();
+    return { success: true, data };
+  }
+
+  @Get('products')
+  async listProducts(
+    @Query('category') category?: string,
+    @Query('limit') limit?: number,
+  ) {
+    const data = await this.marketService.listProducts(
+      category,
+      limit ? Number(limit) : 30,
+    );
+    return { success: true, data };
+  }
+
   @Get('products/:id')
   async getProduct(@Param('id') id: string) {
     const data = await this.marketService.getProduct(id);

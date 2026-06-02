@@ -49,6 +49,30 @@ export async function getMarketProduct(id: string): Promise<MarketProduct> {
   return res.data;
 }
 
+export interface MarketCategory {
+  category: string;
+  count: number;
+}
+
+/** 활성 직접판매 상품이 있는 카테고리만(개수 포함) — 동적 칩 구성용. */
+export async function getMarketCategories(): Promise<MarketCategory[]> {
+  const res = await api('/market/categories');
+  return (res.data as MarketCategory[]) || [];
+}
+
+/** 번개장터 직접판매 상품 평면 목록(선택 카테고리). */
+export async function getMarketProducts(params?: {
+  category?: string;
+  limit?: number;
+}): Promise<{ items: MarketProduct[] }> {
+  const q = new URLSearchParams();
+  if (params?.category) q.set('category', params.category);
+  if (params?.limit) q.set('limit', String(params.limit));
+  const qs = q.toString();
+  const res = await api(`/market/products${qs ? `?${qs}` : ''}`);
+  return res.data;
+}
+
 export async function getExhibition(id: string): Promise<Exhibition & { products: MarketProduct[] }> {
   const res = await api(`/market/exhibitions/${id}`);
   return res.data;

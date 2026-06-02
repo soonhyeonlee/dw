@@ -11,7 +11,6 @@ import {
   Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS, SPACING } from '../constants/theme';
 
 export interface PromoSlide {
@@ -23,6 +22,7 @@ export interface PromoSlide {
   imageUrl?: string;  // 원격 이미지 (연한 배경, 레거시)
   bg?: [string, string];
   fg?: string;
+  align?: 'left' | 'right'; // 텍스트 오버레이 위치(그래픽 반대편). 기본 left.
   onPress?: () => void;
 }
 
@@ -73,6 +73,9 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
           const fg = hasImage ? COLORS.ink[900] : (s.fg || COLORS.white);
           const bg = s.bg || [COLORS.primary, COLORS.primaryDark];
           const isLight = !hasImage && !!s.fg && s.fg !== COLORS.white;
+          // 텍스트는 그래픽 반대편에 — align 미지정 시 왼쪽.
+          const align = s.align || 'left';
+          const right = align === 'right';
           return (
             <TouchableOpacity
               key={s.id}
@@ -83,30 +86,39 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
               {hasImage ? (
                 <Image source={s.image} style={StyleSheet.absoluteFill} resizeMode="cover" />
               ) : (
-                <>
-                  <LinearGradient
-                    colors={bg}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  {s.imageUrl ? (
-                    <Image source={{ uri: s.imageUrl }} style={styles.image} resizeMode="cover" />
-                  ) : null}
-                </>
+                <LinearGradient
+                  colors={bg}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
               )}
-              <View style={styles.content}>
+              {!hasImage && s.imageUrl ? (
+                <Image source={{ uri: s.imageUrl }} style={styles.image} resizeMode="cover" />
+              ) : null}
+
+              {/* 텍스트 오버레이 — 이미지 배너에서도 그래픽을 피해 표시 */}
+              <View style={[styles.content, right && styles.contentRight]}>
                 {s.badge ? (
                   <View style={[styles.badge, { backgroundColor: hasImage || isLight ? COLORS.white : 'rgba(255,255,255,0.22)' }]}>
                     <Text style={[styles.badgeText, { color: fg }]}>{s.badge}</Text>
                   </View>
                 ) : null}
-                <Text style={[styles.title, { color: fg }, hasImage && styles.imgText]} numberOfLines={hasImage ? 1 : 2}>{s.title}</Text>
+                <Text
+                  style={[styles.title, { color: fg }, hasImage && styles.imgText, right && styles.textRight]}
+                  numberOfLines={2}
+                >
+                  {s.title}
+                </Text>
                 {s.subtitle ? (
-                  <Text style={[styles.subtitle, { color: fg, opacity: 0.9 }, hasImage && styles.imgText]} numberOfLines={1}>{s.subtitle}</Text>
+                  <Text
+                    style={[styles.subtitle, { color: fg, opacity: 0.9 }, hasImage && styles.imgText, right && styles.textRight]}
+                    numberOfLines={1}
+                  >
+                    {s.subtitle}
+                  </Text>
                 ) : null}
               </View>
-              <Ionicons name="chevron-forward" size={18} color={fg} style={styles.chev} />
             </TouchableOpacity>
           );
         })}
@@ -138,9 +150,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   image: { ...StyleSheet.absoluteFillObject, opacity: 0.18 },
-  content: { gap: 4 },
+  content: { gap: 4, alignItems: 'flex-start' },
+  contentRight: { alignItems: 'flex-end' },
+  textRight: { textAlign: 'right' },
   badge: {
-    alignSelf: 'flex-start',
     paddingHorizontal: 8, paddingVertical: 2,
     borderRadius: 999,
   },

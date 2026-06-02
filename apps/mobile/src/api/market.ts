@@ -77,7 +77,36 @@ export async function createOrder(dto: {
   return res.data;
 }
 
-export async function getMyOrders(page = 1) {
+export type OrderStatus =
+  | 'pending'
+  | 'paid'
+  | 'shipping'
+  | 'delivered'
+  | 'cancelled'
+  | 'refunded';
+
+export interface MarketOrderItem {
+  id: string;
+  quantity: number;
+  totalPrice: number;
+  usedPoint: number;
+  pointEarned: number;
+  status: OrderStatus;
+  recipientName?: string;
+  trackingNumber?: string;
+  createdAt: string;
+  product?: MarketProduct;
+}
+
+export interface MarketOrderList {
+  items: MarketOrderItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export async function getMyOrders(page = 1): Promise<MarketOrderList> {
   const res = await api(`/market/orders?page=${page}`);
   return res.data;
 }

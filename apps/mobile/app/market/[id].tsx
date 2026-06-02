@@ -46,8 +46,7 @@ export default function MarketProductDetail() {
       ]);
       return;
     }
-    // TODO: 주문 페이지로 이동
-    Alert.alert('구매', '주문 페이지는 준비 중입니다');
+    router.push(`/market/checkout?id=${product!.id}`);
   };
 
   if (loading) {

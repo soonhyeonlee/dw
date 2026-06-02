@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
@@ -99,7 +100,7 @@ export default function SearchScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.searchBar}>
         <Ionicons name="search" size={20} color={COLORS.gray[400]} />
         <TextInput
@@ -138,7 +139,7 @@ export default function SearchScreen() {
       <PlatformFilter selected={selectedPlatform} onSelect={setSelectedPlatform} />
 
       {!hasSearched ? (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.popularSection}>
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={styles.popularSection}>
           {/* 추천 쇼핑몰 (샵백 Travel section 대응) */}
           {malls.length > 0 ? (
             <>
@@ -176,6 +177,7 @@ export default function SearchScreen() {
         <FlatList
           data={products}
           numColumns={2}
+          style={{ flex: 1 }}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.listContent}
           keyExtractor={(item) => item.id}
@@ -197,7 +199,7 @@ export default function SearchScreen() {
           }
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 

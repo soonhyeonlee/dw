@@ -46,9 +46,14 @@ export default function ProductCard({
   cashbackAmount,
   onPress,
 }: Props) {
+  // API 가 decimal 을 문자열("298000.00")로 주므로 숫자로 강제 변환해 포맷.
+  const priceN = Number(price) || 0;
+  const origN = originalPrice != null ? Number(originalPrice) : undefined;
+  const cbRateN = Number(cashbackRate) || 0;
+  const cbAmtN = Number(cashbackAmount) || 0;
   const discountRate =
-    originalPrice && originalPrice > price
-      ? Math.round(((originalPrice - price) / originalPrice) * 100)
+    origN && origN > priceN
+      ? Math.round(((origN - priceN) / origN) * 100)
       : 0;
 
   return (
@@ -85,21 +90,23 @@ export default function ProductCard({
             <Text style={styles.discount}>{discountRate}%</Text>
           )}
           <Text style={styles.price}>
-            {price.toLocaleString()}원
+            {priceN.toLocaleString()}원
           </Text>
         </View>
 
-        {originalPrice && originalPrice > price && (
+        {origN && origN > priceN && (
           <Text style={styles.originalPrice}>
-            {originalPrice.toLocaleString()}원
+            {origN.toLocaleString()}원
           </Text>
         )}
 
-        <View style={styles.cashbackBadge}>
-          <Text style={styles.cashbackText}>
-            캐시백 {cashbackAmount.toLocaleString()}원 ({cashbackRate}%)
-          </Text>
-        </View>
+        {cbAmtN > 0 && (
+          <View style={styles.cashbackBadge}>
+            <Text style={styles.cashbackText}>
+              캐시백 {cbAmtN.toLocaleString()}원 ({cbRateN}%)
+            </Text>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );

@@ -19,6 +19,7 @@ export default function PlatformFilter({ selected, onSelect }: Props) {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
+      style={styles.scroll}
       contentContainerStyle={styles.container}
     >
       {PLATFORMS.map((p) => {
@@ -49,14 +50,18 @@ export default function PlatformFilter({ selected, onSelect }: Props) {
 }
 
 const styles = StyleSheet.create({
+  // 높이를 콘텐츠에 고정 — flex 컬럼 안에서 세로로 늘어나 칩이 거대해지는 것 방지.
+  scroll: { flexGrow: 0, flexShrink: 0 },
   container: {
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
     gap: SPACING.sm,
+    alignItems: 'center',
   },
   chip: {
+    height: 36,
+    justifyContent: 'center',
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.gray[100],
   },

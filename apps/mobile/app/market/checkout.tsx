@@ -126,7 +126,7 @@ export default function MarketCheckout() {
           },
           {
             text: '확인',
-            onPress: () => router.replace('/(tabs)/market'),
+            onPress: () => router.replace('/market'),
           },
         ],
       );

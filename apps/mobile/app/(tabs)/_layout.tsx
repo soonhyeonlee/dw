@@ -89,7 +89,8 @@ export default function TabsLayout() {
       />
 
       {/* === 탭바에서 숨김 (라우트는 유지 — 홈 폴더탭/마이 등에서 사용) === */}
-      <Tabs.Screen name="market" options={{ headerShown: false, href: null }} />
+      {/* 번개장터 진열은 루트 스택 라우트 app/market/index.tsx (/market) 로 이동 —
+          탭이 아니라 push 되어 뒤로가기 시 직전 화면으로 정확히 복귀. */}
       <Tabs.Screen name="cashback" options={{ headerShown: false, href: null }} />
       <Tabs.Screen name="region" options={{ headerShown: false, href: null }} />
       <Tabs.Screen name="search" options={{ headerShown: false, href: null }} />

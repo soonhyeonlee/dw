@@ -70,6 +70,10 @@ export default function RootLayout() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name="market/index"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="market/[id]"
           options={{ headerShown: false }}
         />

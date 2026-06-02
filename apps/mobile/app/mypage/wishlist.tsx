@@ -129,7 +129,7 @@ export default function WishlistScreen() {
             title="찜한 상품이 없어요"
             subtitle="상품 상세에서 하트를 눌러 관심 상품을 모아보세요."
             actionLabel="상품 둘러보기"
-            onAction={() => router.push('/(tabs)/market')}
+            onAction={() => router.push('/market')}
           />
         ) : (
           <FlatList

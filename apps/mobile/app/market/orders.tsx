@@ -74,7 +74,7 @@ export default function MarketOrders() {
         <Text style={styles.emptyText}>주문 내역이 없습니다</Text>
         <TouchableOpacity
           style={styles.shopBtn}
-          onPress={() => router.replace('/(tabs)/market')}
+          onPress={() => router.replace('/market')}
         >
           <Text style={styles.shopBtnText}>번개장터 둘러보기</Text>
         </TouchableOpacity>

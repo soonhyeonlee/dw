@@ -40,9 +40,20 @@ export default function MarketScreen() {
       >
         {/* Header */}
         <View style={styles.topbar}>
-          <View>
-            <Text style={styles.title}>번개장터</Text>
-            <Text style={styles.subtitle}>더블윈 산지직송 위탁판매</Text>
+          <View style={styles.topbarLeft}>
+            {router.canGoBack() && (
+              <TouchableOpacity
+                style={styles.backBtn}
+                onPress={() => router.back()}
+                hitSlop={8}
+              >
+                <Ionicons name="arrow-back" size={24} color={COLORS.ink[800]} />
+              </TouchableOpacity>
+            )}
+            <View>
+              <Text style={styles.title}>번개장터</Text>
+              <Text style={styles.subtitle}>더블윈 산지직송 위탁판매</Text>
+            </View>
           </View>
           <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/market/search')}>
             <Ionicons name="search-outline" size={24} color={COLORS.ink[800]} />
@@ -69,6 +80,8 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 4,
   },
+  topbarLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+  backBtn: { marginLeft: -4, padding: 2 },
   title: { fontSize: 22, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.5 },
   subtitle: { fontSize: 12, color: COLORS.ink[500], marginTop: 2, fontWeight: '500' },
   iconBtn: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },

@@ -60,13 +60,25 @@ export async function getMarketCategories(): Promise<MarketCategory[]> {
   return (res.data as MarketCategory[]) || [];
 }
 
-/** 번개장터 직접판매 상품 평면 목록(선택 카테고리). */
+export interface MarketProductList {
+  items: MarketProduct[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+/** 번개장터 직접판매 상품 평면 목록(선택 카테고리/키워드 검색, 페이지네이션). */
 export async function getMarketProducts(params?: {
   category?: string;
+  keyword?: string;
+  page?: number;
   limit?: number;
-}): Promise<{ items: MarketProduct[] }> {
+}): Promise<MarketProductList> {
   const q = new URLSearchParams();
   if (params?.category) q.set('category', params.category);
+  if (params?.keyword) q.set('keyword', params.keyword);
+  if (params?.page) q.set('page', String(params.page));
   if (params?.limit) q.set('limit', String(params.limit));
   const qs = q.toString();
   const res = await api(`/market/products${qs ? `?${qs}` : ''}`);

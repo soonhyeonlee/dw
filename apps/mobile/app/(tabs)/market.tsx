@@ -44,7 +44,7 @@ export default function MarketScreen() {
             <Text style={styles.title}>번개장터</Text>
             <Text style={styles.subtitle}>더블윈 산지직송 위탁판매</Text>
           </View>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/(tabs)/search')}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/market/search')}>
             <Ionicons name="search-outline" size={24} color={COLORS.ink[800]} />
           </TouchableOpacity>
         </View>

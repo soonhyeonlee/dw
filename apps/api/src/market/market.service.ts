@@ -98,16 +98,21 @@ export class MarketService {
     return rows.map((r) => ({ category: r.category, count: Number(r.count) }));
   }
 
-  // 평면 상품 목록(선택 카테고리) — 번개장터 진열(직접판매)용.
-  async listProducts(category?: string, limit = 30): Promise<{ items: MarketProduct[] }> {
-    const where: any = { isActive: true };
-    if (category) where.category = category;
-    const items = await this.productRepo.find({
-      where,
-      order: { sortOrder: 'ASC', createdAt: 'DESC' },
-      take: limit,
-    });
-    return { items };
+  // 평면 상품 목록(선택 카테고리/키워드 검색) — 번개장터 진열·검색(직접판매)용.
+  async listProducts(category?: string, keyword?: string, page = 1, limit = 30) {
+    const qb = this.productRepo
+      .createQueryBuilder('p')
+      .where('p.isActive = :active', { active: true });
+    if (category) qb.andWhere('p.category = :category', { category });
+    if (keyword && keyword.trim()) {
+      qb.andWhere('p.title ILIKE :kw', { kw: `%${keyword.trim()}%` });
+    }
+    qb.orderBy('p.sortOrder', 'ASC')
+      .addOrderBy('p.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+    const [items, total] = await qb.getManyAndCount();
+    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async getProductsByCategory(category: string, page = 1, limit = 20) {

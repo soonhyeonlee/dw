@@ -36,10 +36,14 @@ export class MarketController {
   @Get('products')
   async listProducts(
     @Query('category') category?: string,
+    @Query('keyword') keyword?: string,
+    @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
     const data = await this.marketService.listProducts(
       category,
+      keyword,
+      page ? Number(page) : 1,
       limit ? Number(limit) : 30,
     );
     return { success: true, data };

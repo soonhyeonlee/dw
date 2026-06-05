@@ -84,21 +84,6 @@ function PROMO_SLIDES(router: ReturnType<typeof useRouter>): PromoSlide[] {
   ];
 }
 
-// 실시간 인기 쇼핑몰 — 랭킹 행
-function RankRow({ rank, mall, onPress }: { rank: number; mall: ApiMall; onPress: () => void }) {
-  return (
-    <TouchableOpacity style={rankStyles.row} onPress={onPress} activeOpacity={0.8}>
-      <Text style={[rankStyles.rank, rank <= 3 && rankStyles.rankTop]}>{rank}</Text>
-      <MallLogo mall={mall} size={46} radius={13} />
-      <View style={{ flex: 1 }}>
-        <Text style={rankStyles.name} numberOfLines={1}>{mall.name}</Text>
-        <Text style={rankStyles.rate}>최대 {Number(mall.cashbackRate)}% 캐시백</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={16} color={COLORS.ink[400]} />
-    </TouchableOpacity>
-  );
-}
-
 function DealCard({ p, label, onPress }: { p: ApiProduct; label: string; onPress: () => void }) {
   return (
     <TouchableOpacity style={dealStyles.card} onPress={onPress} activeOpacity={0.85}>
@@ -145,7 +130,7 @@ function RecCard({ p, label, onPress }: { p: ApiProduct; label: string; onPress:
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { height: windowH } = useWindowDimensions();
+  const { width: windowW, height: windowH } = useWindowDimensions();
   const { user, isAuthenticated } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -209,10 +194,9 @@ export default function HomeScreen() {
     setRefreshing(false);
   }, [loadData]);
 
-  // 실시간 인기 쇼핑몰: 캐시백률 높은 순 상위 6
-  const popularMalls = [...malls]
-    .sort((a, b) => Number(b.cashbackRate || 0) - Number(a.cashbackRate || 0))
-    .slice(0, 6);
+  // 인기 상향 캐시백 그리드(샵백 스타일 3열): 화면폭에서 카드폭 계산
+  const GRID_GAP = 10;
+  const gridCardW = Math.floor((windowW - SPACING.xl * 2 - GRID_GAP * 2) / 3);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -359,37 +343,7 @@ export default function HomeScreen() {
               <Ionicons name="chevron-forward" size={16} color={COLORS.ink[400]} />
             </TouchableOpacity>
 
-            {/* 실시간 인기 쇼핑몰 */}
-            <View style={styles.sectionHead}>
-              <View style={styles.sectionTitleGroup}>
-                <Text style={styles.sectionTitle}>실시간 인기 쇼핑몰</Text>
-                <Text style={styles.sectionSub}>방금 업데이트</Text>
-              </View>
-              <TouchableOpacity style={styles.moreBtn} onPress={() => router.push('/(tabs)/categories' as any)}>
-                <Text style={styles.moreText}>전체</Text>
-                <Ionicons name="chevron-forward" size={12} color={COLORS.ink[500]} />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.rankList}>
-              {loading && popularMalls.length === 0 ? (
-                <ActivityIndicator size="small" color={COLORS.primary} style={{ paddingVertical: 20 }} />
-              ) : popularMalls.length === 0 ? (
-                <Text style={styles.emptyText}>등록된 쇼핑몰이 없습니다</Text>
-              ) : (
-                popularMalls.map((m, i) => (
-                  <RankRow
-                    key={m.id}
-                    rank={i + 1}
-                    mall={m}
-                    onPress={() => router.push(`/mall/${m.platform}` as any)}
-                  />
-                ))
-              )}
-            </View>
-
-            <View style={styles.divider} />
-
-            {/* 인기 상향 캐시백 */}
+            {/* 인기 상향 캐시백 — 샵백 스타일 그리드 */}
             <View style={styles.sectionHead}>
               <View style={styles.sectionTitleGroup}>
                 <Text style={styles.sectionTitle}>인기 상향 캐시백</Text>
@@ -415,38 +369,44 @@ export default function HomeScreen() {
                 );
               })}
             </ScrollView>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={dailyStyles.scroll}>
-              {(() => {
-                const offset = dailyTabIdx;
-                const ordered = malls.length ? [...malls.slice(offset), ...malls.slice(0, offset)] : [];
-                return ordered.slice(0, 6).map((m) => {
-                  const badge = m.promoBadge ? PROMO_BADGE_LABEL[m.promoBadge] : null;
-                  const prev = m.previousCashbackRate != null ? Number(m.previousCashbackRate) : null;
-                  return (
-                    <TouchableOpacity
-                      key={m.id}
-                      style={dailyStyles.bigCard}
-                      onPress={() => router.push(`/mall/${m.platform}` as any)}
-                      activeOpacity={0.9}
-                    >
-                      <View style={dailyStyles.bigLogoWrap}>
-                        <MallLogo mall={m} size={132} radius={18} />
-                        {badge ? (
-                          <View style={[dailyStyles.bigBadge, { backgroundColor: badge.bg }]}>
-                            <Text style={[dailyStyles.bigBadgeText, { color: badge.fg }]}>{badge.text}</Text>
-                          </View>
-                        ) : null}
-                      </View>
-                      <Text style={dailyStyles.bigName} numberOfLines={1}>{m.name}</Text>
-                      <View style={dailyStyles.bigRateRow}>
-                        <Text style={dailyStyles.bigRate}>최대 {Number(m.cashbackRate)}%</Text>
-                        {prev != null ? <Text style={dailyStyles.bigPrev}>{prev}%</Text> : null}
-                      </View>
-                    </TouchableOpacity>
-                  );
-                });
-              })()}
-            </ScrollView>
+            <View style={[gridStyles.grid, { columnGap: GRID_GAP }]}>
+              {loading && malls.length === 0 ? (
+                <ActivityIndicator size="small" color={COLORS.primary} style={{ width: '100%', paddingVertical: 20 }} />
+              ) : malls.length === 0 ? (
+                <Text style={styles.emptyText}>등록된 쇼핑몰이 없습니다</Text>
+              ) : (
+                (() => {
+                  const offset = dailyTabIdx;
+                  const ordered = [...malls.slice(offset), ...malls.slice(0, offset)];
+                  return ordered.slice(0, 9).map((m) => {
+                    const badge = m.promoBadge ? PROMO_BADGE_LABEL[m.promoBadge] : null;
+                    const prev = m.previousCashbackRate != null ? Number(m.previousCashbackRate) : null;
+                    return (
+                      <TouchableOpacity
+                        key={m.id}
+                        style={[gridStyles.card, { width: gridCardW }]}
+                        onPress={() => router.push(`/mall/${m.platform}` as any)}
+                        activeOpacity={0.85}
+                      >
+                        <View style={{ width: gridCardW, height: gridCardW }}>
+                          <MallLogo mall={m} size={gridCardW} radius={16} />
+                          {badge ? (
+                            <View style={[gridStyles.badge, { backgroundColor: badge.bg }]}>
+                              <Text style={[gridStyles.badgeText, { color: badge.fg }]}>{badge.text}</Text>
+                            </View>
+                          ) : null}
+                        </View>
+                        <Text style={gridStyles.name} numberOfLines={1}>{m.name}</Text>
+                        <View style={gridStyles.rateRow}>
+                          <Text style={gridStyles.rate}>최대 {Number(m.cashbackRate)}%</Text>
+                          {prev != null ? <Text style={gridStyles.prev}>{prev}%</Text> : null}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  });
+                })()
+              )}
+            </View>
 
             <View style={[styles.divider, { marginTop: 18 }]} />
 
@@ -620,8 +580,6 @@ const styles = StyleSheet.create({
 
   emptyText: { textAlign: 'center', color: COLORS.ink[400], paddingVertical: 20, fontSize: 13 },
 
-  rankList: { paddingHorizontal: SPACING.xl, gap: 4 },
-
   divider: { height: 8, backgroundColor: COLORS.ink[50], marginTop: 24 },
 
   dayTabScroll: { paddingHorizontal: SPACING.xl, gap: 8, paddingBottom: 12 },
@@ -659,45 +617,25 @@ const styles = StyleSheet.create({
   comingSoonSub: { fontSize: 13, color: COLORS.ink[500], textAlign: 'center', lineHeight: 20 },
 });
 
-const rankStyles = StyleSheet.create({
-  row: {
+// 인기 상향 캐시백 — 샵백 스타일 3열 그리드 (로고 타일 + 캐시백률)
+const gridStyles = StyleSheet.create({
+  grid: {
+    paddingHorizontal: SPACING.xl,
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 9,
+    flexWrap: 'wrap',
+    rowGap: 18,
   },
-  rank: {
-    width: 22,
-    textAlign: 'center',
-    fontSize: 15,
-    fontWeight: '800',
-    color: COLORS.ink[400],
-    fontVariant: ['tabular-nums'],
-  },
-  rankTop: { color: COLORS.primary },
-  logo: {
-    width: 46, height: 46, borderRadius: 13,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  logoText: { fontSize: 18, fontWeight: '800', color: COLORS.white, letterSpacing: -0.5 },
-  name: { fontSize: 14, fontWeight: '700', color: COLORS.ink[900] },
-  rate: { fontSize: 12, fontWeight: '600', color: COLORS.primary, marginTop: 2 },
-});
-
-const dailyStyles = StyleSheet.create({
-  scroll: { paddingHorizontal: SPACING.xl, gap: 12, paddingBottom: 4 },
-  bigCard: { width: 132, gap: 8 },
-  bigLogoWrap: { position: 'relative', width: 132, height: 132 },
-  bigBadge: {
-    position: 'absolute', top: 8, left: 8,
+  card: { gap: 7 },
+  badge: {
+    position: 'absolute', top: 6, left: 6,
     paddingHorizontal: 7, paddingVertical: 3,
     borderRadius: 6,
   },
-  bigBadgeText: { fontSize: 10, fontWeight: '800' },
-  bigName: { fontSize: 13, fontWeight: '700', color: COLORS.ink[900] },
-  bigRateRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
-  bigRate: { fontSize: 14, fontWeight: '800', color: COLORS.primary, letterSpacing: -0.3 },
-  bigPrev: { fontSize: 11, color: COLORS.ink[400], textDecorationLine: 'line-through' },
+  badgeText: { fontSize: 10, fontWeight: '800' },
+  name: { fontSize: 12.5, fontWeight: '700', color: COLORS.ink[900] },
+  rateRow: { flexDirection: 'row', alignItems: 'baseline', gap: 5 },
+  rate: { fontSize: 13, fontWeight: '800', color: COLORS.primary, letterSpacing: -0.3 },
+  prev: { fontSize: 10, color: COLORS.ink[400], textDecorationLine: 'line-through' },
 });
 
 const dealStyles = StyleSheet.create({

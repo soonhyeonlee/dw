@@ -50,7 +50,10 @@ coverage/
 design-mockup/qa-*/
 apps/mobile/_uitest/
 _verify/
+_verify_checkout/
 apps/mobile/gradle-build*.log
+# 루트에 드롭한 배너 원본 소스(에셋으로 가공 후 보관용)
+/*배너.png
 
 # Local tooling / agent state (not project source)
 .claude/

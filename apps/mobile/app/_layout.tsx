@@ -90,6 +90,10 @@ export default function RootLayout() {
           options={{ title: '주문 내역' }}
         />
         <Stack.Screen
+          name="market/order/[id]"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="region/[id]"
           options={{ headerShown: false }}
         />

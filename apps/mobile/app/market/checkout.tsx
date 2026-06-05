@@ -10,6 +10,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -156,9 +157,13 @@ export default function MarketCheckout() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>주문 상품</Text>
           <View style={styles.productRow}>
-            <View style={styles.thumb}>
-              <Text style={{ fontSize: 28 }}>📦</Text>
-            </View>
+            {product.imageUrl ? (
+              <Image source={{ uri: product.imageUrl }} style={styles.thumb} resizeMode="cover" />
+            ) : (
+              <View style={styles.thumb}>
+                <Text style={{ fontSize: 28 }}>📦</Text>
+              </View>
+            )}
             <View style={{ flex: 1 }}>
               <Text style={styles.productTitle} numberOfLines={2}>
                 {product.title}

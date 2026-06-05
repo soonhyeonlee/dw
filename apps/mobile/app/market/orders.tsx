@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
@@ -95,7 +96,7 @@ export default function MarketOrders() {
           <TouchableOpacity
             style={styles.card}
             activeOpacity={0.8}
-            onPress={() => item.product && router.push(`/market/${item.product.id}`)}
+            onPress={() => router.push(`/market/order/${item.id}`)}
           >
             <View style={styles.cardHeader}>
               <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
@@ -105,9 +106,13 @@ export default function MarketOrders() {
             </View>
 
             <View style={styles.cardBody}>
-              <View style={styles.thumb}>
-                <Text style={{ fontSize: 26 }}>📦</Text>
-              </View>
+              {item.product?.imageUrl ? (
+                <Image source={{ uri: item.product.imageUrl }} style={styles.thumb} resizeMode="cover" />
+              ) : (
+                <View style={styles.thumb}>
+                  <Text style={{ fontSize: 26 }}>📦</Text>
+                </View>
+              )}
               <View style={{ flex: 1 }}>
                 <Text style={styles.title} numberOfLines={2}>
                   {item.product?.title || '상품'}

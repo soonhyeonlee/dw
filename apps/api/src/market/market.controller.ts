@@ -125,6 +125,13 @@ export class MarketController {
     return { success: true, data };
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Patch('orders/:id/cancel')
+  async cancelOrder(@Request() req, @Param('id') id: string) {
+    const data = await this.marketService.cancelOrder(id, req.user.id);
+    return { success: true, data };
+  }
+
   // === Admin ===
 
   @UseGuards(JwtAuthGuard, AdminGuard)

@@ -129,6 +129,11 @@ export interface MarketOrderItem {
   pointEarned: number;
   status: OrderStatus;
   recipientName?: string;
+  recipientPhone?: string;
+  zipCode?: string;
+  address?: string;
+  addressDetail?: string;
+  deliveryMemo?: string;
   trackingNumber?: string;
   createdAt: string;
   product?: MarketProduct;
@@ -144,6 +149,17 @@ export interface MarketOrderList {
 
 export async function getMyOrders(page = 1): Promise<MarketOrderList> {
   const res = await api(`/market/orders?page=${page}`);
+  return res.data;
+}
+
+export async function getMarketOrder(id: string): Promise<MarketOrderItem> {
+  const res = await api(`/market/orders/${id}`);
+  return res.data;
+}
+
+/** 본인 주문 취소(배송 전) — 포인트·재고 원복. */
+export async function cancelMarketOrder(id: string): Promise<MarketOrderItem> {
+  const res = await api(`/market/orders/${id}/cancel`, { method: 'PATCH' });
   return res.data;
 }
 

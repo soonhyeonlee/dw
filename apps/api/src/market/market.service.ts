@@ -210,6 +210,8 @@ export class MarketService {
       totalPrice,
       usedPoint,
       pointEarned,
+      // 번개장터 포인트/즉시정산 결제 — 별도 PG 없이 결제 즉시 완료 처리.
+      status: OrderStatus.PAID,
       ...shippingInfo,
     });
 
@@ -247,6 +249,30 @@ export class MarketService {
     });
     if (!order) throw new NotFoundException('주문을 찾을 수 없습니다');
     return order;
+  }
+
+  // 사용자 본인 주문 취소 — 배송 시작 전(pending/paid)만 가능. 포인트·재고 원복.
+  async cancelOrder(id: string, userId: string) {
+    const order = await this.orderRepo.findOne({ where: { id, userId } });
+    if (!order) throw new NotFoundException('주문을 찾을 수 없습니다');
+    if (![OrderStatus.PENDING, OrderStatus.PAID].includes(order.status)) {
+      throw new BadRequestException('배송이 시작되었거나 이미 취소된 주문은 취소할 수 없습니다');
+    }
+    await this.reverseOrder(order);
+    await this.orderRepo.update(id, { status: OrderStatus.CANCELLED });
+    return this.orderRepo.findOne({ where: { id }, relations: ['product'] });
+  }
+
+  // 주문 원복 — 사용 포인트 환급 + 적립 포인트 회수 + 판매수/재고 복원. (취소/환불 공통)
+  private async reverseOrder(order: MarketOrder) {
+    const used = Number(order.usedPoint) || 0;
+    const earned = Number(order.pointEarned) || 0;
+    if (used > 0) await this.usersService.addMarketPoint(order.userId, used); // 사용분 환급
+    if (earned > 0) await this.usersService.spendMarketPoint(order.userId, earned); // 적립분 회수
+    await this.productRepo.update(order.productId, {
+      soldCount: () => `GREATEST("soldCount" - ${order.quantity}, 0)`,
+      stockQuantity: () => `"stockQuantity" + ${order.quantity}`,
+    } as any);
   }
 
   // === Admin ===
@@ -287,14 +313,11 @@ export class MarketService {
     const order = await this.orderRepo.findOne({ where: { id } });
     if (!order) throw new NotFoundException('주문을 찾을 수 없습니다');
 
-    // 취소/환불로 전환될 때 포인트 원복 (한 번만).
+    // 취소/환불로 전환될 때 포인트·재고 원복 (한 번만).
     const wasReversed = [OrderStatus.CANCELLED, OrderStatus.REFUNDED].includes(order.status);
     const willReverse = [OrderStatus.CANCELLED, OrderStatus.REFUNDED].includes(status);
     if (willReverse && !wasReversed) {
-      const used = Number(order.usedPoint) || 0;
-      const earned = Number(order.pointEarned) || 0;
-      if (used > 0) await this.usersService.addMarketPoint(order.userId, used); // 사용분 환급
-      if (earned > 0) await this.usersService.spendMarketPoint(order.userId, earned); // 적립분 회수
+      await this.reverseOrder(order);
     }
 
     const update: any = { status };

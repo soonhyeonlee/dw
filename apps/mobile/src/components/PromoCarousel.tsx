@@ -84,8 +84,8 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
               style={[styles.slide, { width: SLIDE_W, marginRight: i === slides.length - 1 ? 0 : SLIDE_GAP }]}
             >
               {hasImage ? (
-                /* 배너 전체가 잘리지 않도록 고유 비율 박스로 렌더(슬라이드 높이를 이미지가 결정) */
-                <Image source={s.image} style={styles.bannerImage} resizeMode="cover" />
+                /* 이미지를 카드(둥근 사각형)에 cover 로 채움 — 카드형으로 깎아 표시 */
+                <Image source={s.image} style={StyleSheet.absoluteFill} resizeMode="cover" />
               ) : (
                 <LinearGradient
                   colors={bg}
@@ -142,15 +142,11 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
 const styles = StyleSheet.create({
   wrap: { marginTop: 4 },
   slide: {
-    // 이미지 배너는 bannerImage 의 aspectRatio 가 높이를 결정(전체 표시, 잘림 없음).
-    // minHeight 는 이미지 없는 그라데이션 슬라이드용 폴백.
-    minHeight: Math.round(SLIDE_W / 4),
+    height: Math.round(SLIDE_W / 2), // 이전(원래) 배너 카드 사이즈
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     justifyContent: 'center',
   },
-  // 배너 원본 비율(≈4.1:1)로 폭 100% 채움 → 그래픽 포함 전체가 보임.
-  bannerImage: { width: '100%', aspectRatio: 1705 / 414 },
   image: { ...StyleSheet.absoluteFillObject, opacity: 0.18 },
   contentOverlay: {
     position: 'absolute',

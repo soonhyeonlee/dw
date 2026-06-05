@@ -45,6 +45,12 @@
         {
           "locationAlwaysAndWhenInUsePermission": "내 주변 학원·어린이집을 보여드리기 위해 위치 정보를 사용합니다."
         }
+      ],
+      [
+        "@react-native-seoul/kakao-login",
+        {
+          "kakaoAppKey": "7822ff27784b8d9481ac9540c79e6d73"
+        }
       ]
     ],
     "extra": {

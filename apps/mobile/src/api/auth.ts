@@ -103,6 +103,21 @@ export async function ihomePasswordLogin(mbId: string, password: string) {
   return res.data;
 }
 
+/**
+ * 네이티브 소셜 로그인 — 앱 SDK로 받은 access token 을 백엔드에 넘겨
+ * 아이홈마켓 회원과 통합(같은 카카오 앱이라 identifier 동일). 웹뷰 안 거침.
+ */
+export async function ihomeSocialLogin(provider: string, accessToken: string) {
+  const res = await api('/auth/ihome-social', {
+    method: 'POST',
+    body: JSON.stringify({ provider, accessToken }),
+  });
+  if (res.data?.token) {
+    await setToken(res.data.token);
+  }
+  return res.data;
+}
+
 export async function updatePushToken(pushToken: string) {
   const res = await api('/auth/push-token', {
     method: 'POST',

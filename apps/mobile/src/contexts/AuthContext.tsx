@@ -36,6 +36,7 @@ interface AuthContextType {
   socialLogin: (data: SocialLoginData) => Promise<void>;
   ihomeLogin: (data: { mbId: string; email: string; nickname: string; ts: string; sig: string }) => Promise<void>;
   ihomePasswordLogin: (mbId: string, password: string) => Promise<void>;
+  ihomeSocialLogin: (provider: string, accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -49,6 +50,7 @@ const AuthContext = createContext<AuthContextType>({
   socialLogin: async () => {},
   ihomeLogin: async () => {},
   ihomePasswordLogin: async () => {},
+  ihomeSocialLogin: async () => {},
   logout: async () => {},
   refreshProfile: async () => {},
 });
@@ -106,6 +108,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(res.user);
   };
 
+  const handleIhomeSocialLogin = async (provider: string, accessToken: string) => {
+    const res = await authApi.ihomeSocialLogin(provider, accessToken);
+    setUser(res.user);
+  };
+
   const logout = async () => {
     await authApi.logout();
     setUser(null);
@@ -132,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         socialLogin: handleSocialLogin,
         ihomeLogin: handleIhomeLogin,
         ihomePasswordLogin: handleIhomePasswordLogin,
+        ihomeSocialLogin: handleIhomeSocialLogin,
         logout,
         refreshProfile,
       }}

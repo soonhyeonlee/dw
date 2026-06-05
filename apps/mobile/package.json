@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@react-native-seoul/kakao-login": "^5.4.2",
     "expo": "~55.0.5",
     "expo-auth-session": "~55.0.9",
     "expo-build-properties": "~55.0.13",

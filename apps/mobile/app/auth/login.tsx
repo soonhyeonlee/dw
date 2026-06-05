@@ -16,10 +16,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { loginWithIhome } from '../../src/lib/ihome-sso';
+import { loginWithKakaoNative, KAKAO_CANCELLED } from '../../src/lib/kakao-native';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { ihomeLogin, ihomePasswordLogin } = useAuth();
+  const { ihomeLogin, ihomePasswordLogin, ihomeSocialLogin } = useAuth();
   const [mbId, setMbId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -43,7 +44,24 @@ export default function LoginScreen() {
     }
   };
 
-  // 소셜(카카오·네이버·구글) — OAuth 라 아이홈마켓 웹뷰가 필요한 경우에만.
+  // 카카오 — 네이티브 SDK 로그인(웹뷰 안 거침). 같은 카카오 앱이라 아이홈마켓 회원과 통합.
+  const handleKakaoLogin = async () => {
+    if (loading || socialLoading) return;
+    setSocialLoading(true);
+    try {
+      const accessToken = await loginWithKakaoNative();
+      await ihomeSocialLogin('kakao', accessToken);
+      router.replace('/(tabs)');
+    } catch (e: any) {
+      if (e?.message && e.message !== KAKAO_CANCELLED) {
+        Alert.alert('로그인 실패', e.message);
+      }
+    } finally {
+      setSocialLoading(false);
+    }
+  };
+
+  // 네이버·구글 — 아직 네이티브 SDK 미통합이라 아이홈마켓 웹뷰 OAuth 사용.
   const handleSocialLogin = async () => {
     if (loading || socialLoading) return;
     setSocialLoading(true);
@@ -121,6 +139,22 @@ export default function LoginScreen() {
         </View>
 
         <TouchableOpacity
+          style={[styles.kakaoBtn, busy && styles.btnDisabled]}
+          onPress={handleKakaoLogin}
+          disabled={busy}
+          activeOpacity={0.85}
+        >
+          {socialLoading ? (
+            <ActivityIndicator color="#3C1E1E" />
+          ) : (
+            <>
+              <Ionicons name="chatbubble" size={18} color="#3C1E1E" />
+              <Text style={styles.kakaoBtnText}>카카오로 로그인</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={[styles.socialBtn, busy && styles.btnDisabled]}
           onPress={handleSocialLogin}
           disabled={busy}
@@ -129,10 +163,7 @@ export default function LoginScreen() {
           {socialLoading ? (
             <ActivityIndicator color={COLORS.gray[700]} />
           ) : (
-            <>
-              <Ionicons name="chatbubble" size={18} color={COLORS.gray[700]} />
-              <Text style={styles.socialBtnText}>카카오 · 네이버 · 구글로 로그인</Text>
-            </>
+            <Text style={styles.socialBtnText}>네이버 · 구글로 로그인</Text>
           )}
         </TouchableOpacity>
       </ScrollView>
@@ -188,6 +219,17 @@ const styles = StyleSheet.create({
   },
   line: { flex: 1, height: 1, backgroundColor: COLORS.gray[200] },
   dividerText: { fontSize: FONT.sizes.sm, color: COLORS.gray[400] },
+  kakaoBtn: {
+    height: 52,
+    backgroundColor: '#FEE500', // 카카오 브랜드 컬러
+    borderRadius: RADIUS.lg,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: SPACING.md,
+  },
+  kakaoBtnText: { fontSize: FONT.sizes.md, fontWeight: '800', color: '#3C1E1E' },
   socialBtn: {
     height: 52,
     backgroundColor: COLORS.gray[100],

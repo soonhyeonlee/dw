@@ -15,12 +15,13 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
-import { loginWithIhome } from '../../src/lib/ihome-sso';
 import { loginWithKakaoNative, KAKAO_CANCELLED } from '../../src/lib/kakao-native';
+import { loginWithNaverNative, NAVER_CANCELLED } from '../../src/lib/naver-native';
+import { loginWithGoogleNative, GOOGLE_CANCELLED } from '../../src/lib/google-native';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { ihomeLogin, ihomePasswordLogin, ihomeSocialLogin } = useAuth();
+  const { ihomePasswordLogin, ihomeSocialLogin } = useAuth();
   const [mbId, setMbId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,16 +45,21 @@ export default function LoginScreen() {
     }
   };
 
-  // 카카오 — 네이티브 SDK 로그인(웹뷰 안 거침). 같은 카카오 앱이라 아이홈마켓 회원과 통합.
-  const handleKakaoLogin = async () => {
+  // 소셜 네이티브 로그인 공용 핸들러 — SDK 로 토큰을 받아 같은 OAuth 앱/계정으로
+  // 아이홈마켓 회원과 통합한다(웹뷰 안 거침). 취소는 조용히 무시.
+  const runSocial = async (
+    getToken: () => Promise<string>,
+    provider: 'kakao' | 'naver' | 'google',
+    cancelledMsg: string,
+  ) => {
     if (loading || socialLoading) return;
     setSocialLoading(true);
     try {
-      const accessToken = await loginWithKakaoNative();
-      await ihomeSocialLogin('kakao', accessToken);
+      const token = await getToken();
+      await ihomeSocialLogin(provider, token);
       router.replace('/(tabs)');
     } catch (e: any) {
-      if (e?.message && e.message !== KAKAO_CANCELLED) {
+      if (e?.message && e.message !== cancelledMsg) {
         Alert.alert('로그인 실패', e.message);
       }
     } finally {
@@ -61,22 +67,9 @@ export default function LoginScreen() {
     }
   };
 
-  // 네이버·구글 — 아직 네이티브 SDK 미통합이라 아이홈마켓 웹뷰 OAuth 사용.
-  const handleSocialLogin = async () => {
-    if (loading || socialLoading) return;
-    setSocialLoading(true);
-    try {
-      const identity = await loginWithIhome();
-      await ihomeLogin(identity);
-      router.replace('/(tabs)');
-    } catch (e: any) {
-      if (e?.message && e.message !== '로그인이 취소되었습니다') {
-        Alert.alert('로그인 실패', e.message);
-      }
-    } finally {
-      setSocialLoading(false);
-    }
-  };
+  const handleKakaoLogin = () => runSocial(loginWithKakaoNative, 'kakao', KAKAO_CANCELLED);
+  const handleNaverLogin = () => runSocial(loginWithNaverNative, 'naver', NAVER_CANCELLED);
+  const handleGoogleLogin = () => runSocial(loginWithGoogleNative, 'google', GOOGLE_CANCELLED);
 
   const busy = loading || socialLoading;
 
@@ -155,16 +148,23 @@ export default function LoginScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.socialBtn, busy && styles.btnDisabled]}
-          onPress={handleSocialLogin}
+          style={[styles.naverBtn, busy && styles.btnDisabled]}
+          onPress={handleNaverLogin}
           disabled={busy}
           activeOpacity={0.85}
         >
-          {socialLoading ? (
-            <ActivityIndicator color={COLORS.gray[700]} />
-          ) : (
-            <Text style={styles.socialBtnText}>네이버 · 구글로 로그인</Text>
-          )}
+          <Text style={styles.naverMark}>N</Text>
+          <Text style={styles.naverBtnText}>네이버로 로그인</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.googleBtn, busy && styles.btnDisabled]}
+          onPress={handleGoogleLogin}
+          disabled={busy}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.googleMark}>G</Text>
+          <Text style={styles.googleBtnText}>구글로 로그인</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -230,16 +230,29 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   kakaoBtnText: { fontSize: FONT.sizes.md, fontWeight: '800', color: '#3C1E1E' },
-  socialBtn: {
+  naverBtn: {
     height: 52,
-    backgroundColor: COLORS.gray[100],
+    backgroundColor: '#03C75A', // 네이버 브랜드 컬러
+    borderRadius: RADIUS.lg,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: SPACING.md,
+  },
+  naverMark: { fontSize: 18, fontWeight: '900', color: COLORS.white },
+  naverBtnText: { fontSize: FONT.sizes.md, fontWeight: '800', color: COLORS.white },
+  googleBtn: {
+    height: 52,
+    backgroundColor: COLORS.white,
     borderRadius: RADIUS.lg,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: COLORS.gray[200],
+    borderColor: COLORS.gray[300],
   },
-  socialBtnText: { fontSize: FONT.sizes.md, fontWeight: '700', color: COLORS.gray[700] },
+  googleMark: { fontSize: 18, fontWeight: '900', color: '#4285F4' },
+  googleBtnText: { fontSize: FONT.sizes.md, fontWeight: '700', color: COLORS.gray[800] },
 });

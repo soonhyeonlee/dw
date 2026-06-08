@@ -51,6 +51,18 @@
         {
           "kakaoAppKey": "7822ff27784b8d9481ac9540c79e6d73"
         }
+      ],
+      [
+        "@react-native-seoul/naver-login",
+        {
+          "urlScheme": "navercomdoublewin"
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.726584045345-PLACEHOLDER_IOS"
+        }
       ]
     ],
     "extra": {

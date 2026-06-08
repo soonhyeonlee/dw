@@ -30,6 +30,9 @@ const SCREEN_W = Dimensions.get('window').width;
 const SLIDE_W = SCREEN_W - SPACING.xl * 2;
 const SLIDE_GAP = 10;
 const AUTO_INTERVAL = 4500;
+// 배너 원본은 ≈4.1:1 와이드(payback 1687×416, association 1705×414).
+// aspectRatio 가 이 RN/레이아웃에서 높이를 안 만들어서 명시적 숫자 height 로 고정.
+const BANNER_H = Math.round((SLIDE_W * 414) / 1705);
 
 export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
   const [active, setActive] = useState(0);
@@ -84,8 +87,8 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
               style={[styles.slide, { width: SLIDE_W, marginRight: i === slides.length - 1 ? 0 : SLIDE_GAP }]}
             >
               {hasImage ? (
-                /* 이미지를 카드(둥근 사각형)에 cover 로 채움 — 카드형으로 깎아 표시 */
-                <Image source={s.image} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                /* 배너 원본을 고유 비율로 잘림 없이 전체 표시 — 그래픽(단색 아닌 부분)이 보이도록 */
+                <Image source={s.image} style={styles.bannerImage} resizeMode="cover" />
               ) : (
                 <LinearGradient
                   colors={bg}
@@ -142,11 +145,14 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
 const styles = StyleSheet.create({
   wrap: { marginTop: 4 },
   slide: {
-    height: Math.round(SLIDE_W / 2), // 이전(원래) 배너 카드 사이즈
+    // 명시적 BANNER_H 로 슬라이드 높이 고정(≈4.1:1). 그라데이션 폴백도 같은 높이.
+    height: BANNER_H,
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     justifyContent: 'center',
   },
+  // 폭·높이 둘 다 숫자로 고정 → aspectRatio 미적용 이슈 회피, 그래픽 포함 전체 표시.
+  bannerImage: { width: SLIDE_W, height: BANNER_H },
   image: { ...StyleSheet.absoluteFillObject, opacity: 0.18 },
   contentOverlay: {
     position: 'absolute',

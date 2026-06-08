@@ -69,7 +69,7 @@ function PROMO_SLIDES(router: ReturnType<typeof useRouter>): PromoSlide[] {
       title: '쇼핑하고 페이백 받기',
       subtitle: '더블윈 경유 시 캐시 적립',
       image: require('../../assets/images/banner-payback.png'),
-      align: 'right', // 돼지 그래픽이 왼쪽 → 텍스트 오른쪽
+      align: 'left', // 그래픽이 오른쪽 → 텍스트 왼쪽 (2번 배너와 동일 위치)
       onPress: () => router.push('/guide'),
     },
     {

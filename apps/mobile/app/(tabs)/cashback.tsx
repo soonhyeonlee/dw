@@ -580,8 +580,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.ink[200],
   },
   periodChipActive: {
-    backgroundColor: COLORS.ink[900],
-    borderColor: COLORS.ink[900],
+    backgroundColor: QM.coral,
+    borderColor: QM.coral,
   },
   periodText: { fontSize: 12, fontWeight: '600', color: COLORS.ink[700] },
   periodTextActive: { color: COLORS.white, fontWeight: '700' },

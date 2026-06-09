@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: COLORS.ink[50],
   },
-  dayTabActive: { backgroundColor: COLORS.ink[900] },
+  dayTabActive: { backgroundColor: QM.coral },
   dayTabText: { fontSize: 12, fontWeight: '700', color: COLORS.ink[600] },
   dayTabTextActive: { color: COLORS.white },
 

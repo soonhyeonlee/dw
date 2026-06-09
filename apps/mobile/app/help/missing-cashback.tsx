@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderWidth: 1, borderColor: COLORS.ink[200],
   },
-  chipActive: { backgroundColor: COLORS.ink[900], borderColor: COLORS.ink[900] },
+  chipActive: { backgroundColor: QM.coral, borderColor: QM.coral },
   chipText: { fontSize: 13, fontWeight: '600', color: COLORS.ink[700] },
   chipTextActive: { color: COLORS.white, fontWeight: '700' },
 

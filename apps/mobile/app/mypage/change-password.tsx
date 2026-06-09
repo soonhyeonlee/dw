@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, FONT, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { changePassword } from '../../src/api/auth-extra';
 
 export default function ChangePasswordScreen() {
@@ -104,28 +104,31 @@ export default function ChangePasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: QM.pageBg },
   content: { padding: SPACING.xl, gap: SPACING.lg },
   field: { gap: SPACING.sm },
-  label: { fontSize: FONT.sizes.sm, fontWeight: '600', color: COLORS.gray[700] },
+  label: { fontSize: FONT.sizes.sm, fontWeight: '700', color: '#9097A0' },
   input: {
     height: 52,
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.lg,
+    backgroundColor: QM.fieldBg,
+    borderRadius: 14,
     paddingHorizontal: SPACING.lg,
     fontSize: FONT.sizes.md,
-    color: COLORS.gray[900],
+    color: QM.ink,
     borderWidth: 1,
-    borderColor: COLORS.gray[200],
+    borderColor: QM.hairline,
   },
   saveBtn: {
     height: 52,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.lg,
+    backgroundColor: QM.coral,
+    borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: SPACING.md,
+    ...QM.cardShadow,
+    shadowColor: QM.coral,
+    shadowOpacity: 0.28,
   },
   saveBtnDisabled: { opacity: 0.6 },
-  saveBtnText: { fontSize: FONT.sizes.lg, fontWeight: '700', color: COLORS.white },
+  saveBtnText: { fontSize: FONT.sizes.lg, fontWeight: '800', color: COLORS.white },
 });

@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../src/constants/theme';
 import { EmptyState } from '../src/components/EmptyState';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -224,17 +224,17 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
   scroll: { flex: 1 },
 
   markAll: { paddingHorizontal: 12, paddingVertical: 6 },
-  markAllText: { fontSize: 13, color: COLORS.primary, fontWeight: '700' },
+  markAllText: { fontSize: 13, color: QM.coral, fontWeight: '700' },
 
   filterWrap: {
-    backgroundColor: COLORS.background,
+    backgroundColor: QM.pageBg,
     paddingTop: 12, paddingBottom: 4,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.divider,
+    borderBottomColor: QM.hairline,
   },
   filterRow: { paddingHorizontal: SPACING.xl, gap: 8 },
   chip: {
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: COLORS.ink[100],
   },
-  rowUnread: { backgroundColor: '#FFF8F4' },
+  rowUnread: { backgroundColor: QM.coralSoft },
   iconBox: {
     width: 40, height: 40, borderRadius: 20,
     alignItems: 'center', justifyContent: 'center',
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
   typeLabel: { fontSize: 11, fontWeight: '800', color: COLORS.ink[500], letterSpacing: 0.2 },
-  unreadDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.primary },
+  unreadDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: QM.coral },
   time: { fontSize: 11, color: COLORS.ink[500], marginLeft: 'auto' },
   title: { fontSize: 14, fontWeight: '600', color: COLORS.ink[800], marginBottom: 3 },
   titleUnread: { fontWeight: '800', color: COLORS.ink[900] },

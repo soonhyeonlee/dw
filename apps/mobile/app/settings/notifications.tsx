@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -136,7 +136,7 @@ export default function NotificationSettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
   scroll: { flex: 1 },
 
   notice: {
@@ -152,12 +152,12 @@ const styles = StyleSheet.create({
   noticeText: { flex: 1, fontSize: 12, color: COLORS.ink[700], lineHeight: 17 },
 
   group: { paddingHorizontal: SPACING.xl, paddingTop: 24 },
-  groupLabel: { fontSize: 13, fontWeight: '800', color: COLORS.ink[600], letterSpacing: -0.2, marginBottom: 4 },
+  groupLabel: { fontSize: 13, fontWeight: '700', color: '#9097A0', letterSpacing: -0.2, marginBottom: 4 },
   groupDesc: { fontSize: 11, color: COLORS.ink[500], marginBottom: 8 },
   card: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1, borderColor: COLORS.divider,
+    backgroundColor: QM.card,
+    borderRadius: 18,
+    ...QM.cardShadow,
     overflow: 'hidden',
     marginTop: 4,
   },
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 14, paddingVertical: 14,
   },
-  rowDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.ink[100] },
+  rowDivider: { borderBottomWidth: 1, borderBottomColor: '#F1F2F4' },
   rowIcon: {
     width: 36, height: 36, borderRadius: 12,
     backgroundColor: COLORS.ink[50],

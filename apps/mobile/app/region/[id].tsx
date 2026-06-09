@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { getAcademy, getCoupons, downloadCoupon, type Academy, type Coupon } from '../../src/api/region';
 import { useAuth } from '../../src/contexts/AuthContext';
 
@@ -569,8 +569,8 @@ function Row({ k, v }: { k: string; v: string }) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
-  container: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
+  container: { flex: 1, backgroundColor: QM.pageBg },
 
   floatBar: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
   topbar: {
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     gap: 12,
   },
-  name: { flex: 1, fontSize: 22, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.4 },
+  name: { flex: 1, fontSize: 22, fontWeight: '800', color: QM.ink, letterSpacing: -0.4 },
   phoneBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 14, paddingVertical: 8,
@@ -647,13 +647,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 2,
     paddingHorizontal: 8, paddingVertical: 4,
   },
-  detailActionText: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
+  detailActionText: { fontSize: 12, fontWeight: '700', color: QM.coral },
 
   chipRow: { flexDirection: 'row', gap: 6, marginTop: 16, flexWrap: 'wrap' },
-  chip: { paddingHorizontal: 11, paddingVertical: 6, borderRadius: 999, backgroundColor: COLORS.ink[50] },
-  chipText: { fontSize: 11, color: COLORS.ink[600], fontWeight: '600' },
+  chip: { paddingHorizontal: 11, paddingVertical: 6, borderRadius: 999, backgroundColor: QM.coralSoft },
+  chipText: { fontSize: 11, color: QM.coral, fontWeight: '700' },
 
-  divider: { height: 8, backgroundColor: COLORS.ink[50], marginTop: 20 },
+  divider: { height: 8, backgroundColor: QM.hairline, marginTop: 20 },
 
   tabBar: {
     flexDirection: 'row',
@@ -663,24 +663,24 @@ const styles = StyleSheet.create({
   },
   tabItem: { paddingVertical: 14, marginRight: 24, alignItems: 'center' },
   tabText: { fontSize: 14, fontWeight: '600', color: COLORS.ink[400] },
-  tabTextActive: { color: COLORS.ink[900], fontWeight: '800' },
+  tabTextActive: { color: QM.ink, fontWeight: '800' },
   tabUnderline: {
     position: 'absolute',
     left: 0, right: 0, bottom: -1,
     height: 2.5,
-    backgroundColor: COLORS.ink[900],
+    backgroundColor: QM.coral,
   },
 
   section: { paddingHorizontal: SPACING.xl, paddingVertical: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.ink[900], marginBottom: 8 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: QM.ink, marginBottom: 8 },
   bodyText: { fontSize: 13, color: COLORS.ink[700], lineHeight: 20 },
 
   noticeBox: {
     flexDirection: 'row',
     gap: 8,
-    backgroundColor: COLORS.primarySoft,
-    borderRadius: RADIUS.md,
-    padding: 12,
+    backgroundColor: QM.coralSoft,
+    borderRadius: 18,
+    padding: 14,
   },
   noticeText: { flex: 1, fontSize: 12.5, color: COLORS.ink[700], lineHeight: 19 },
 
@@ -694,11 +694,11 @@ const styles = StyleSheet.create({
 
   mapPlaceholder: {
     height: 140,
-    backgroundColor: COLORS.ink[50],
-    borderRadius: RADIUS.md,
+    backgroundColor: QM.fieldBg,
+    borderRadius: 18,
     alignItems: 'center', justifyContent: 'center',
     gap: 6,
-    borderWidth: 1, borderColor: COLORS.divider,
+    borderWidth: 1, borderColor: QM.hairline,
   },
   mapText: { fontSize: 12, color: COLORS.ink[600] },
 
@@ -716,22 +716,21 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginBottom: 16,
   },
-  bigRating: { fontSize: 32, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.5 },
+  bigRating: { fontSize: 32, fontWeight: '800', color: QM.ink, letterSpacing: -0.5 },
   reviewCount: { fontSize: 12, color: COLORS.ink[500], marginTop: 4 },
   writeBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 12, paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: 1, borderColor: COLORS.primarySoft,
-    backgroundColor: COLORS.primarySoft,
+    paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: 14,
+    backgroundColor: QM.coralSoft,
   },
-  writeText: { fontSize: 12, color: COLORS.primary, fontWeight: '700' },
+  writeText: { fontSize: 12, color: QM.coral, fontWeight: '700' },
 
   reviewList: { gap: 16 },
   reviewItem: {
     paddingVertical: 14,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.divider,
+    borderTopColor: QM.hairline,
   },
   reviewTop: { flexDirection: 'row', gap: 10, marginBottom: 8 },
   reviewAvatar: {
@@ -753,30 +752,30 @@ const styles = StyleSheet.create({
 
   couponCard: {
     flexDirection: 'row',
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1, borderColor: COLORS.divider,
+    backgroundColor: QM.card,
+    borderRadius: 18,
     overflow: 'hidden',
     marginBottom: 12,
+    ...QM.cardShadow,
   },
-  couponLeftBar: { width: 4, backgroundColor: COLORS.primary },
+  couponLeftBar: { width: 4, backgroundColor: QM.coral },
   couponTypeBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: COLORS.primarySoft,
+    backgroundColor: QM.coralSoft,
     paddingHorizontal: 8, paddingVertical: 3,
     borderRadius: 6,
     marginBottom: 4,
   },
-  couponTypeText: { fontSize: 10, fontWeight: '700', color: COLORS.primary },
-  couponTitle: { fontSize: 14, fontWeight: '700', color: COLORS.ink[900] },
+  couponTypeText: { fontSize: 10, fontWeight: '700', color: QM.coral },
+  couponTitle: { fontSize: 14, fontWeight: '800', color: QM.ink },
   couponMeta: { fontSize: 11, color: COLORS.ink[500], marginTop: 4 },
   couponRight: {
     width: 100,
-    borderLeftWidth: 1, borderLeftColor: COLORS.divider, borderStyle: 'dashed',
+    borderLeftWidth: 1, borderLeftColor: QM.hairline, borderStyle: 'dashed',
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: COLORS.ink[50],
+    backgroundColor: QM.coralSoft,
   },
-  couponValue: { fontSize: 18, fontWeight: '800', color: COLORS.primary, letterSpacing: -0.3 },
+  couponValue: { fontSize: 18, fontWeight: '800', color: QM.coral, letterSpacing: -0.3 },
 
   emptyCoupon: { alignItems: 'center', paddingVertical: 40, gap: 8 },
 
@@ -790,16 +789,16 @@ const styles = StyleSheet.create({
     bottom: 0, left: 0, right: 0,
   },
   noticeStrip: {
-    backgroundColor: '#FFF4EE',
+    backgroundColor: QM.coralSoft,
     paddingVertical: 9,
     alignItems: 'center',
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.primarySoft,
+    borderTopColor: QM.coralSoft,
   },
-  noticeStripText: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
+  noticeStripText: { fontSize: 12, fontWeight: '700', color: QM.coral },
   bottomBarSafe: {
-    backgroundColor: COLORS.white,
-    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: COLORS.divider,
+    backgroundColor: QM.card,
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: QM.hairline,
   },
   bottomBar: {
     flexDirection: 'row',
@@ -824,9 +823,10 @@ const styles = StyleSheet.create({
   consultBtn: {
     flex: 1,
     height: 52,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.md,
+    backgroundColor: QM.coral,
+    borderRadius: 16,
     alignItems: 'center', justifyContent: 'center',
+    shadowColor: QM.coral, shadowOpacity: 0.28, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 4,
   },
   consultText: { color: COLORS.white, fontSize: 15, fontWeight: '800', letterSpacing: -0.2 },
 });

@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, FONT, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { updateProfile } from '../../src/api/user';
 
@@ -120,51 +120,54 @@ export default function BankAccountScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: QM.pageBg },
   content: { padding: SPACING.xl, gap: SPACING.lg },
   notice: {
     fontSize: FONT.sizes.sm,
-    color: COLORS.gray[500],
-    backgroundColor: COLORS.gray[100],
+    color: QM.coral,
+    backgroundColor: QM.coralSoft,
     padding: SPACING.md,
-    borderRadius: RADIUS.md,
+    borderRadius: 14,
   },
   field: { gap: SPACING.sm },
-  label: { fontSize: FONT.sizes.sm, fontWeight: '600', color: COLORS.gray[700] },
+  label: { fontSize: FONT.sizes.sm, fontWeight: '700', color: '#9097A0' },
   bankScroll: { marginHorizontal: -SPACING.xl },
   bankRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm, paddingHorizontal: SPACING.xl },
   bankChip: {
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.white,
+    backgroundColor: QM.card,
     borderWidth: 1,
-    borderColor: COLORS.gray[200],
+    borderColor: QM.hairline,
   },
   bankChipActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: QM.coral,
+    borderColor: QM.coral,
   },
   bankChipText: { fontSize: FONT.sizes.sm, color: COLORS.gray[700] },
-  bankChipTextActive: { color: COLORS.white, fontWeight: '600' },
+  bankChipTextActive: { color: COLORS.white, fontWeight: '700' },
   input: {
     height: 52,
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.lg,
+    backgroundColor: QM.fieldBg,
+    borderRadius: 14,
     paddingHorizontal: SPACING.lg,
     fontSize: FONT.sizes.md,
-    color: COLORS.gray[900],
+    color: QM.ink,
     borderWidth: 1,
-    borderColor: COLORS.gray[200],
+    borderColor: QM.hairline,
   },
   saveBtn: {
     height: 52,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.lg,
+    backgroundColor: QM.coral,
+    borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: SPACING.md,
+    ...QM.cardShadow,
+    shadowColor: QM.coral,
+    shadowOpacity: 0.28,
   },
   saveBtnDisabled: { opacity: 0.6 },
-  saveBtnText: { fontSize: FONT.sizes.lg, fontWeight: '700', color: COLORS.white },
+  saveBtnText: { fontSize: FONT.sizes.lg, fontWeight: '800', color: COLORS.white },
 });

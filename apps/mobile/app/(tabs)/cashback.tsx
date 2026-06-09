@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { getCashbackHistory, getWithdrawalHistory } from '../../src/api/cashback';
 import { EmptyState } from '../../src/components/EmptyState';
@@ -242,7 +242,7 @@ export default function CashbackScreen() {
           <View style={styles.cashcardRow}>
             <Text style={styles.cashcardLabel}>환급 가능 캐시백</Text>
             <View style={styles.thisMonthBadge}>
-              <Ionicons name="trending-up" size={11} color="#7DE19C" />
+              <Ionicons name="trending-up" size={11} color="#118658" />
               <Text style={styles.thisMonthText}>이번 달 +{fmt(monthEarned)}원</Text>
             </View>
           </View>
@@ -476,8 +476,8 @@ export default function CashbackScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
-  container: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
+  container: { flex: 1, backgroundColor: QM.pageBg },
 
   topbar: {
     height: 56,
@@ -498,26 +498,27 @@ const styles = StyleSheet.create({
   cashcard: {
     marginHorizontal: SPACING.xl,
     marginTop: 4,
-    backgroundColor: COLORS.ink[900],
-    borderRadius: RADIUS.xl,
+    backgroundColor: QM.card,
+    borderRadius: 20,
     padding: 22,
+    ...QM.cardShadow,
   },
   cashcardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cashcardLabel: { fontSize: 13, color: COLORS.ink[400], fontWeight: '500' },
+  cashcardLabel: { fontSize: 13, color: '#9097A0', fontWeight: '700' },
   thisMonthBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(125,225,156,0.15)',
+    backgroundColor: '#E5F6EB',
     paddingHorizontal: 8, paddingVertical: 3,
     borderRadius: 999,
   },
-  thisMonthText: { fontSize: 11, color: '#7DE19C', fontWeight: '700' },
+  thisMonthText: { fontSize: 11, color: '#118658', fontWeight: '700' },
   cashcardAmountRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 10, marginBottom: 18 },
-  cashcardAmount: { fontSize: 36, fontWeight: '800', color: COLORS.white, letterSpacing: -0.5 },
-  cashcardUnit: { fontSize: 22, fontWeight: '700', color: COLORS.white, marginLeft: 4 },
+  cashcardAmount: { fontSize: 36, fontWeight: '800', color: QM.coral, letterSpacing: -0.5 },
+  cashcardUnit: { fontSize: 22, fontWeight: '700', color: QM.coral, marginLeft: 4 },
   withdrawBtn: {
     height: 46,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.md,
+    backgroundColor: QM.coral,
+    borderRadius: 14,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 4,
   },
@@ -527,16 +528,16 @@ const styles = StyleSheet.create({
     marginHorizontal: SPACING.xl,
     marginTop: 14,
     paddingVertical: 16,
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1, borderColor: COLORS.divider,
+    backgroundColor: QM.card,
+    borderRadius: 18,
+    ...QM.cardShadow,
     flexDirection: 'row',
     alignItems: 'center',
   },
   miniItem: { flex: 1, alignItems: 'center', gap: 4 },
-  miniLabel: { fontSize: 11, color: COLORS.ink[500], fontWeight: '500', textAlign: 'center', lineHeight: 14, minHeight: 28 },
-  miniVal: { fontSize: 14, color: COLORS.ink[900], fontWeight: '800' },
-  miniSep: { width: 1, height: 28, backgroundColor: COLORS.ink[100] },
+  miniLabel: { fontSize: 11, color: '#9097A0', fontWeight: '700', textAlign: 'center', lineHeight: 14, minHeight: 28 },
+  miniVal: { fontSize: 14, color: QM.ink, fontWeight: '800' },
+  miniSep: { width: 1, height: 28, backgroundColor: QM.hairline },
 
   segment: {
     marginHorizontal: SPACING.xl,
@@ -585,18 +586,25 @@ const styles = StyleSheet.create({
   periodText: { fontSize: 12, fontWeight: '600', color: COLORS.ink[700] },
   periodTextActive: { color: COLORS.white, fontWeight: '700' },
 
-  list: { paddingHorizontal: SPACING.xl, paddingTop: 8 },
+  list: {
+    marginHorizontal: SPACING.xl,
+    marginTop: 8,
+    paddingHorizontal: 16,
+    backgroundColor: QM.card,
+    borderRadius: 18,
+    ...QM.cardShadow,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
     gap: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.divider,
+    borderBottomColor: QM.hairline,
   },
   rowIcon: { width: 36, alignItems: 'center' },
   rowTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  rowTitle: { flex: 1, fontSize: 14, color: COLORS.ink[900], fontWeight: '600' },
+  rowTitle: { flex: 1, fontSize: 14, color: QM.ink, fontWeight: '600' },
   rowAmount: { fontSize: 15, fontWeight: '800', letterSpacing: -0.2 },
   rowMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
   rowMeta: { fontSize: 11, color: COLORS.ink[500] },
@@ -708,7 +716,7 @@ const guestStyles = StyleSheet.create({
   howNum: { fontSize: 14, fontWeight: '800', color: COLORS.white },
   howStepTitle: { fontSize: 14, fontWeight: '700', color: COLORS.ink[900] },
   howStepSub: { fontSize: 12, color: COLORS.ink[600], marginTop: 2 },
-  divider: { height: 8, backgroundColor: COLORS.ink[50], marginTop: 12 },
+  divider: { height: 8, backgroundColor: QM.pageBg, marginTop: 12 },
   section: { paddingHorizontal: SPACING.xl, paddingTop: 22, paddingBottom: 12 },
   sectionTitle: { fontSize: 16, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.3 },
   sectionSub: { fontSize: 12, color: COLORS.ink[500], marginTop: 3 },

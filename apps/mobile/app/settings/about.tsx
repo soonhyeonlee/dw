@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 
 const APP_VERSION = '0.4.0';
@@ -211,7 +211,7 @@ export default function AboutScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
   scroll: { flex: 1 },
 
   identity: {
@@ -221,23 +221,23 @@ const styles = StyleSheet.create({
   },
   logoBox: {
     width: 72, height: 72, borderRadius: 22,
-    backgroundColor: COLORS.primary,
+    backgroundColor: QM.coral,
     alignItems: 'center', justifyContent: 'center',
     marginBottom: 8,
   },
   logoText: { fontSize: 32, fontWeight: '900', color: COLORS.white, letterSpacing: -1 },
   appName: { fontSize: 18, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.3 },
   appVersion: { fontSize: 12, color: COLORS.ink[500], fontVariant: ['tabular-nums'] },
-  link: { fontSize: 12, color: COLORS.primary, fontWeight: '700', marginTop: 6 },
+  link: { fontSize: 12, color: QM.coral, fontWeight: '700', marginTop: 6 },
 
   section: { paddingHorizontal: SPACING.xl, paddingTop: 16 },
-  sectionLabel: { fontSize: 12, fontWeight: '800', color: COLORS.ink[500], marginBottom: 8, letterSpacing: -0.1 },
+  sectionLabel: { fontSize: 12, fontWeight: '700', color: '#9097A0', marginBottom: 8, letterSpacing: -0.1 },
   sectionFoot: { fontSize: 11, color: COLORS.ink[500], marginTop: 8, lineHeight: 16 },
 
   card: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1, borderColor: COLORS.divider,
+    backgroundColor: QM.card,
+    borderRadius: 18,
+    ...QM.cardShadow,
     overflow: 'hidden',
   },
   row: {
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   },
   rowLabel: { flex: 1, fontSize: 14, fontWeight: '600' },
   rowValue: { fontSize: 13, color: COLORS.ink[500], fontWeight: '500' },
-  divider: { height: StyleSheet.hairlineWidth, backgroundColor: COLORS.ink[100] },
+  divider: { height: 1, backgroundColor: '#F1F2F4' },
 });
 
 const modalStyles = StyleSheet.create({

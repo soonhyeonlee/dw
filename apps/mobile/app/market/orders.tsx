@@ -10,10 +10,10 @@ import {
   Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, FONT, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { getMyOrders, type MarketOrderItem, type OrderStatus } from '../../src/api/market';
 
-const PURPLE = '#6633CC';
+const PURPLE = QM.coral;
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   pending: '결제 대기',
@@ -157,29 +157,33 @@ function formatDate(iso: string): string {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.surface },
+  container: { flex: 1, backgroundColor: QM.pageBg },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
+    backgroundColor: QM.pageBg,
     padding: SPACING.xl,
   },
   emptyText: { fontSize: FONT.sizes.md, color: COLORS.gray[500], marginBottom: SPACING.xl },
   shopBtn: {
     paddingHorizontal: SPACING.xxl,
     paddingVertical: SPACING.md,
-    backgroundColor: PURPLE,
-    borderRadius: RADIUS.lg,
+    backgroundColor: QM.coral,
+    borderRadius: 16,
+    shadowColor: QM.coral,
+    shadowOpacity: 0.22,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
   },
   shopBtnText: { color: COLORS.white, fontWeight: '700', fontSize: FONT.sizes.sm },
 
   card: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.md,
+    backgroundColor: QM.card,
+    borderRadius: 18,
     padding: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.gray[200],
+    ...QM.cardShadow,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -195,11 +199,11 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: RADIUS.sm,
-    backgroundColor: PURPLE + '15',
+    backgroundColor: QM.coralSoft,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  title: { fontSize: FONT.sizes.sm, fontWeight: '600', color: COLORS.gray[900], lineHeight: 19 },
+  title: { fontSize: FONT.sizes.sm, fontWeight: '600', color: QM.ink, lineHeight: 19 },
   qty: { fontSize: FONT.sizes.xs, color: COLORS.gray[500], marginTop: 2 },
   price: { fontSize: FONT.sizes.md, fontWeight: '800', color: COLORS.black, marginTop: 4 },
 
@@ -209,7 +213,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.md,
     paddingTop: SPACING.md,
     borderTopWidth: 1,
-    borderTopColor: COLORS.gray[100],
+    borderTopColor: QM.hairline,
   },
   pointUsed: { fontSize: FONT.sizes.xs, color: COLORS.gray[600], fontWeight: '600' },
   pointEarn: { fontSize: FONT.sizes.xs, color: PURPLE, fontWeight: '700' },

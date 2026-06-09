@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { getMalls, type Mall } from '../../src/api/home';
 import { getProducts, type Product as ApiProduct } from '../../src/api/products';
 import { MallCard } from '../../src/components/MallCard';
@@ -291,7 +291,7 @@ export default function CategoriesScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
   container: { flex: 1 },
   header: {
     height: 56,
@@ -299,30 +299,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: SPACING.xl,
   },
-  headerTitle: { flex: 1, fontSize: 20, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.3 },
+  headerTitle: { flex: 1, fontSize: 20, fontWeight: '800', color: QM.ink, letterSpacing: -0.3 },
   headerAction: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
 
   featured: {
     marginHorizontal: SPACING.xl,
     marginTop: SPACING.xs,
-    backgroundColor: COLORS.ink[50],
-    borderRadius: RADIUS.lg,
+    backgroundColor: QM.card,
+    borderRadius: 18,
     paddingVertical: 16,
     paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
+    ...QM.cardShadow,
   },
   featuredIcon: {
     width: 48, height: 48, borderRadius: 24,
-    backgroundColor: COLORS.white,
+    backgroundColor: QM.coralSoft,
     alignItems: 'center', justifyContent: 'center',
   },
-  featuredTitle: { fontSize: 15, fontWeight: '700', color: COLORS.ink[900] },
+  featuredTitle: { fontSize: 15, fontWeight: '700', color: QM.ink },
   featuredSub: { fontSize: 12, color: COLORS.ink[500], marginTop: 2 },
 
   gridTitle: {
-    fontSize: 16, fontWeight: '800', color: COLORS.ink[900],
+    fontSize: 16, fontWeight: '800', color: QM.ink,
     paddingHorizontal: SPACING.xl, marginTop: 26, letterSpacing: -0.3,
   },
   tileGrid: {
@@ -335,16 +336,17 @@ const styles = StyleSheet.create({
   tile: { width: '25%', alignItems: 'center', gap: 6 },
   tileIcon: {
     width: 58, height: 58, borderRadius: 18,
-    backgroundColor: COLORS.ink[50],
+    backgroundColor: QM.card,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: 'transparent',
+    borderWidth: 1, borderColor: QM.hairline,
+    ...QM.cardShadow,
   },
-  tileIconActive: { backgroundColor: COLORS.primarySoft, borderColor: COLORS.primary },
+  tileIconActive: { backgroundColor: QM.coralSoft, borderColor: QM.coral },
   tileEmoji: { fontSize: 25 },
   tileLabel: { fontSize: 12, color: COLORS.ink[700], fontWeight: '600' },
-  tileLabelActive: { color: COLORS.primary, fontWeight: '800' },
+  tileLabelActive: { color: QM.coral, fontWeight: '800' },
 
-  gridDivider: { height: 8, backgroundColor: COLORS.ink[50], marginTop: 24 },
+  gridDivider: { height: 8, backgroundColor: QM.hairline, marginTop: 24 },
 
   section: { marginTop: 26, paddingHorizontal: SPACING.xl },
   sectionHead: {
@@ -353,9 +355,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.ink[900], letterSpacing: -0.3 },
-  moreText: { fontSize: 13, color: '#1673E8', fontWeight: '500' },
-  resetText: { fontSize: 13, color: COLORS.primary, fontWeight: '700' },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: QM.ink, letterSpacing: -0.3 },
+  moreText: { fontSize: 13, color: QM.coral, fontWeight: '700' },
+  resetText: { fontSize: 13, color: QM.coral, fontWeight: '700' },
 
   tileRow: { flexDirection: 'row', gap: 8 },
   rowCard: { width: '31.5%' },

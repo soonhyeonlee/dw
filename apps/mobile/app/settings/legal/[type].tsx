@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { COLORS, SPACING } from '../../../src/constants/theme';
+import { COLORS, SPACING, QM } from '../../../src/constants/theme';
 
 type LegalType = 'terms' | 'privacy';
 
@@ -79,12 +79,12 @@ export default function LegalScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
   scroll: { flex: 1 },
   content: { paddingHorizontal: SPACING.xl, paddingTop: 16, paddingBottom: 32 },
-  docTitle: { fontSize: 22, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.5 },
+  docTitle: { fontSize: 22, fontWeight: '800', color: QM.ink, letterSpacing: -0.5 },
   docMeta: { fontSize: 12, color: COLORS.ink[500], marginTop: 6 },
-  divider: { height: 1, backgroundColor: COLORS.ink[100], marginVertical: 18 },
+  divider: { height: 1, backgroundColor: QM.hairline, marginVertical: 18 },
   section: { marginTop: 18 },
   sectionHead: { fontSize: 14, fontWeight: '800', color: COLORS.ink[900], marginBottom: 6, letterSpacing: -0.2 },
   sectionBody: { fontSize: 13, color: COLORS.ink[700], lineHeight: 21 },

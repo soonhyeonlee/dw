@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../src/constants/theme';
 
 export default function ActivateCashbackScreen() {
   const router = useRouter();
@@ -99,7 +99,7 @@ export default function ActivateCashbackScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
   header: { height: 56, flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: SPACING.md },
   closeBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACING.xl },
@@ -111,10 +111,10 @@ const styles = StyleSheet.create({
   },
   logoInner: {
     width: 88, height: 88, borderRadius: 22,
-    backgroundColor: COLORS.primarySoft,
+    backgroundColor: QM.coralSoft,
     alignItems: 'center', justifyContent: 'center',
   },
-  title: { fontSize: 24, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.5 },
+  title: { fontSize: 24, fontWeight: '800', color: QM.ink, letterSpacing: -0.5 },
   subtitle: { fontSize: 14, color: COLORS.ink[600], marginTop: 8, textAlign: 'center' },
 
   errBox: {
@@ -129,8 +129,9 @@ const styles = StyleSheet.create({
   guideBox: {
     marginTop: 48,
     width: '100%',
-    backgroundColor: COLORS.ink[50],
-    borderRadius: RADIUS.md,
+    backgroundColor: QM.card,
+    borderRadius: 18,
+    ...QM.cardShadow,
     padding: 16,
     gap: 10,
   },

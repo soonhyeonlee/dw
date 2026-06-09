@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING } from '../../src/constants/theme';
+import { COLORS, SPACING, QM } from '../../src/constants/theme';
 import {
   RegionContent,
   type RegionContentHandle,
@@ -96,8 +96,8 @@ export default function RegionScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
-  container: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
+  container: { flex: 1, backgroundColor: QM.pageBg },
 
   topbar: {
     paddingHorizontal: SPACING.xl,
@@ -107,12 +107,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  title: { fontSize: 22, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.5 },
+  title: { fontSize: 22, fontWeight: '800', color: QM.ink, letterSpacing: -0.5 },
   locRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, alignSelf: 'flex-start' },
-  loc: { fontSize: 13, color: COLORS.ink[700], fontWeight: '600' },
+  loc: { fontSize: 13, color: QM.ink, fontWeight: '600' },
   iconBtn: {
     width: 40, height: 40, borderRadius: 20,
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: COLORS.ink[50],
+    backgroundColor: QM.card,
+    ...QM.cardShadow,
   },
 });

@@ -12,7 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, FONT, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import {
   getMarketProducts,
   getMarketCategories,
@@ -20,7 +20,7 @@ import {
   type MarketCategory,
 } from '../../src/api/market';
 
-const PURPLE = '#6633CC';
+const PURPLE = QM.coral;
 const POINT_RATE = 0.02; // 번개장터 적립률 2% (백엔드와 동기)
 const PAGE_SIZE = 20;
 
@@ -209,7 +209,7 @@ export default function MarketSearch() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: QM.pageBg },
   topbar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -223,19 +223,19 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.gray[100],
+    backgroundColor: QM.fieldBg,
     borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.md,
     height: 44,
     gap: SPACING.sm,
   },
-  searchInput: { flex: 1, fontSize: FONT.sizes.md, color: COLORS.gray[900] },
+  searchInput: { flex: 1, fontSize: FONT.sizes.md, color: QM.ink },
 
   preSection: { padding: SPACING.lg },
   sectionTitle: {
     fontSize: FONT.sizes.lg,
     fontWeight: '800',
-    color: COLORS.secondary,
+    color: QM.ink,
     marginBottom: SPACING.md,
   },
   catWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
@@ -246,9 +246,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm,
     borderRadius: 999,
-    backgroundColor: PURPLE + '12',
+    backgroundColor: QM.coralSoft,
   },
-  catChipText: { fontSize: FONT.sizes.sm, fontWeight: '700', color: PURPLE },
+  catChipText: { fontSize: FONT.sizes.sm, fontWeight: '700', color: QM.coral },
   catChipCount: { fontSize: FONT.sizes.xs, color: COLORS.gray[500] },
   hint: { fontSize: FONT.sizes.sm, color: COLORS.gray[500], marginTop: SPACING.md },
 
@@ -272,11 +272,11 @@ const styles = StyleSheet.create({
   },
   cardImgInner: { width: '100%', height: '100%' },
   cardImgPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  cardTitle: { fontSize: FONT.sizes.sm, color: COLORS.gray[800], lineHeight: 18, marginTop: 6 },
+  cardTitle: { fontSize: FONT.sizes.sm, color: QM.ink, lineHeight: 18, marginTop: 6 },
   cardPriceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 4 },
   cardDiscount: { fontSize: FONT.sizes.md, fontWeight: '800', color: '#FF4040' },
   cardPrice: { fontSize: FONT.sizes.md, fontWeight: '800', color: COLORS.black },
-  cardPoint: { fontSize: FONT.sizes.xs, color: PURPLE, fontWeight: '700', marginTop: 3 },
+  cardPoint: { fontSize: FONT.sizes.xs, color: QM.coral, fontWeight: '700', marginTop: 3 },
 
   empty: { alignItems: 'center', paddingTop: 80, gap: SPACING.md },
   emptyText: { fontSize: FONT.sizes.md, color: COLORS.gray[500] },

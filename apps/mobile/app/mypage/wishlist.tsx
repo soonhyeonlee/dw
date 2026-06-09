@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, FONT, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { EmptyState } from '../../src/components/EmptyState';
 import { getWishlist, getMallWishlist } from '../../src/api/products';
 import { getMarketWishlist } from '../../src/api/market';
@@ -225,6 +225,7 @@ export default function WishlistScreen() {
       ) : (
         <FlatList
           data={malls}
+          style={styles.mallListOuter}
           contentContainerStyle={styles.mallList}
           keyExtractor={(item) => item.id}
           refreshControl={
@@ -241,13 +242,13 @@ export default function WishlistScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: SPACING.md, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: QM.pageBg },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: SPACING.md, backgroundColor: QM.pageBg },
 
   segmentWrap: { paddingHorizontal: SPACING.xl, paddingTop: 12 },
   segment: {
     flexDirection: 'row',
-    backgroundColor: COLORS.ink[100],
+    backgroundColor: QM.hairline,
     borderRadius: 10,
     padding: 4,
   },
@@ -264,8 +265,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     elevation: 1,
   },
-  segText: { fontSize: 13, fontWeight: '600', color: COLORS.ink[500] },
-  segTextActive: { color: COLORS.ink[900], fontWeight: '700' },
+  segText: { fontSize: 13, fontWeight: '700', color: QM.sub },
+  segTextActive: { color: QM.ink, fontWeight: '800' },
 
   countRow: {
     paddingHorizontal: SPACING.xl,
@@ -273,13 +274,21 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
   },
   countText: { fontSize: 13, color: COLORS.ink[600] },
-  countStrong: { color: COLORS.ink[900], fontWeight: '800' },
+  countStrong: { color: QM.ink, fontWeight: '800' },
 
   row: { justifyContent: 'space-between', paddingHorizontal: SPACING.lg },
   listContent: { paddingTop: SPACING.sm, paddingBottom: SPACING.xxxl },
 
-  mallList: { paddingHorizontal: SPACING.xl, paddingTop: 4, paddingBottom: SPACING.xxxl },
-  sep: { height: 1, backgroundColor: COLORS.divider },
+  mallListOuter: { paddingHorizontal: SPACING.xl, paddingTop: 8 },
+  mallList: {
+    backgroundColor: QM.card,
+    borderRadius: 18,
+    paddingHorizontal: 2,
+    paddingBottom: 0,
+    marginBottom: SPACING.xxxl,
+    ...QM.cardShadow,
+  },
+  sep: { height: 1, backgroundColor: '#F1F2F4', marginHorizontal: SPACING.lg },
 });
 
 const mallStyles = StyleSheet.create({
@@ -287,6 +296,7 @@ const mallStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
+    paddingHorizontal: SPACING.lg,
     gap: 14,
   },
   logo: {
@@ -296,9 +306,9 @@ const mallStyles = StyleSheet.create({
   },
   logoImg: { width: 32, height: 32 },
   logoTxt: { color: COLORS.white, fontSize: 18, fontWeight: '800' },
-  name: { fontSize: 15, fontWeight: '700', color: COLORS.ink[900] },
+  name: { fontSize: 15, fontWeight: '800', color: QM.ink },
   rate: { fontSize: 12, color: COLORS.ink[600], marginTop: 2 },
-  rateStrong: { color: COLORS.primary, fontWeight: '800' },
+  rateStrong: { color: QM.coral, fontWeight: '800' },
   platform: { fontSize: 12, color: COLORS.ink[500], marginTop: 2 },
 });
 
@@ -314,8 +324,8 @@ const wcStyles = StyleSheet.create({
   imgPlaceholder: { alignItems: 'center', justifyContent: 'center' },
   title: { fontSize: FONT.sizes.sm, color: COLORS.ink[800], lineHeight: 18, marginTop: 6 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 4 },
-  discount: { fontSize: FONT.sizes.md, fontWeight: '800', color: '#FF4040' },
-  price: { fontSize: FONT.sizes.md, fontWeight: '800', color: COLORS.black },
-  cashback: { fontSize: FONT.sizes.xs, color: COLORS.primary, fontWeight: '700', marginTop: 3 },
-  point: { fontSize: FONT.sizes.xs, color: '#6633CC', fontWeight: '700', marginTop: 3 },
+  discount: { fontSize: FONT.sizes.md, fontWeight: '800', color: QM.coral },
+  price: { fontSize: FONT.sizes.md, fontWeight: '800', color: QM.ink },
+  cashback: { fontSize: FONT.sizes.xs, color: QM.coral, fontWeight: '700', marginTop: 3 },
+  point: { fontSize: FONT.sizes.xs, color: QM.coral, fontWeight: '700', marginTop: 3 },
 });

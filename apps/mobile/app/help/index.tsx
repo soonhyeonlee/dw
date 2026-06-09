@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -189,7 +189,7 @@ function FaqRow({ q, a }: { q: string; a: string }) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
   scroll: { flex: 1 },
 
   hero: {
@@ -220,13 +220,12 @@ const styles = StyleSheet.create({
   quickCard: {
     flex: 1,
     padding: 14,
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.divider,
+    backgroundColor: QM.card,
+    borderRadius: 18,
+    ...QM.cardShadow,
     gap: 6,
   },
-  quickCardPrimary: { borderColor: COLORS.primarySoft, backgroundColor: COLORS.primarySoft },
+  quickCardPrimary: { backgroundColor: QM.coralSoft, shadowOpacity: 0 },
   quickIcon: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: COLORS.white,
@@ -284,15 +283,14 @@ const styles = StyleSheet.create({
 const faqStyles = StyleSheet.create({
   row: {
     paddingVertical: 14, paddingHorizontal: 14,
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.divider,
+    backgroundColor: QM.card,
+    borderRadius: 18,
+    ...QM.cardShadow,
   },
   qRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  qMark: { fontSize: 13, fontWeight: '800', color: COLORS.primary },
+  qMark: { fontSize: 13, fontWeight: '800', color: QM.coral },
   q: { flex: 1, fontSize: 13, fontWeight: '600', color: COLORS.ink[900], lineHeight: 18 },
-  aRow: { flexDirection: 'row', gap: 8, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: COLORS.ink[100] },
+  aRow: { flexDirection: 'row', gap: 8, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F1F2F4' },
   aMark: { fontSize: 13, fontWeight: '800', color: COLORS.ink[500] },
   a: { flex: 1, fontSize: 13, color: COLORS.ink[700], lineHeight: 19 },
 });

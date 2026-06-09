@@ -15,11 +15,11 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, FONT, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { getMarketProduct, createOrder, type MarketProduct } from '../../src/api/market';
 import { useAuth } from '../../src/contexts/AuthContext';
 
-const PURPLE = '#6633CC';
+const PURPLE = QM.coral;
 const POINT_RATE = 0.02; // 번개장터 적립률 2% (백엔드 MARKET_POINT_RATE_PERCENT 와 동기)
 
 export default function MarketCheckout() {
@@ -329,7 +329,7 @@ function SummaryRow({ label, value, accent }: { label: string; value: string; ac
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.surface },
+  container: { flex: 1, backgroundColor: QM.pageBg },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -347,20 +347,23 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.md,
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray[200],
+    borderBottomColor: QM.hairline,
   },
-  headerTitle: { fontSize: FONT.sizes.lg, fontWeight: '800', color: COLORS.secondary },
+  headerTitle: { fontSize: FONT.sizes.lg, fontWeight: '800', color: QM.ink },
 
   section: {
-    backgroundColor: COLORS.white,
+    backgroundColor: QM.card,
+    marginHorizontal: SPACING.lg,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.lg,
     marginTop: SPACING.md,
+    borderRadius: 18,
+    ...QM.cardShadow,
   },
   sectionTitle: {
     fontSize: FONT.sizes.md,
     fontWeight: '800',
-    color: COLORS.secondary,
+    color: QM.ink,
     marginBottom: SPACING.md,
   },
 
@@ -369,11 +372,11 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: RADIUS.sm,
-    backgroundColor: PURPLE + '15',
+    backgroundColor: QM.coralSoft,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  productTitle: { fontSize: FONT.sizes.sm, fontWeight: '600', color: COLORS.gray[900], lineHeight: 19 },
+  productTitle: { fontSize: FONT.sizes.sm, fontWeight: '600', color: QM.ink, lineHeight: 19 },
   productPrice: { fontSize: FONT.sizes.md, fontWeight: '800', color: COLORS.black, marginTop: 4 },
 
   qtyRow: {
@@ -387,7 +390,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: COLORS.gray[200],
+    borderColor: QM.hairline,
     borderRadius: RADIUS.sm,
   },
   stepBtn: { width: 38, height: 36, justifyContent: 'center', alignItems: 'center' },
@@ -401,14 +404,14 @@ const styles = StyleSheet.create({
 
   input: {
     borderWidth: 1,
-    borderColor: COLORS.gray[200],
+    borderColor: QM.hairline,
     borderRadius: RADIUS.sm,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     fontSize: FONT.sizes.sm,
-    color: COLORS.gray[900],
+    color: QM.ink,
     marginBottom: SPACING.sm,
-    backgroundColor: COLORS.white,
+    backgroundColor: QM.fieldBg,
   },
   zipRow: { flexDirection: 'row' },
   zipInput: { flex: 1 },
@@ -433,9 +436,9 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   summaryLabel: { fontSize: FONT.sizes.sm, color: COLORS.gray[600] },
-  summaryValue: { fontSize: FONT.sizes.sm, fontWeight: '600', color: COLORS.gray[900] },
-  divider: { height: 1, backgroundColor: COLORS.gray[200], marginVertical: SPACING.sm },
-  payLabel: { fontSize: FONT.sizes.md, fontWeight: '800', color: COLORS.secondary },
+  summaryValue: { fontSize: FONT.sizes.sm, fontWeight: '600', color: QM.ink },
+  divider: { height: 1, backgroundColor: QM.hairline, marginVertical: SPACING.sm },
+  payLabel: { fontSize: FONT.sizes.md, fontWeight: '800', color: QM.ink },
   payValue: { fontSize: FONT.sizes.lg, fontWeight: '900', color: PURPLE },
   earnHint: { fontSize: FONT.sizes.xs, color: COLORS.gray[500], marginTop: SPACING.sm },
 
@@ -448,14 +451,19 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.xxl,
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
-    borderTopColor: COLORS.gray[200],
+    borderTopColor: QM.hairline,
   },
   payBtn: {
     height: 52,
-    backgroundColor: PURPLE,
-    borderRadius: RADIUS.lg,
+    backgroundColor: QM.coral,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: QM.coral,
+    shadowOpacity: 0.22,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
   },
   payBtnText: { color: COLORS.white, fontSize: FONT.sizes.lg, fontWeight: '800' },
 });

@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, FONT, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import ProductCard from '../../src/components/ProductCard';
 import { getRecentlyViewed } from '../../src/api/products';
 
@@ -65,9 +65,9 @@ export default function RecentScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: SPACING.md },
-  emptyText: { fontSize: FONT.sizes.md, color: COLORS.gray[500] },
+  container: { flex: 1, backgroundColor: QM.pageBg },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: SPACING.md, backgroundColor: QM.pageBg },
+  emptyText: { fontSize: FONT.sizes.md, color: QM.sub },
   row: { justifyContent: 'space-between', paddingHorizontal: SPACING.lg },
   listContent: { paddingTop: SPACING.md, paddingBottom: SPACING.xxxl },
 });

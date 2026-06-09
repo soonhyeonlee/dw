@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import {
   getProduct,
   clickProduct,
@@ -244,8 +244,8 @@ export default function ProductDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
-  container: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
+  container: { flex: 1, backgroundColor: QM.pageBg },
 
   floatBar: {
     position: 'absolute',
@@ -276,49 +276,62 @@ const styles = StyleSheet.create({
   },
   mallBadgeText: { color: COLORS.white, fontSize: 11, fontWeight: '700' },
 
-  info: { padding: SPACING.xl, gap: 6 },
+  info: { padding: SPACING.xl, gap: 6, backgroundColor: QM.card },
   brand: { fontSize: 13, fontWeight: '600', color: COLORS.ink[500] },
-  title: { fontSize: 18, fontWeight: '700', color: COLORS.ink[900], lineHeight: 24, letterSpacing: -0.3 },
+  title: { fontSize: 18, fontWeight: '800', color: QM.ink, lineHeight: 24, letterSpacing: -0.3 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
   rating: { fontSize: 13, fontWeight: '700', color: COLORS.ink[900] },
   review: { fontSize: 13, color: COLORS.ink[500] },
 
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 10 },
-  discount: { fontSize: 24, fontWeight: '800', color: COLORS.primary },
-  price: { fontSize: 24, fontWeight: '800', color: COLORS.ink[900] },
+  discount: { fontSize: 24, fontWeight: '800', color: QM.coral },
+  price: { fontSize: 24, fontWeight: '800', color: QM.ink },
   priceUnit: { fontSize: 17, fontWeight: '700', color: COLORS.ink[900] },
   original: { fontSize: 13, color: COLORS.ink[400], textDecorationLine: 'line-through' },
 
   shipRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10 },
   shipText: { fontSize: 12, color: COLORS.ink[700], fontWeight: '500' },
 
-  divider: { height: 8, backgroundColor: COLORS.ink[50] },
+  divider: { height: 12, backgroundColor: QM.pageBg },
 
-  cashbackBox: { padding: SPACING.xl },
+  cashbackBox: {
+    marginHorizontal: SPACING.xl,
+    padding: 18,
+    backgroundColor: QM.card,
+    borderRadius: 20,
+    ...QM.cardShadow,
+  },
   cbRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   cbIconWrap: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: COLORS.primarySoft,
+    backgroundColor: QM.coralSoft,
     alignItems: 'center', justifyContent: 'center',
   },
-  cbLabel: { fontSize: 14, fontWeight: '700', color: COLORS.ink[900] },
-  cbSub: { fontSize: 12, color: COLORS.ink[500], marginTop: 2 },
-  cbAmount: { fontSize: 18, fontWeight: '800', color: COLORS.primary, letterSpacing: -0.3 },
-  cbRate: { fontSize: 11, color: COLORS.ink[500], fontWeight: '600', marginTop: 2 },
+  cbLabel: { fontSize: 14, fontWeight: '800', color: QM.ink },
+  cbSub: { fontSize: 12, color: QM.sub, marginTop: 2 },
+  cbAmount: { fontSize: 18, fontWeight: '800', color: QM.coral, letterSpacing: -0.3 },
+  cbRate: { fontSize: 11, color: QM.sub, fontWeight: '700', marginTop: 2 },
   cbNote: {
     marginTop: 14,
-    backgroundColor: COLORS.ink[50],
+    backgroundColor: QM.coralSoft,
     padding: 12,
     borderRadius: RADIUS.sm,
   },
-  cbNoteText: { fontSize: 12, color: COLORS.ink[600], lineHeight: 17 },
+  cbNoteText: { fontSize: 12, color: QM.ink, lineHeight: 17 },
 
-  howto: { padding: SPACING.xl, gap: 14 },
-  howtoTitle: { fontSize: 15, fontWeight: '700', color: COLORS.ink[900], marginBottom: 4 },
+  howto: {
+    marginHorizontal: SPACING.xl,
+    padding: 18,
+    gap: 14,
+    backgroundColor: QM.card,
+    borderRadius: 20,
+    ...QM.cardShadow,
+  },
+  howtoTitle: { fontSize: 15, fontWeight: '800', color: QM.ink, marginBottom: 4 },
   step: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   stepCircle: {
     width: 24, height: 24, borderRadius: 12,
-    backgroundColor: COLORS.ink[900],
+    backgroundColor: QM.coral,
     alignItems: 'center', justifyContent: 'center',
   },
   stepNum: { color: COLORS.white, fontSize: 12, fontWeight: '700' },
@@ -339,19 +352,24 @@ const styles = StyleSheet.create({
   },
   wishBtn: {
     width: 52, height: 52,
-    borderRadius: RADIUS.md,
-    borderWidth: 1, borderColor: COLORS.ink[200],
+    borderRadius: 16,
+    borderWidth: 1, borderColor: QM.hairline,
     alignItems: 'center', justifyContent: 'center',
   },
   buyBtn: {
     flex: 1,
     height: 52,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.md,
+    backgroundColor: QM.coral,
+    borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 18,
+    shadowColor: QM.coral,
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
   buyBtnInner: { alignItems: 'flex-start' },
   buyCbText: { fontSize: 11, color: 'rgba(255,255,255,0.85)', fontWeight: '600' },

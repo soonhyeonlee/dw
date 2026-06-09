@@ -12,7 +12,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, FONT, SPACING, RADIUS } from '../../../src/constants/theme';
+import { COLORS, FONT, SPACING, RADIUS, QM } from '../../../src/constants/theme';
 import {
   getMarketOrder,
   cancelMarketOrder,
@@ -21,7 +21,7 @@ import {
 } from '../../../src/api/market';
 import { useAuth } from '../../../src/contexts/AuthContext';
 
-const PURPLE = '#6633CC';
+const PURPLE = QM.coral;
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   pending: '결제 대기',
@@ -253,12 +253,12 @@ function formatDate(iso: string): string {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.surface },
+  container: { flex: 1, backgroundColor: QM.pageBg },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
+    backgroundColor: QM.pageBg,
   },
   errorText: { color: COLORS.gray[500], fontSize: FONT.sizes.md },
 
@@ -270,31 +270,38 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.md,
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray[200],
+    borderBottomColor: QM.hairline,
   },
-  headerTitle: { fontSize: FONT.sizes.lg, fontWeight: '800', color: COLORS.secondary },
+  headerTitle: { fontSize: FONT.sizes.lg, fontWeight: '800', color: QM.ink },
 
   statusBox: {
-    backgroundColor: COLORS.white,
+    backgroundColor: QM.card,
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.md,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.xl,
     alignItems: 'center',
     marginBottom: SPACING.md,
+    borderRadius: 18,
+    ...QM.cardShadow,
   },
   statusText: { fontSize: FONT.sizes.xl, fontWeight: '900' },
   orderDate: { fontSize: FONT.sizes.sm, color: COLORS.gray[500], marginTop: SPACING.xs },
   tracking: { fontSize: FONT.sizes.sm, color: COLORS.gray[700], marginTop: SPACING.sm },
 
   section: {
-    backgroundColor: COLORS.white,
+    backgroundColor: QM.card,
+    marginHorizontal: SPACING.lg,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.lg,
     marginBottom: SPACING.md,
+    borderRadius: 18,
+    ...QM.cardShadow,
   },
   sectionTitle: {
     fontSize: FONT.sizes.md,
     fontWeight: '800',
-    color: COLORS.secondary,
+    color: QM.ink,
     marginBottom: SPACING.md,
   },
 
@@ -303,14 +310,14 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: RADIUS.sm,
-    backgroundColor: PURPLE + '15',
+    backgroundColor: QM.coralSoft,
     justifyContent: 'center',
     alignItems: 'center',
   },
   productTitle: {
     fontSize: FONT.sizes.sm,
     fontWeight: '600',
-    color: COLORS.gray[900],
+    color: QM.ink,
     lineHeight: 19,
   },
   qty: { fontSize: FONT.sizes.xs, color: COLORS.gray[500], marginTop: 2 },
@@ -318,7 +325,7 @@ const styles = StyleSheet.create({
 
   infoRow: { flexDirection: 'row', paddingVertical: 5 },
   infoLabel: { width: 80, fontSize: FONT.sizes.sm, color: COLORS.gray[500] },
-  infoValue: { flex: 1, fontSize: FONT.sizes.sm, color: COLORS.gray[900], fontWeight: '500' },
+  infoValue: { flex: 1, fontSize: FONT.sizes.sm, color: QM.ink, fontWeight: '500' },
 
   summaryRow: {
     flexDirection: 'row',
@@ -327,9 +334,9 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   summaryLabel: { fontSize: FONT.sizes.sm, color: COLORS.gray[600] },
-  summaryValue: { fontSize: FONT.sizes.sm, fontWeight: '600', color: COLORS.gray[900] },
-  divider: { height: 1, backgroundColor: COLORS.gray[200], marginVertical: SPACING.sm },
-  payLabel: { fontSize: FONT.sizes.md, fontWeight: '800', color: COLORS.secondary },
+  summaryValue: { fontSize: FONT.sizes.sm, fontWeight: '600', color: QM.ink },
+  divider: { height: 1, backgroundColor: QM.hairline, marginVertical: SPACING.sm },
+  payLabel: { fontSize: FONT.sizes.md, fontWeight: '800', color: QM.ink },
   payValue: { fontSize: FONT.sizes.lg, fontWeight: '900', color: PURPLE },
   earnHint: { fontSize: FONT.sizes.xs, color: COLORS.gray[500], marginTop: SPACING.sm },
 
@@ -341,14 +348,14 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
-    borderTopColor: COLORS.gray[200],
+    borderTopColor: QM.hairline,
   },
   cancelBtn: {
     height: 52,
     backgroundColor: COLORS.white,
     borderWidth: 1.5,
     borderColor: COLORS.error,
-    borderRadius: RADIUS.lg,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },

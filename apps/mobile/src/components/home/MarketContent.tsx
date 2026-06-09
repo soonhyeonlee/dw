@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../../constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../../constants/theme';
 import {
   getMarketProducts,
   getMarketCategories,
@@ -335,28 +335,29 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    backgroundColor: COLORS.primarySoft,
-    borderRadius: RADIUS.lg,
+    backgroundColor: QM.card,
+    borderRadius: 20,
+    ...QM.cardShadow,
   },
   pointIcon: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: COLORS.white,
+    backgroundColor: QM.coralSoft,
     alignItems: 'center', justifyContent: 'center',
   },
-  pointLabel: { fontSize: 14, fontWeight: '800', color: COLORS.ink[900] },
-  pointSub: { fontSize: 11, color: COLORS.ink[600], marginTop: 1 },
-  pointValue: { fontSize: 20, fontWeight: '900', color: COLORS.primary, letterSpacing: -0.3 },
+  pointLabel: { fontSize: 14, fontWeight: '800', color: QM.ink },
+  pointSub: { fontSize: 11, color: QM.sub, marginTop: 1 },
+  pointValue: { fontSize: 20, fontWeight: '900', color: QM.coral, letterSpacing: -0.3 },
 
   chips: { paddingHorizontal: SPACING.xl, gap: 8, paddingVertical: 12 },
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: COLORS.ink[100],
+    backgroundColor: QM.fieldBg,
   },
-  chipActive: { backgroundColor: COLORS.ink[900] },
-  chipText: { fontSize: 13, fontWeight: '500', color: COLORS.ink[700] },
-  chipTextActive: { color: COLORS.white, fontWeight: '600' },
+  chipActive: { backgroundColor: QM.coral },
+  chipText: { fontSize: 13, fontWeight: '600', color: QM.sub },
+  chipTextActive: { color: COLORS.white, fontWeight: '700' },
 
   hero: {
     marginHorizontal: SPACING.xl,
@@ -400,10 +401,10 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
   },
   titleGroup: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
-  sectionTitle: { fontSize: 17, fontWeight: '700', color: COLORS.ink[900], letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 17, fontWeight: '800', color: QM.ink, letterSpacing: -0.3 },
 
   flashScroll: { paddingHorizontal: SPACING.xl, gap: 12 },
-  divider: { height: 8, backgroundColor: COLORS.ink[50], marginTop: 24 },
+  divider: { height: 1, backgroundColor: QM.hairline, marginTop: 24, marginHorizontal: SPACING.xl },
 
   grid: {
     paddingHorizontal: SPACING.xl,
@@ -438,14 +439,14 @@ const fStyles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.92)',
     alignItems: 'center', justifyContent: 'center',
   },
-  title: { fontSize: 13, color: COLORS.ink[800], lineHeight: 17 },
+  title: { fontSize: 13, color: QM.ink, lineHeight: 17 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
-  discount: { fontSize: 14, fontWeight: '800', color: COLORS.primary },
-  price: { fontSize: 14, fontWeight: '800', color: COLORS.ink[900] },
+  discount: { fontSize: 14, fontWeight: '800', color: QM.coral },
+  price: { fontSize: 14, fontWeight: '800', color: QM.ink },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  rating: { fontSize: 11, fontWeight: '700', color: COLORS.ink[800] },
-  review: { fontSize: 11, color: COLORS.ink[500] },
-  cb: { fontSize: 11, color: COLORS.primary, fontWeight: '700' },
+  rating: { fontSize: 11, fontWeight: '700', color: QM.ink },
+  review: { fontSize: 11, color: QM.sub },
+  cb: { fontSize: 11, color: QM.coral, fontWeight: '700' },
 });
 
 const flStyles = StyleSheet.create({
@@ -466,9 +467,9 @@ const flStyles = StyleSheet.create({
     borderRadius: 6,
   },
   urgentText: { color: COLORS.white, fontSize: 9, fontWeight: '700' },
-  title: { fontSize: 12, color: COLORS.ink[700], lineHeight: 16 },
+  title: { fontSize: 12, color: QM.ink, lineHeight: 16 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
-  discount: { fontSize: 15, fontWeight: '800', color: COLORS.primary },
-  price: { fontSize: 15, fontWeight: '800', color: COLORS.ink[900] },
-  sold: { fontSize: 10, color: COLORS.ink[500], fontWeight: '600' },
+  discount: { fontSize: 15, fontWeight: '800', color: QM.coral },
+  price: { fontSize: 15, fontWeight: '800', color: QM.ink },
+  sold: { fontSize: 10, color: QM.coral, fontWeight: '700' },
 });

@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, FONT, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import PlatformFilter from '../../src/components/PlatformFilter';
 import ProductCard from '../../src/components/ProductCard';
 import { getProducts } from '../../src/api/products';
@@ -204,14 +204,14 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.gray[100], marginHorizontal: SPACING.lg, marginTop: SPACING.md, borderRadius: RADIUS.lg, paddingHorizontal: SPACING.md, height: 48, gap: SPACING.sm },
+  container: { flex: 1, backgroundColor: QM.pageBg },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: QM.fieldBg, marginHorizontal: SPACING.lg, marginTop: SPACING.md, borderRadius: RADIUS.lg, paddingHorizontal: SPACING.md, height: 48, gap: SPACING.sm },
   searchInput: { flex: 1, fontSize: FONT.sizes.md, color: COLORS.gray[900] },
   popularSection: { padding: SPACING.lg },
-  sectionTitle: { fontSize: FONT.sizes.lg, fontWeight: '700', color: COLORS.secondary, marginBottom: SPACING.md },
+  sectionTitle: { fontSize: FONT.sizes.lg, fontWeight: '800', color: QM.ink, marginBottom: SPACING.md },
   keywordGrid: { gap: SPACING.sm },
-  keywordChip: { flexDirection: 'row', alignItems: 'center', paddingVertical: SPACING.md, borderBottomWidth: 1, borderBottomColor: COLORS.gray[100], gap: SPACING.md },
-  keywordRank: { fontSize: FONT.sizes.md, fontWeight: '800', color: COLORS.primary, width: 24 },
+  keywordChip: { flexDirection: 'row', alignItems: 'center', paddingVertical: SPACING.md, borderBottomWidth: 1, borderBottomColor: QM.hairline, gap: SPACING.md },
+  keywordRank: { fontSize: FONT.sizes.md, fontWeight: '800', color: QM.coral, width: 24 },
   keywordText: { fontSize: FONT.sizes.md, color: COLORS.gray[700] },
   row: { justifyContent: 'space-between', paddingHorizontal: SPACING.lg },
   listContent: { paddingBottom: SPACING.xxxl },
@@ -222,12 +222,12 @@ const styles = StyleSheet.create({
     paddingTop: SPACING.md,
     paddingBottom: SPACING.sm,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.divider,
+    borderBottomColor: QM.hairline,
   },
   mallMatchTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.ink[800],
+    color: QM.ink,
     paddingHorizontal: SPACING.lg,
     marginBottom: SPACING.sm,
   },

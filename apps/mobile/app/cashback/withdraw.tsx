@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { requestWithdrawal } from '../../src/api/cashback';
 
@@ -242,7 +242,7 @@ export default function WithdrawScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
 
   header: {
     height: 56,
@@ -263,25 +263,26 @@ const styles = StyleSheet.create({
     marginHorizontal: SPACING.xl,
     marginTop: 20,
     padding: 20,
-    backgroundColor: COLORS.ink[900],
-    borderRadius: RADIUS.xl,
+    backgroundColor: QM.card,
+    borderRadius: 20,
+    ...QM.cardShadow,
   },
-  balanceLabel: { fontSize: 12, color: COLORS.ink[400], fontWeight: '500' },
+  balanceLabel: { fontSize: 12, color: '#9097A0', fontWeight: '700' },
   balanceRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 6 },
-  balanceAmount: { fontSize: 28, fontWeight: '800', color: COLORS.white, letterSpacing: -0.5 },
-  balanceUnit: { fontSize: 18, fontWeight: '700', color: COLORS.white, marginLeft: 4 },
+  balanceAmount: { fontSize: 28, fontWeight: '800', color: QM.coral, letterSpacing: -0.5 },
+  balanceUnit: { fontSize: 18, fontWeight: '700', color: QM.coral, marginLeft: 4 },
 
   section: {
     marginHorizontal: SPACING.xl,
     marginTop: 28,
   },
   sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionLabel: { fontSize: 14, fontWeight: '700', color: COLORS.ink[900], marginBottom: 10 },
-  sectionAction: { fontSize: 13, color: COLORS.primary, fontWeight: '700' },
+  sectionLabel: { fontSize: 14, fontWeight: '800', color: QM.ink, marginBottom: 10 },
+  sectionAction: { fontSize: 13, color: QM.coral, fontWeight: '700' },
 
   inputBox: {
     height: 64,
-    backgroundColor: COLORS.ink[50],
+    backgroundColor: QM.fieldBg,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     borderColor: 'transparent',
@@ -289,7 +290,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  inputBoxFocus: { borderColor: COLORS.ink[900], backgroundColor: COLORS.white },
+  inputBoxFocus: { borderColor: QM.coral, backgroundColor: COLORS.white },
   inputBoxError: { borderColor: COLORS.error, backgroundColor: '#FFE3E2' },
   input: { flex: 1, fontSize: 24, fontWeight: '800', color: COLORS.ink[900], padding: 0 },
   inputUnit: { fontSize: 18, fontWeight: '700', color: COLORS.ink[700], marginLeft: 6 },
@@ -307,10 +308,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.ink[200],
   },
-  quickChipAll: { borderColor: COLORS.primary, backgroundColor: COLORS.primarySoft },
+  quickChipAll: { borderColor: QM.coralSoft, backgroundColor: QM.coralSoft },
   quickChipDisabled: { opacity: 0.4 },
   quickText: { fontSize: 13, fontWeight: '700', color: COLORS.ink[800] },
-  quickTextAll: { color: COLORS.primary },
+  quickTextAll: { color: QM.coral },
   quickTextDisabled: { color: COLORS.ink[400] },
 
   accountCard: {
@@ -318,14 +319,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 16,
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.divider,
+    backgroundColor: QM.card,
+    borderRadius: 18,
+    ...QM.cardShadow,
   },
   accountIcon: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: COLORS.primarySoft,
+    backgroundColor: QM.coralSoft,
     alignItems: 'center', justifyContent: 'center',
   },
   accountBank: { fontSize: 14, fontWeight: '700', color: COLORS.ink[900] },
@@ -347,9 +347,10 @@ const styles = StyleSheet.create({
   notice: {
     marginHorizontal: SPACING.xl,
     marginTop: 24,
-    padding: 14,
-    backgroundColor: COLORS.ink[50],
-    borderRadius: RADIUS.md,
+    padding: 16,
+    backgroundColor: QM.card,
+    borderRadius: 18,
+    ...QM.cardShadow,
     gap: 8,
   },
   noticeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -359,16 +360,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xl,
     paddingTop: 12,
     paddingBottom: Platform.OS === 'ios' ? 0 : 12,
-    backgroundColor: COLORS.background,
+    backgroundColor: QM.card,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.divider,
+    borderTopColor: QM.hairline,
   },
   submitBtn: {
     height: 52,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.primary,
+    borderRadius: 16,
+    backgroundColor: QM.coral,
     alignItems: 'center',
     justifyContent: 'center',
+    ...QM.cardShadow,
+    shadowColor: QM.coral,
+    shadowOpacity: 0.28,
   },
   submitBtnDisabled: { backgroundColor: COLORS.ink[200] },
   submitText: { color: COLORS.white, fontSize: 15, fontWeight: '800', letterSpacing: -0.2 },

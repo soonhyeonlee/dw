@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
 
 const REASONS = [
   '구매 후 4일이 지났는데 적립이 안 됐어요',
@@ -237,15 +237,15 @@ function Label({ children, required }: { children: React.ReactNode; required?: b
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
   scroll: { flex: 1 },
 
   notice: {
     marginHorizontal: SPACING.xl,
     marginTop: 16,
     padding: 14,
-    backgroundColor: COLORS.primarySoft,
-    borderRadius: RADIUS.md,
+    backgroundColor: QM.coralSoft,
+    borderRadius: 18,
   },
   noticeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
   noticeTitle: { fontSize: 13, fontWeight: '800', color: COLORS.ink[900] },
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   section: { paddingHorizontal: SPACING.xl, marginTop: 24 },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 10 },
   label: { fontSize: 14, fontWeight: '700', color: COLORS.ink[900] },
-  required: { fontSize: 14, fontWeight: '800', color: COLORS.primary },
+  required: { fontSize: 14, fontWeight: '800', color: QM.coral },
 
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
@@ -288,18 +288,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     paddingVertical: 12, paddingHorizontal: 14,
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.md,
-    borderWidth: 1, borderColor: COLORS.divider,
+    backgroundColor: QM.card,
+    borderRadius: 14,
+    borderWidth: 1, borderColor: QM.hairline,
   },
-  reasonRowActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primarySoft },
+  reasonRowActive: { borderColor: QM.coral, backgroundColor: QM.coralSoft },
   radio: {
     width: 20, height: 20, borderRadius: 10,
     borderWidth: 2, borderColor: COLORS.ink[300],
     alignItems: 'center', justifyContent: 'center',
   },
-  radioActive: { borderColor: COLORS.primary },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: COLORS.primary },
+  radioActive: { borderColor: QM.coral },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: QM.coral },
   reasonText: { flex: 1, fontSize: 13, color: COLORS.ink[800], fontWeight: '500' },
   reasonTextActive: { color: COLORS.ink[900], fontWeight: '700' },
 
@@ -307,14 +307,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xl,
     paddingTop: 12,
     paddingBottom: Platform.OS === 'ios' ? 0 : 12,
-    backgroundColor: COLORS.background,
+    backgroundColor: QM.pageBg,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.divider,
+    borderTopColor: QM.hairline,
   },
   submitBtn: {
-    height: 52, borderRadius: RADIUS.md,
-    backgroundColor: COLORS.primary,
+    height: 52, borderRadius: 16,
+    backgroundColor: QM.coral,
     alignItems: 'center', justifyContent: 'center',
+    shadowColor: QM.coral, shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 3,
   },
   submitBtnDisabled: { backgroundColor: COLORS.ink[200] },
   submitText: { color: COLORS.white, fontSize: 15, fontWeight: '800', letterSpacing: -0.2 },

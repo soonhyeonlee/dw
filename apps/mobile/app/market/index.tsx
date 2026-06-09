@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING } from '../../src/constants/theme';
+import { COLORS, SPACING, QM } from '../../src/constants/theme';
 import {
   MarketContent,
   type MarketContentHandle,
@@ -30,7 +30,7 @@ export default function MarketScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={QM.pageBg} />
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
@@ -69,8 +69,8 @@ export default function MarketScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
-  container: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
+  container: { flex: 1, backgroundColor: QM.pageBg },
 
   topbar: {
     flexDirection: 'row',
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   },
   topbarLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
   backBtn: { marginLeft: -4, padding: 2 },
-  title: { fontSize: 22, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.5 },
-  subtitle: { fontSize: 12, color: COLORS.ink[500], marginTop: 2, fontWeight: '500' },
+  title: { fontSize: 22, fontWeight: '800', color: QM.ink, letterSpacing: -0.5 },
+  subtitle: { fontSize: 12, color: '#9097A0', marginTop: 2, fontWeight: '700' },
   iconBtn: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
 });

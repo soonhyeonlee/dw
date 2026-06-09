@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../src/constants/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -191,7 +191,7 @@ export default function GuideScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
   scroll: { flex: 1 },
 
   hero: {
@@ -262,9 +262,10 @@ const styles = StyleSheet.create({
 
   cta: {
     marginTop: 16,
-    height: 48, borderRadius: RADIUS.md,
-    backgroundColor: COLORS.primary,
+    height: 48, borderRadius: 14,
+    backgroundColor: QM.coral,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    shadowColor: QM.coral, shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 3,
   },
   ctaText: { color: COLORS.white, fontSize: 14, fontWeight: '800' },
 
@@ -289,9 +290,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 14,
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.md,
-    borderWidth: 1, borderColor: COLORS.divider,
+    backgroundColor: QM.card,
+    borderRadius: 18,
+    ...QM.cardShadow,
   },
   linkIcon: {
     width: 36, height: 36, borderRadius: 12,

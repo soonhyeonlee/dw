@@ -14,7 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { getMallDetail, type Mall as ApiMall } from '../../src/api/home';
 import { getProducts, toggleMallWishlist, type Product as ApiProduct } from '../../src/api/products';
@@ -75,7 +75,7 @@ function ProductRow({ p, onPress }: { p: RowProduct; onPress: () => void }) {
 const PROMO_BADGE_LABEL: Record<string, { text: string; bg: string; fg: string }> = {
   time_deal: { text: '타임특가', bg: '#E0311E', fg: '#FFFFFF' },
   rate_up:   { text: '상향 캐시백', bg: '#EEEEFF', fg: '#4B4BF4' },
-  welcome:   { text: '웰컴 혜택', bg: '#FFE6DC', fg: '#FF6B35' },
+  welcome:   { text: '웰컴 혜택', bg: QM.coralSoft, fg: QM.coral },
 };
 
 interface RateTier { category: string; rate: number; note?: string }
@@ -164,7 +164,7 @@ export default function MallDetailScreen() {
       .catch(() => setProducts([]));
   }, [platform]);
 
-  const tint = PLATFORM_TINT[platform] || { color: '#FF6B35', wordmark: 'M' };
+  const tint = PLATFORM_TINT[platform] || { color: QM.coral, wordmark: 'M' };
   const mall = apiMall
     ? {
         platform: apiMall.platform,
@@ -397,17 +397,18 @@ export default function MallDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
   topbar: {
     height: 52,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.sm,
+    backgroundColor: QM.card,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.divider,
+    borderBottomColor: QM.hairline,
   },
-  topTitle: { fontSize: 16, fontWeight: '700', color: COLORS.ink[900] },
+  topTitle: { fontSize: 16, fontWeight: '800', color: QM.ink },
   topActions: { flexDirection: 'row' },
   iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
 
@@ -429,9 +430,9 @@ const styles = StyleSheet.create({
     width: 6, height: 6, borderRadius: 3,
     backgroundColor: COLORS.ink[200],
   },
-  heroCollageDotActive: { width: 16, backgroundColor: COLORS.ink[900] },
-  mallInfo: { alignItems: 'center', paddingHorizontal: SPACING.xl, paddingBottom: 14, gap: 6 },
-  heroName: { fontSize: 20, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.3 },
+  heroCollageDotActive: { width: 16, backgroundColor: QM.coral },
+  mallInfo: { alignItems: 'center', paddingHorizontal: SPACING.xl, paddingBottom: 14, paddingTop: 14, gap: 6, backgroundColor: QM.card },
+  heroName: { fontSize: 20, fontWeight: '800', color: QM.ink, letterSpacing: -0.3 },
   heroRateBox: {
     marginTop: 10,
     flexDirection: 'row', alignItems: 'center', gap: 8,
@@ -449,10 +450,10 @@ const styles = StyleSheet.create({
   categoryChip: {
     marginTop: 6, marginBottom: 6,
     paddingHorizontal: 10, paddingVertical: 4,
-    backgroundColor: COLORS.ink[100],
+    backgroundColor: QM.coralSoft,
     borderRadius: 999,
   },
-  categoryChipText: { fontSize: 11, color: COLORS.ink[700], fontWeight: '600' },
+  categoryChipText: { fontSize: 11, color: QM.coral, fontWeight: '700' },
   heroBadge: {
     marginTop: 8,
     paddingHorizontal: 10, paddingVertical: 4,
@@ -461,33 +462,40 @@ const styles = StyleSheet.create({
   heroBadgeText: { fontSize: 11, fontWeight: '700' },
   heroRateBig: {
     marginTop: 12,
-    fontSize: 24, fontWeight: '800', color: COLORS.ink[900],
+    fontSize: 24, fontWeight: '800', color: QM.coral,
     letterSpacing: -0.5,
   },
 
-  divider: { height: 8, backgroundColor: COLORS.ink[50] },
+  divider: { height: 12, backgroundColor: QM.pageBg },
 
-  rateTableWrap: { paddingHorizontal: SPACING.xl, paddingVertical: 18 },
-  rateTableTitle: { fontSize: 14, fontWeight: '700', color: COLORS.ink[900], marginBottom: 10 },
+  rateTableWrap: {
+    marginHorizontal: SPACING.xl,
+    marginTop: 12,
+    padding: 18,
+    backgroundColor: QM.card,
+    borderRadius: 20,
+    ...QM.cardShadow,
+  },
+  rateTableTitle: { fontSize: 14, fontWeight: '800', color: QM.ink, marginBottom: 10 },
   rateTable: {
-    borderWidth: 1, borderColor: COLORS.ink[100],
+    borderWidth: 1, borderColor: QM.hairline,
     borderRadius: RADIUS.md,
     overflow: 'hidden',
   },
   rateRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 14, paddingVertical: 14,
-    borderBottomWidth: 1, borderBottomColor: COLORS.ink[100],
+    borderBottomWidth: 1, borderBottomColor: QM.hairline,
   },
-  rateRowCategory: { fontSize: 13, color: COLORS.ink[800], fontWeight: '600' },
-  rateRowNote: { fontSize: 11, color: COLORS.ink[500], marginTop: 2 },
-  rateRowRate: { fontSize: 15, fontWeight: '800', color: COLORS.primary, letterSpacing: -0.3 },
+  rateRowCategory: { fontSize: 13, color: QM.ink, fontWeight: '600' },
+  rateRowNote: { fontSize: 11, color: QM.sub, marginTop: 2 },
+  rateRowRate: { fontSize: 15, fontWeight: '800', color: QM.coral, letterSpacing: -0.3 },
   rateRowRateMuted: { color: COLORS.ink[400], fontWeight: '600' },
 
   noticeCard: {
     marginTop: 14,
     flexDirection: 'row', gap: 10,
-    backgroundColor: COLORS.ink[50],
+    backgroundColor: QM.fieldBg,
     borderRadius: RADIUS.md,
     padding: 14,
   },
@@ -496,8 +504,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     alignItems: 'center', justifyContent: 'center',
   },
-  noticeTitle: { fontSize: 12, fontWeight: '700', color: COLORS.ink[800], marginBottom: 4 },
-  noticeBody: { fontSize: 11, color: COLORS.ink[600], lineHeight: 17 },
+  noticeTitle: { fontSize: 12, fontWeight: '800', color: QM.ink, marginBottom: 4 },
+  noticeBody: { fontSize: 11, color: QM.sub, lineHeight: 17 },
 
   moreDealsPill: {
     marginTop: 12,
@@ -505,17 +513,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 14, paddingVertical: 9,
     borderRadius: 999,
-    borderWidth: 1, borderColor: COLORS.ink[200],
+    borderWidth: 1, borderColor: QM.hairline,
     backgroundColor: COLORS.white,
   },
-  moreDealsText: { fontSize: 12, fontWeight: '700', color: COLORS.ink[800] },
+  moreDealsText: { fontSize: 12, fontWeight: '700', color: QM.ink },
 
   timelineWrap: {
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: 22,
+    marginHorizontal: SPACING.xl,
+    marginTop: 12,
+    padding: 18,
+    backgroundColor: QM.card,
+    borderRadius: 20,
+    ...QM.cardShadow,
   },
   timelineTitle: {
-    fontSize: 14, fontWeight: '700', color: COLORS.ink[900],
+    fontSize: 14, fontWeight: '800', color: QM.ink,
     marginBottom: 18,
   },
   timelineRow: { flexDirection: 'row', alignItems: 'flex-start' },
@@ -527,10 +539,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   timelineDotActive: {
-    backgroundColor: COLORS.ink[900],
-    borderColor: COLORS.ink[900],
+    backgroundColor: QM.coral,
+    borderColor: QM.coral,
   },
-  timelineLabel: { fontSize: 12, fontWeight: '700', color: COLORS.ink[800] },
+  timelineLabel: { fontSize: 12, fontWeight: '700', color: QM.ink },
   timelineSub: { fontSize: 10, color: COLORS.ink[500], marginTop: 3, textAlign: 'center' },
   timelineLine: {
     flex: 1, height: 2, backgroundColor: COLORS.ink[200], marginTop: 6,
@@ -538,10 +550,10 @@ const styles = StyleSheet.create({
 
   sectionHead: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline',
-    paddingHorizontal: SPACING.xl, paddingTop: 20, paddingBottom: 12,
+    paddingHorizontal: SPACING.xl, paddingTop: 24, paddingBottom: 12,
   },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.ink[900] },
-  sectionCount: { fontSize: 13, color: COLORS.ink[500], fontWeight: '500' },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: QM.ink },
+  sectionCount: { fontSize: 13, color: QM.sub, fontWeight: '600' },
 
   list: { paddingHorizontal: SPACING.xl, gap: 16 },
 
@@ -556,15 +568,20 @@ const styles = StyleSheet.create({
   bottomBarWrap: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: COLORS.white,
-    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: COLORS.divider,
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: QM.hairline,
     paddingHorizontal: 16, paddingTop: 12,
   },
   goBtn: {
     height: 52,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.md,
+    backgroundColor: QM.coral,
+    borderRadius: 16,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6,
+    shadowColor: QM.coral,
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
   goBtnText: { fontSize: 15, fontWeight: '800', color: COLORS.white },
 });
@@ -577,10 +594,10 @@ const rowStyles = StyleSheet.create({
     backgroundColor: COLORS.ink[100],
   },
   body: { flex: 1, justifyContent: 'space-between' },
-  brand: { fontSize: 11, color: COLORS.ink[500], fontWeight: '600' },
-  title: { fontSize: 13, color: COLORS.ink[800], lineHeight: 17 },
+  brand: { fontSize: 11, color: QM.sub, fontWeight: '600' },
+  title: { fontSize: 13, color: QM.ink, lineHeight: 17 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 4 },
-  discount: { fontSize: 14, fontWeight: '800', color: COLORS.primary },
-  price: { fontSize: 14, fontWeight: '800', color: COLORS.ink[900] },
-  cb: { fontSize: 11, color: COLORS.primary, fontWeight: '600', marginTop: 2 },
+  discount: { fontSize: 14, fontWeight: '800', color: QM.coral },
+  price: { fontSize: 14, fontWeight: '800', color: QM.ink },
+  cb: { fontSize: 11, color: QM.coral, fontWeight: '700', marginTop: 2 },
 });

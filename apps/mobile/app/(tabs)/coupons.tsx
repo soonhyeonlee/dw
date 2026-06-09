@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, FONT, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { getMyCoupons, useCoupon as useCouponApi, type MyCoupon } from '../../src/api/region';
 
@@ -173,35 +173,35 @@ export default function CouponsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
   header: { height: 56, justifyContent: 'center', paddingHorizontal: SPACING.xl },
-  headerTitle: { fontSize: 20, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.3 },
+  headerTitle: { fontSize: 20, fontWeight: '800', color: QM.ink, letterSpacing: -0.3 },
 
   list: { padding: SPACING.lg, gap: SPACING.md, flexGrow: 1 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.ink[100],
+    backgroundColor: QM.card,
+    borderRadius: 18,
     padding: SPACING.lg,
+    ...QM.cardShadow,
   },
   cardDisabled: { opacity: 0.55 },
   cardLeft: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: COLORS.primarySoft,
+    backgroundColor: QM.coralSoft,
     alignItems: 'center', justifyContent: 'center',
   },
-  value: { fontSize: FONT.sizes.lg, fontWeight: '900', color: COLORS.primary },
-  title: { fontSize: FONT.sizes.sm, fontWeight: '600', color: COLORS.ink[900], marginTop: 2 },
+  value: { fontSize: FONT.sizes.lg, fontWeight: '900', color: QM.coral },
+  title: { fontSize: FONT.sizes.sm, fontWeight: '600', color: QM.ink, marginTop: 2 },
   partner: { fontSize: FONT.sizes.xs, color: COLORS.ink[500], marginTop: 2 },
   expire: { fontSize: FONT.sizes.xs, color: COLORS.ink[400], marginTop: 4 },
 
   useBtn: {
-    paddingHorizontal: SPACING.lg, height: 38, borderRadius: RADIUS.sm,
-    backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center',
+    paddingHorizontal: SPACING.lg, height: 38, borderRadius: 14,
+    backgroundColor: QM.coral, alignItems: 'center', justifyContent: 'center',
+    shadowColor: QM.coral, shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3,
   },
   useBtnText: { color: COLORS.white, fontWeight: '700', fontSize: FONT.sizes.sm },
   badgeUsed: {
@@ -213,15 +213,16 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 40 },
   iconWrap: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: COLORS.primarySoft,
+    backgroundColor: QM.coralSoft,
     alignItems: 'center', justifyContent: 'center', marginBottom: 4,
   },
-  emptyTitle: { fontSize: 17, fontWeight: '800', color: COLORS.ink[900] },
+  emptyTitle: { fontSize: 17, fontWeight: '800', color: QM.ink },
   emptySub: { fontSize: 13, color: COLORS.ink[500], textAlign: 'center', lineHeight: 20 },
   cta: {
     marginTop: SPACING.md, paddingHorizontal: SPACING.xxl, height: 46,
-    borderRadius: RADIUS.lg, backgroundColor: COLORS.primary,
+    borderRadius: 16, backgroundColor: QM.coral,
     alignItems: 'center', justifyContent: 'center',
+    shadowColor: QM.coral, shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3,
   },
   ctaText: { color: COLORS.white, fontWeight: '800', fontSize: FONT.sizes.md },
 });

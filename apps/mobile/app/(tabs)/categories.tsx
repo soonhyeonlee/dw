@@ -48,6 +48,31 @@ function metaFor(key: string) {
   return CAT_META[key] || { label: key, emoji: '🏷️' };
 }
 
+// 경유사(platform) → 표시명. malls 목록에 없는 직접판매 채널 보강.
+const CHANNEL_NAME: Record<string, string> = {
+  ihomemarket: '아이홈마켓',
+  coupang: '쿠팡',
+  naver: '네이버쇼핑',
+  '11st': '11번가',
+  gmarket: 'G마켓',
+  ssg: 'SSG',
+  lotteon: '롯데온',
+  gsshop: 'GS샵',
+  auction: '옥션',
+  tmon: '티몬',
+  wemakeprice: '위메프',
+  lightning: '번개장터',
+};
+
+// 상품 제목에서 회사/브랜드(첫 단어) 추출. 브랜드 전용 필드가 없어 제목 기반 휴리스틱.
+function brandOf(title: string): string {
+  if (!title) return '기타';
+  // 앞쪽 [태그]·(부가)·숫자%·할인 마커 제거 후 첫 단어
+  const cleaned = title.replace(/^\s*(\[[^\]]*\]|\([^)]*\)|\d+%?|무료배송|특가|신상)\s*/g, '').trim();
+  const first = (cleaned || title).trim().split(/\s+/)[0] || '기타';
+  return first.length > 14 ? first.slice(0, 14) : first;
+}
+
 const CAT_PROMO_SLIDES: PromoSlide[] = [
   {
     id: 'cat-travel',
@@ -92,6 +117,11 @@ function ProductTile({
     </TouchableOpacity>
   );
 }
+
+// 그룹 헤더("[경유사] 회사") 또는 상품 한 줄. FlatList 한 데이터로 평탄화해 가상화 유지.
+type GroupRow =
+  | { type: 'header'; key: string; channel: string; brand: string; count: number }
+  | { type: 'product'; p: ApiProduct };
 
 // 카테고리 선택 시 — 상품을 한 줄에 하나씩 크게 보여주는 배너형 카드.
 function ProductBanner({ p, onPress }: { p: ApiProduct; onPress: () => void }) {
@@ -186,7 +216,37 @@ export default function CategoriesScreen() {
   const selProducts = selectedCat ? productsByCat.get(selectedCat) || [] : [];
   const selectedMeta = selectedCat ? metaFor(selectedCat) : null;
 
-  const visibleProducts = selectedCat ? selProducts.slice(0, visibleCount) : [];
+  // 경유사 표시명: malls 의 실제 이름 우선, 없으면 CHANNEL_NAME, 그래도 없으면 platform 문자열
+  const channelLabel = useMemo(() => {
+    const m: Record<string, string> = { ...CHANNEL_NAME };
+    for (const mall of malls) if (mall.platform && mall.name) m[mall.platform] = mall.name;
+    return m;
+  }, [malls]);
+  const channelName = (platform?: string) =>
+    (platform && (channelLabel[platform] || platform)) || '제휴몰';
+
+  // 선택 카테고리 상품을 (경유사 · 회사) 로 그룹핑 → 헤더 + 상품 행을 한 줄로 평탄화(가상화 유지)
+  const groupedRows = useMemo<GroupRow[]>(() => {
+    if (!selectedCat) return [];
+    const groups = new Map<string, ApiProduct[]>();
+    const order: string[] = [];
+    for (const p of selProducts) {
+      const key = `${channelName(p.platform)}␟${brandOf(p.title)}`;
+      if (!groups.has(key)) { groups.set(key, []); order.push(key); }
+      groups.get(key)!.push(p);
+    }
+    order.sort((a, b) => groups.get(b)!.length - groups.get(a)!.length);
+    const rows: GroupRow[] = [];
+    for (const key of order) {
+      const [channel, brand] = key.split('␟');
+      const arr = groups.get(key)!;
+      rows.push({ type: 'header', key, channel, brand, count: arr.length });
+      for (const p of arr) rows.push({ type: 'product', p });
+    }
+    return rows;
+  }, [selectedCat, selProducts, channelLabel]);
+
+  const visibleRows = selectedCat ? groupedRows.slice(0, visibleCount) : [];
 
   const headerContent = (
     <>
@@ -322,19 +382,29 @@ export default function CategoriesScreen() {
 
       <FlatList
         style={styles.container}
-        data={visibleProducts}
-        keyExtractor={(p) => p.id}
-        renderItem={({ item }) => (
-          <View style={styles.bannerWrap}>
-            <ProductBanner p={item} onPress={() => router.push(`/product/${item.id}` as any)} />
-          </View>
-        )}
+        data={visibleRows}
+        keyExtractor={(item) => (item.type === 'header' ? `h:${item.key}` : item.p.id)}
+        renderItem={({ item }) =>
+          item.type === 'header' ? (
+            <View style={gStyles.groupHeader}>
+              <View style={gStyles.channelPill}>
+                <Text style={gStyles.channelText}>{item.channel}</Text>
+              </View>
+              <Text style={gStyles.brandText} numberOfLines={1}>{item.brand}</Text>
+              <Text style={gStyles.groupCount}>{item.count}개</Text>
+            </View>
+          ) : (
+            <View style={styles.bannerWrap}>
+              <ProductBanner p={item.p} onPress={() => router.push(`/product/${item.p.id}` as any)} />
+            </View>
+          )
+        }
         ListHeaderComponent={headerContent}
         ListFooterComponent={<View style={{ height: 40 }} />}
         onEndReachedThreshold={0.5}
         onEndReached={() => {
-          if (selectedCat && visibleCount < selProducts.length) {
-            setVisibleCount((c) => c + PAGE);
+          if (selectedCat && visibleCount < groupedRows.length) {
+            setVisibleCount((c) => c + PAGE * 2);
           }
         }}
         showsVerticalScrollIndicator={false}
@@ -473,4 +543,25 @@ const bStyles = StyleSheet.create({
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 8 },
   discount: { fontSize: 18, fontWeight: '800', color: QM.coral },
   price: { fontSize: 18, fontWeight: '800', color: QM.ink },
+});
+
+// 그룹 헤더 — [경유사] 회사
+const gStyles = StyleSheet.create({
+  groupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: SPACING.xl,
+    marginTop: 24,
+    marginBottom: 2,
+  },
+  channelPill: {
+    backgroundColor: QM.coralSoft,
+    borderRadius: 7,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+  },
+  channelText: { color: QM.coral, fontSize: 11, fontWeight: '800' },
+  brandText: { fontSize: 15, fontWeight: '800', color: QM.ink, letterSpacing: -0.3, flexShrink: 1 },
+  groupCount: { marginLeft: 'auto', fontSize: 12, color: '#9097A0', fontWeight: '600' },
 });

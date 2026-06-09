@@ -104,9 +104,11 @@ function ProductBanner({ p, onPress }: { p: ApiProduct; onPress: () => void }) {
             <Text style={bStyles.discountBadgeText}>{Math.round(Number(p.discountRate))}%</Text>
           </View>
         ) : null}
-        <View style={bStyles.cbPill}>
-          <Text style={bStyles.cbPillText}>캐시백 {p.cashbackRate}%</Text>
-        </View>
+        {Number(p.cashbackRate) > 0 ? (
+          <View style={bStyles.cbPill}>
+            <Text style={bStyles.cbPillText}>캐시백 {p.cashbackRate}%</Text>
+          </View>
+        ) : null}
       </View>
       <View style={bStyles.body}>
         <Text style={bStyles.title} numberOfLines={2}>{p.title}</Text>

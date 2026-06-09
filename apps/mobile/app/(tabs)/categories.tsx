@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   Image,
   ActivityIndicator,
@@ -93,12 +93,44 @@ function ProductTile({
   );
 }
 
+// 카테고리 선택 시 — 상품을 한 줄에 하나씩 크게 보여주는 배너형 카드.
+function ProductBanner({ p, onPress }: { p: ApiProduct; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={bStyles.card} onPress={onPress} activeOpacity={0.9}>
+      <View style={bStyles.imgBox}>
+        <Image source={{ uri: p.imageUrl }} style={bStyles.img} resizeMode="cover" />
+        {p.discountRate ? (
+          <View style={bStyles.discountBadge}>
+            <Text style={bStyles.discountBadgeText}>{Math.round(Number(p.discountRate))}%</Text>
+          </View>
+        ) : null}
+        <View style={bStyles.cbPill}>
+          <Text style={bStyles.cbPillText}>캐시백 {p.cashbackRate}%</Text>
+        </View>
+      </View>
+      <View style={bStyles.body}>
+        <Text style={bStyles.title} numberOfLines={2}>{p.title}</Text>
+        <View style={bStyles.priceRow}>
+          {p.discountRate ? <Text style={bStyles.discount}>{Math.round(Number(p.discountRate))}%</Text> : null}
+          <Text style={bStyles.price}>{fmt(p.price)}원</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+const PAGE = 8; // 무한스크롤 1회 렌더 개수
+
 export default function CategoriesScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [malls, setMalls] = useState<Mall[]>([]);
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE);
+
+  // 카테고리를 바꾸면 무한스크롤 카운트 초기화
+  useEffect(() => { setVisibleCount(PAGE); }, [selectedCat]);
 
   useEffect(() => {
     Promise.all([
@@ -152,78 +184,73 @@ export default function CategoriesScreen() {
   const selProducts = selectedCat ? productsByCat.get(selectedCat) || [] : [];
   const selectedMeta = selectedCat ? metaFor(selectedCat) : null;
 
-  return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>카테고리</Text>
-        <TouchableOpacity style={styles.headerAction}>
-          <Ionicons name="bookmark-outline" size={22} color={COLORS.ink[800]} />
-        </TouchableOpacity>
+  const visibleProducts = selectedCat ? selProducts.slice(0, visibleCount) : [];
+
+  const headerContent = (
+    <>
+      {/* Featured: 카드사 혜택 */}
+      <TouchableOpacity style={styles.featured} activeOpacity={0.85}>
+        <View style={styles.featuredIcon}>
+          <Ionicons name="card-outline" size={26} color={COLORS.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.featuredTitle}>카드사 혜택</Text>
+          <Text style={styles.featuredSub}>제휴 카드 캐시백 추가 적립</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={COLORS.ink[400]} />
+      </TouchableOpacity>
+
+      <View style={{ marginTop: 18 }}>
+        <PromoCarousel slides={CAT_PROMO_SLIDES} />
       </View>
 
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Featured: 카드사 혜택 */}
-        <TouchableOpacity style={styles.featured} activeOpacity={0.85}>
-          <View style={styles.featuredIcon}>
-            <Ionicons name="card-outline" size={26} color={COLORS.primary} />
+      {/* Category tile grid — 상품/몰이 들어와 있는 카테고리만 */}
+      {tiles.length > 0 && (
+        <>
+          <Text style={styles.gridTitle}>전체 카테고리</Text>
+          <View style={styles.tileGrid}>
+            {tiles.map((t) => {
+              const active = selectedCat === t.key;
+              return (
+                <TouchableOpacity
+                  key={t.key}
+                  style={styles.tile}
+                  onPress={() => setSelectedCat(active ? null : t.key)}
+                  activeOpacity={0.75}
+                >
+                  <View style={[styles.tileIcon, active && styles.tileIconActive]}>
+                    <Text style={styles.tileEmoji}>{t.emoji}</Text>
+                  </View>
+                  <Text style={[styles.tileLabel, active && styles.tileLabelActive]} numberOfLines={1}>
+                    {t.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.featuredTitle}>카드사 혜택</Text>
-            <Text style={styles.featuredSub}>제휴 카드 캐시백 추가 적립</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={COLORS.ink[400]} />
-        </TouchableOpacity>
+          <View style={styles.gridDivider} />
+        </>
+      )}
 
-        <View style={{ marginTop: 18 }}>
-          <PromoCarousel slides={CAT_PROMO_SLIDES} />
+      {/* 선택 헤더 / 전체 미리보기 */}
+      {loading && tiles.length === 0 ? (
+        <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 60 }} />
+      ) : tiles.length === 0 ? (
+        <View style={[styles.emptyCat, { marginTop: 40 }]}>
+          <Ionicons name="storefront-outline" size={34} color={COLORS.ink[300]} />
+          <Text style={styles.emptyCatText}>등록된 상품 카테고리가 없습니다</Text>
         </View>
-
-        {/* Category tile grid — 상품/몰이 들어와 있는 카테고리만 */}
-        {tiles.length > 0 && (
-          <>
-            <Text style={styles.gridTitle}>전체 카테고리</Text>
-            <View style={styles.tileGrid}>
-              {tiles.map((t) => {
-                const active = selectedCat === t.key;
-                return (
-                  <TouchableOpacity
-                    key={t.key}
-                    style={styles.tile}
-                    onPress={() => setSelectedCat(active ? null : t.key)}
-                    activeOpacity={0.75}
-                  >
-                    <View style={[styles.tileIcon, active && styles.tileIconActive]}>
-                      <Text style={styles.tileEmoji}>{t.emoji}</Text>
-                    </View>
-                    <Text style={[styles.tileLabel, active && styles.tileLabelActive]} numberOfLines={1}>
-                      {t.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            <View style={styles.gridDivider} />
-          </>
-        )}
-
-        {/* Sections */}
-        {loading && tiles.length === 0 ? (
-          <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 60 }} />
-        ) : tiles.length === 0 ? (
-          <View style={[styles.emptyCat, { marginTop: 40 }]}>
-            <Ionicons name="storefront-outline" size={34} color={COLORS.ink[300]} />
-            <Text style={styles.emptyCatText}>등록된 상품 카테고리가 없습니다</Text>
+      ) : selectedCat && selectedMeta ? (
+        /* 선택된 카테고리 — 몰(있으면) 상단, 상품은 아래 배너 리스트(FlatList data) */
+        <View style={styles.section}>
+          <View style={styles.sectionHead}>
+            <Text style={styles.sectionTitle}>{selectedMeta.label} {metaFor(selectedCat).emoji}</Text>
+            <TouchableOpacity onPress={() => setSelectedCat(null)}>
+              <Text style={styles.resetText}>전체 보기</Text>
+            </TouchableOpacity>
           </View>
-        ) : selectedCat && selectedMeta ? (
-          /* 선택된 카테고리 — 몰 + 상품 */
-          <View style={styles.section}>
-            <View style={styles.sectionHead}>
-              <Text style={styles.sectionTitle}>{selectedMeta.label} {metaFor(selectedCat).emoji}</Text>
-              <TouchableOpacity onPress={() => setSelectedCat(null)}>
-                <Text style={styles.resetText}>전체 보기</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.wrapGrid}>
+          {selMalls.length > 0 && (
+            <View style={[styles.wrapGrid, { marginBottom: 6 }]}>
               {selMalls.map((m) => (
                 <MallCard
                   key={m.id}
@@ -233,59 +260,86 @@ export default function CategoriesScreen() {
                   onPress={() => router.push(`/mall/${m.platform}` as any)}
                 />
               ))}
-              {selProducts.map((p) => (
-                <ProductTile
-                  key={p.id}
-                  p={p}
-                  style={styles.wrapCard}
-                  onPress={() => router.push(`/product/${p.id}` as any)}
-                />
-              ))}
             </View>
-          </View>
-        ) : (
-          /* 전체 — 카테고리별 미리보기 */
-          tiles.map((t) => {
-            const ms = mallsByCat.get(t.key) || [];
-            const ps = productsByCat.get(t.key) || [];
-            const total = ms.length + ps.length;
-            const previewMalls = ms.slice(0, 3);
-            const previewProducts = ps.slice(0, Math.max(0, 3 - previewMalls.length));
-            return (
-              <View key={t.key} style={styles.section}>
-                <View style={styles.sectionHead}>
-                  <Text style={styles.sectionTitle}>{t.label} {t.emoji}</Text>
-                  {total > 3 ? (
-                    <TouchableOpacity onPress={() => setSelectedCat(t.key)}>
-                      <Text style={styles.moreText}>더보기</Text>
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-                <View style={styles.tileRow}>
-                  {previewMalls.map((m) => (
-                    <MallCard
-                      key={m.id}
-                      mall={m}
-                      variant="category"
-                      onPress={() => router.push(`/mall/${m.platform}` as any)}
-                    />
-                  ))}
-                  {previewProducts.map((p) => (
-                    <ProductTile
-                      key={p.id}
-                      p={p}
-                      style={styles.rowCard}
-                      onPress={() => router.push(`/product/${p.id}` as any)}
-                    />
-                  ))}
-                </View>
+          )}
+          {selProducts.length === 0 && selMalls.length === 0 ? (
+            <Text style={styles.emptyCatText}>이 카테고리에 상품이 없습니다</Text>
+          ) : null}
+        </View>
+      ) : (
+        /* 전체 — 카테고리별 미리보기 */
+        tiles.map((t) => {
+          const ms = mallsByCat.get(t.key) || [];
+          const ps = productsByCat.get(t.key) || [];
+          const total = ms.length + ps.length;
+          const previewMalls = ms.slice(0, 3);
+          const previewProducts = ps.slice(0, Math.max(0, 3 - previewMalls.length));
+          return (
+            <View key={t.key} style={styles.section}>
+              <View style={styles.sectionHead}>
+                <Text style={styles.sectionTitle}>{t.label} {t.emoji}</Text>
+                {total > 3 ? (
+                  <TouchableOpacity onPress={() => setSelectedCat(t.key)}>
+                    <Text style={styles.moreText}>더보기</Text>
+                  </TouchableOpacity>
+                ) : null}
               </View>
-            );
-          })
-        )}
+              <View style={styles.tileRow}>
+                {previewMalls.map((m) => (
+                  <MallCard
+                    key={m.id}
+                    mall={m}
+                    variant="category"
+                    onPress={() => router.push(`/mall/${m.platform}` as any)}
+                  />
+                ))}
+                {previewProducts.map((p) => (
+                  <ProductTile
+                    key={p.id}
+                    p={p}
+                    style={styles.rowCard}
+                    onPress={() => router.push(`/product/${p.id}` as any)}
+                  />
+                ))}
+              </View>
+            </View>
+          );
+        })
+      )}
+    </>
+  );
 
-        <View style={{ height: 40 }} />
-      </ScrollView>
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>카테고리</Text>
+        <TouchableOpacity style={styles.headerAction}>
+          <Ionicons name="bookmark-outline" size={22} color={COLORS.ink[800]} />
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        style={styles.container}
+        data={visibleProducts}
+        keyExtractor={(p) => p.id}
+        renderItem={({ item }) => (
+          <View style={styles.bannerWrap}>
+            <ProductBanner p={item} onPress={() => router.push(`/product/${item.id}` as any)} />
+          </View>
+        )}
+        ListHeaderComponent={headerContent}
+        ListFooterComponent={<View style={{ height: 40 }} />}
+        onEndReachedThreshold={0.5}
+        onEndReached={() => {
+          if (selectedCat && visibleCount < selProducts.length) {
+            setVisibleCount((c) => c + PAGE);
+          }
+        }}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={PAGE}
+        maxToRenderPerBatch={PAGE}
+        windowSize={7}
+      />
     </SafeAreaView>
   );
 }
@@ -293,6 +347,7 @@ export default function CategoriesScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: QM.pageBg },
   container: { flex: 1 },
+  bannerWrap: { paddingHorizontal: SPACING.xl, marginTop: 14 },
   header: {
     height: 56,
     flexDirection: 'row',
@@ -382,4 +437,38 @@ const pStyles = StyleSheet.create({
   discount: { fontSize: 13, fontWeight: '800', color: COLORS.primary },
   price: { fontSize: 13, fontWeight: '800', color: COLORS.ink[900] },
   cb: { fontSize: 10, color: COLORS.primary, fontWeight: '700' },
+});
+
+// 배너형 큰 상품 카드 (한 줄에 하나)
+const bStyles = StyleSheet.create({
+  card: {
+    backgroundColor: QM.card,
+    borderRadius: 18,
+    overflow: 'hidden',
+    ...QM.cardShadow,
+  },
+  imgBox: {
+    width: '100%',
+    aspectRatio: 16 / 10,
+    backgroundColor: COLORS.ink[100],
+    position: 'relative',
+  },
+  img: { width: '100%', height: '100%' },
+  discountBadge: {
+    position: 'absolute', top: 12, left: 12,
+    backgroundColor: QM.coral, borderRadius: 9,
+    paddingHorizontal: 10, paddingVertical: 5,
+  },
+  discountBadgeText: { color: '#fff', fontWeight: '800', fontSize: 13 },
+  cbPill: {
+    position: 'absolute', bottom: 12, left: 12,
+    backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 999,
+    paddingHorizontal: 11, paddingVertical: 6,
+  },
+  cbPillText: { color: QM.coral, fontWeight: '800', fontSize: 12 },
+  body: { padding: 16 },
+  title: { fontSize: 15, fontWeight: '700', color: QM.ink, lineHeight: 21 },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 8 },
+  discount: { fontSize: 18, fontWeight: '800', color: QM.coral },
+  price: { fontSize: 18, fontWeight: '800', color: QM.ink },
 });

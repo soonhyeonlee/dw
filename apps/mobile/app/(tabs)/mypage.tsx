@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -343,22 +343,22 @@ function Section({
         <Text style={styles.sectionTitle}>{title}</Text>
         {subtitle && <Text style={styles.sectionSub}>{subtitle}</Text>}
       </View>
-      <View>
-        {items.map((m) => (
+      <View style={styles.sectionCard}>
+        {items.map((m, i) => (
           <TouchableOpacity
             key={m.label}
-            style={styles.menuItem}
+            style={[styles.menuItem, i === items.length - 1 && styles.menuItemLast]}
             onPress={() => onPress(m)}
             activeOpacity={0.6}
           >
-            <Ionicons name={m.icon} size={22} color={COLORS.ink[700]} />
+            <Ionicons name={m.icon} size={20} color={COLORS.ink[700]} />
             <Text style={styles.menuLabel}>{m.label}</Text>
             {m.badge && (
               <View style={styles.menuBadge}>
                 <Text style={styles.menuBadgeText}>{m.badge}</Text>
               </View>
             )}
-            <Ionicons name="chevron-forward" size={18} color={COLORS.ink[300]} />
+            <Ionicons name="chevron-forward" size={18} color="#C7CCD2" />
           </TouchableOpacity>
         ))}
       </View>
@@ -367,8 +367,8 @@ function Section({
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
-  container: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
+  container: { flex: 1, backgroundColor: QM.pageBg },
 
   topbar: {
     height: 56,
@@ -377,16 +377,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.xl,
   },
-  topTitle: { fontSize: 22, fontWeight: '800', color: COLORS.ink[900], letterSpacing: -0.5 },
-  topActions: { flexDirection: 'row', gap: SPACING.lg },
-  iconBtn: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  topTitle: { fontSize: 24, fontWeight: '800', color: QM.ink, letterSpacing: -0.5 },
+  topActions: { flexDirection: 'row', gap: 10 },
+  iconBtn: {
+    width: 40, height: 40, borderRadius: 13,
+    backgroundColor: QM.card,
+    borderWidth: 1, borderColor: '#ECEEF1',
+    alignItems: 'center', justifyContent: 'center',
+    ...QM.cardShadow, shadowOpacity: 0.04, shadowRadius: 8,
+  },
 
   profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.xl,
-    paddingTop: 4,
-    paddingBottom: 16,
+    marginHorizontal: SPACING.xl,
+    marginTop: 4,
+    marginBottom: 14,
+    padding: 18,
+    borderRadius: 20,
+    backgroundColor: QM.card,
+    ...QM.cardShadow,
     gap: 14,
   },
   avatar: {
@@ -409,13 +419,12 @@ const styles = StyleSheet.create({
 
   tierCard: {
     marginHorizontal: SPACING.xl,
-    marginBottom: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.ink[50],
-    borderWidth: 1,
-    borderColor: COLORS.ink[100],
+    marginBottom: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+    backgroundColor: QM.card,
+    ...QM.cardShadow,
   },
   tierHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   tierLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -432,38 +441,37 @@ const styles = StyleSheet.create({
 
   cashcard: {
     marginHorizontal: SPACING.xl,
-    backgroundColor: COLORS.ink[900],
-    borderRadius: RADIUS.xl,
-    padding: 22,
+    backgroundColor: QM.card,
+    borderRadius: 20,
+    padding: 20,
     overflow: 'hidden',
+    ...QM.cardShadow,
   },
   cashcardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cashcardLabel: { fontSize: 13, color: COLORS.ink[400], fontWeight: '500' },
+  cashcardLabel: { fontSize: 12.5, color: QM.sub, fontWeight: '600' },
   moreLinkRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  cashcardMore: { fontSize: 12, color: COLORS.ink[300] },
-  cashcardAmountRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 8 },
-  cashcardAmount: { fontSize: 32, fontWeight: '800', color: COLORS.white, letterSpacing: -0.5 },
-  cashcardUnit: { fontSize: 20, fontWeight: '700', color: COLORS.white, marginLeft: 2 },
+  cashcardMore: { fontSize: 12, color: '#B6BBC2' },
+  cashcardAmountRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 5 },
+  cashcardAmount: { fontSize: 30, fontWeight: '800', color: QM.ink, letterSpacing: -1 },
+  cashcardUnit: { fontSize: 20, fontWeight: '800', color: QM.coral, marginLeft: 2 },
   cashcardStats: {
-    marginTop: 18,
-    paddingTop: 14,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.12)',
+    marginTop: 14,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 20,
   },
-  stat: { gap: 3 },
-  statKey: { fontSize: 11, color: COLORS.ink[400], fontWeight: '500' },
-  statVal: { fontSize: 15, color: COLORS.white, fontWeight: '600' },
-  statSep: { width: StyleSheet.hairlineWidth, height: 24, backgroundColor: 'rgba(255,255,255,0.14)', marginHorizontal: 14 },
+  stat: { gap: 2 },
+  statKey: { fontSize: 11, color: '#9097A0', fontWeight: '500' },
+  statVal: { fontSize: 14, color: QM.ink, fontWeight: '700' },
+  statSep: { width: 0, height: 0 },
   withdraw: {
     marginLeft: 'auto',
-    borderWidth: 1,
-    borderColor: 'rgba(255,107,53,0.6)',
-    paddingHorizontal: 12, paddingVertical: 7,
-    borderRadius: RADIUS.sm,
+    backgroundColor: QM.coral,
+    paddingHorizontal: 18, paddingVertical: 10,
+    borderRadius: 999,
+    ...QM.cardShadow, shadowColor: QM.coral, shadowOpacity: 0.22, shadowRadius: 14,
   },
-  withdrawText: { color: COLORS.primary, fontSize: 12, fontWeight: '600' },
+  withdrawText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 
   guestCard: {
     marginHorizontal: SPACING.xl,
@@ -483,37 +491,47 @@ const styles = StyleSheet.create({
 
   quickmenu: {
     flexDirection: 'row',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: 24,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: 20,
   },
-  quickItem: { flex: 1, alignItems: 'center', gap: 8 },
+  quickItem: { flex: 1, alignItems: 'center', gap: 7 },
   quickIcon: {
-    width: 44, height: 44, borderRadius: 14,
-    backgroundColor: COLORS.ink[100],
+    width: 50, height: 50, borderRadius: 16,
+    backgroundColor: QM.card,
+    borderWidth: 1, borderColor: '#EEF0F3',
     alignItems: 'center', justifyContent: 'center',
+    ...QM.cardShadow, shadowOpacity: 0.05, shadowRadius: 10,
   },
-  quickLabel: { fontSize: 12, color: COLORS.ink[700], fontWeight: '500' },
+  quickLabel: { fontSize: 11, color: '#5A6069', fontWeight: '600' },
 
-  divider: { height: 8, backgroundColor: COLORS.ink[50] },
+  divider: { height: 6 },
 
   section: {
-    paddingTop: 8,
-    paddingBottom: 4,
+    marginHorizontal: SPACING.xl,
+    marginBottom: 16,
+  },
+  sectionCard: {
+    borderRadius: 20,
+    backgroundColor: QM.card,
+    ...QM.cardShadow,
+    overflow: 'hidden',
   },
   sectionHead: {
-    paddingHorizontal: SPACING.xl,
-    paddingTop: 16, paddingBottom: 8,
+    paddingHorizontal: 4, paddingTop: 2, paddingBottom: 10,
   },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: COLORS.ink[500] },
+  sectionTitle: { fontSize: 12, fontWeight: '700', color: '#9097A0', letterSpacing: 0.3 },
   sectionSub: { fontSize: 11, color: COLORS.ink[400], marginTop: 2 },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: 14,
-    gap: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 15,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F2F4',
   },
-  menuLabel: { flex: 1, fontSize: 15, color: COLORS.ink[800], fontWeight: '500' },
+  menuItemLast: { borderBottomWidth: 0 },
+  menuLabel: { flex: 1, fontSize: 14, color: COLORS.ink[800], fontWeight: '500' },
   menuBadge: {
     paddingHorizontal: 6, paddingVertical: 2,
     borderRadius: 4,

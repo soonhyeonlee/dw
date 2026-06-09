@@ -13,17 +13,28 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { loginWithKakaoNative, KAKAO_CANCELLED } from '../../src/lib/kakao-native';
 import { loginWithNaverNative, NAVER_CANCELLED } from '../../src/lib/naver-native';
 import { loginWithGoogleNative, GOOGLE_CANCELLED } from '../../src/lib/google-native';
 
+// Scheme 03 (Quiet Mono) 디자인 토큰 — 정제된 코랄 + 라이트 뉴트럴.
+const CORAL = '#F0410E';
+const CORAL_GRAD = ['#FB572F', '#F0410E'] as const;
+const INK = '#14161A';
+const SUBTLE = '#8B9097';
+const FIELD_BG = '#F5F6F8';
+const HAIRLINE = '#E9EBEE';
+
 export default function LoginScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { ihomePasswordLogin, ihomeSocialLogin } = useAuth();
   const [mbId, setMbId] = useState('');
   const [password, setPassword] = useState('');
+  const [focus, setFocus] = useState<'id' | 'pw' | null>(null);
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState(false);
 
@@ -79,92 +90,131 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 28 }]}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.logo}>더블윈</Text>
-        <Text style={styles.subtitle}>쇼핑하면 캐시백!</Text>
+        {/* 브랜드 락업 */}
+        <View style={styles.brand}>
+          <LinearGradient colors={CORAL_GRAD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.mark}>
+            <Text style={styles.markText}>W</Text>
+          </LinearGradient>
+          <Text style={styles.wordmark}>더블윈</Text>
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="아이디"
-          placeholderTextColor={COLORS.gray[400]}
-          autoCapitalize="none"
-          autoCorrect={false}
-          value={mbId}
-          onChangeText={setMbId}
-          editable={!busy}
-          returnKeyType="next"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="비밀번호"
-          placeholderTextColor={COLORS.gray[400]}
-          secureTextEntry
-          autoCapitalize="none"
-          autoCorrect={false}
-          value={password}
-          onChangeText={setPassword}
-          editable={!busy}
-          returnKeyType="done"
-          onSubmitEditing={handlePasswordLogin}
-        />
+        {/* 헤드라인 */}
+        <Text style={styles.headline}>
+          간편하게 로그인하고{'\n'}
+          <Text style={{ color: CORAL }}>캐시백</Text>을 받아보세요
+        </Text>
+        <Text style={styles.headSub}>아이홈마켓 계정 하나로 시작해요</Text>
 
+        {/* 입력 */}
+        <View style={styles.fields}>
+          <View style={[styles.field, focus === 'id' && styles.fieldFocus]}>
+            <Ionicons name="person-outline" size={19} color={focus === 'id' ? CORAL : '#AAB0B7'} />
+            <View style={styles.fieldBody}>
+              <Text style={[styles.fieldLabel, focus === 'id' && { color: CORAL }]}>아이디</Text>
+              <TextInput
+                style={styles.fieldInput}
+                placeholder="아이디를 입력하세요"
+                placeholderTextColor="#B7BCC3"
+                autoCapitalize="none"
+                autoCorrect={false}
+                value={mbId}
+                onChangeText={setMbId}
+                onFocus={() => setFocus('id')}
+                onBlur={() => setFocus(null)}
+                editable={!busy}
+                returnKeyType="next"
+              />
+            </View>
+          </View>
+
+          <View style={[styles.field, focus === 'pw' && styles.fieldFocus]}>
+            <Ionicons name="lock-closed-outline" size={19} color={focus === 'pw' ? CORAL : '#AAB0B7'} />
+            <View style={styles.fieldBody}>
+              <Text style={[styles.fieldLabel, focus === 'pw' && { color: CORAL }]}>비밀번호</Text>
+              <TextInput
+                style={styles.fieldInput}
+                placeholder="비밀번호를 입력하세요"
+                placeholderTextColor="#B7BCC3"
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                value={password}
+                onChangeText={setPassword}
+                onFocus={() => setFocus('pw')}
+                onBlur={() => setFocus(null)}
+                editable={!busy}
+                returnKeyType="done"
+                onSubmitEditing={handlePasswordLogin}
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* 로그인 버튼 */}
         <TouchableOpacity
-          style={[styles.loginBtn, busy && styles.btnDisabled]}
           onPress={handlePasswordLogin}
           disabled={busy}
-          activeOpacity={0.85}
+          activeOpacity={0.88}
+          style={[styles.loginShadow, busy && styles.btnDisabled]}
         >
-          {loading ? (
-            <ActivityIndicator color={COLORS.white} />
-          ) : (
-            <Text style={styles.loginBtnText}>로그인</Text>
-          )}
+          <LinearGradient colors={CORAL_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.loginBtn}>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.loginBtnText}>로그인</Text>
+            )}
+          </LinearGradient>
         </TouchableOpacity>
 
-        <Text style={styles.helper}>아이홈마켓 계정으로 로그인됩니다.</Text>
+        <View style={styles.helper}>
+          <Ionicons name="lock-closed" size={12} color="#B6BBC2" />
+          <Text style={styles.helperText}>안전하게 암호화되어 보호됩니다</Text>
+        </View>
 
+        {/* 구분선 */}
         <View style={styles.divider}>
           <View style={styles.line} />
-          <Text style={styles.dividerText}>소셜 계정으로 로그인</Text>
+          <Text style={styles.dividerText}>또는</Text>
           <View style={styles.line} />
         </View>
 
+        {/* 소셜 — 아웃라인 */}
         <TouchableOpacity
-          style={[styles.kakaoBtn, busy && styles.btnDisabled]}
+          style={[styles.social, busy && styles.btnDisabled]}
           onPress={handleKakaoLogin}
           disabled={busy}
           activeOpacity={0.85}
         >
-          {socialLoading ? (
-            <ActivityIndicator color="#3C1E1E" />
-          ) : (
-            <>
-              <Ionicons name="chatbubble" size={18} color="#3C1E1E" />
-              <Text style={styles.kakaoBtnText}>카카오로 로그인</Text>
-            </>
-          )}
+          <View style={[styles.badge, { backgroundColor: '#FEE500' }]}>
+            <Ionicons name="chatbubble" size={12} color="#3C1E1E" />
+          </View>
+          <Text style={styles.socialText}>카카오로 계속하기</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.naverBtn, busy && styles.btnDisabled]}
+          style={[styles.social, busy && styles.btnDisabled]}
           onPress={handleNaverLogin}
           disabled={busy}
           activeOpacity={0.85}
         >
-          <Text style={styles.naverMark}>N</Text>
-          <Text style={styles.naverBtnText}>네이버로 로그인</Text>
+          <View style={[styles.badge, { backgroundColor: '#03C75A' }]}>
+            <Text style={styles.naverMark}>N</Text>
+          </View>
+          <Text style={styles.socialText}>네이버로 계속하기</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.googleBtn, busy && styles.btnDisabled]}
+          style={[styles.social, busy && styles.btnDisabled]}
           onPress={handleGoogleLogin}
           disabled={busy}
           activeOpacity={0.85}
         >
-          <Text style={styles.googleMark}>G</Text>
-          <Text style={styles.googleBtnText}>구글로 로그인</Text>
+          <Ionicons name="logo-google" size={18} color="#4285F4" />
+          <Text style={styles.socialText}>구글로 계속하기</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -172,87 +222,103 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.white },
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
   content: {
     flexGrow: 1,
+    paddingHorizontal: 30,
+    paddingBottom: 40,
+  },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 11 },
+  mark: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     justifyContent: 'center',
-    paddingHorizontal: SPACING.xxl,
-    paddingVertical: SPACING.xxxl,
+    alignItems: 'center',
   },
-  logo: { fontSize: 48, fontWeight: '900', color: COLORS.primary, textAlign: 'center' },
-  subtitle: {
-    fontSize: FONT.sizes.md,
-    color: COLORS.gray[500],
-    textAlign: 'center',
-    marginBottom: SPACING.xxxl,
+  markText: { color: '#fff', fontWeight: '900', fontSize: 19, letterSpacing: -1 },
+  wordmark: { fontSize: 21, fontWeight: '800', letterSpacing: -0.8, color: INK },
+  headline: {
+    fontSize: 25,
+    fontWeight: '800',
+    letterSpacing: -0.8,
+    lineHeight: 36,
+    color: INK,
+    marginTop: 46,
   },
-  input: {
-    height: 56,
-    backgroundColor: COLORS.gray[100],
-    borderRadius: RADIUS.lg,
-    paddingHorizontal: SPACING.lg,
-    fontSize: FONT.sizes.md,
-    color: COLORS.gray[900],
-    marginBottom: SPACING.md,
+  headSub: { fontSize: 14, color: SUBTLE, marginTop: 11, fontWeight: '500' },
+  fields: { marginTop: 36 },
+  field: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    height: 62,
+    backgroundColor: FIELD_BG,
+    borderRadius: 15,
+    paddingHorizontal: 16,
+    marginBottom: 11,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  fieldFocus: {
+    backgroundColor: '#fff',
+    borderColor: CORAL,
+    shadowColor: CORAL,
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 2,
+  },
+  fieldBody: { flex: 1 },
+  fieldLabel: { fontSize: 11, color: '#A2A7AE', fontWeight: '600' },
+  fieldInput: {
+    fontSize: 16,
+    color: '#1B1E23',
+    fontWeight: '600',
+    paddingVertical: 0,
+    marginTop: 3,
+  },
+  loginShadow: {
+    marginTop: 10,
+    borderRadius: 15,
+    shadowColor: CORAL,
+    shadowOpacity: 0.24,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
   loginBtn: {
     height: 56,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.lg,
+    borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: SPACING.sm,
   },
-  loginBtnText: { fontSize: FONT.sizes.md, fontWeight: '800', color: COLORS.white },
-  btnDisabled: { opacity: 0.6 },
-  helper: {
-    marginTop: SPACING.lg,
-    fontSize: FONT.sizes.sm,
-    color: COLORS.gray[500],
-    textAlign: 'center',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: SPACING.xxl,
-    gap: SPACING.md,
-  },
-  line: { flex: 1, height: 1, backgroundColor: COLORS.gray[200] },
-  dividerText: { fontSize: FONT.sizes.sm, color: COLORS.gray[400] },
-  kakaoBtn: {
-    height: 52,
-    backgroundColor: '#FEE500', // 카카오 브랜드 컬러
-    borderRadius: RADIUS.lg,
+  loginBtnText: { fontSize: 16, fontWeight: '700', color: '#fff', letterSpacing: 0.2 },
+  btnDisabled: { opacity: 0.55 },
+  helper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 15 },
+  helperText: { fontSize: 12, color: '#A2A7AE', fontWeight: '500' },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: 14, marginVertical: 26 },
+  line: { flex: 1, height: 1, backgroundColor: '#EEF0F2' },
+  dividerText: { fontSize: 12, color: '#AEB3BA', fontWeight: '500' },
+  social: {
+    height: 54,
+    backgroundColor: '#fff',
+    borderRadius: 14,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: SPACING.md,
-  },
-  kakaoBtnText: { fontSize: FONT.sizes.md, fontWeight: '800', color: '#3C1E1E' },
-  naverBtn: {
-    height: 52,
-    backgroundColor: '#03C75A', // 네이버 브랜드 컬러
-    borderRadius: RADIUS.lg,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: SPACING.md,
-  },
-  naverMark: { fontSize: 18, fontWeight: '900', color: COLORS.white },
-  naverBtnText: { fontSize: FONT.sizes.md, fontWeight: '800', color: COLORS.white },
-  googleBtn: {
-    height: 52,
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.lg,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
+    gap: 10,
+    marginBottom: 10,
     borderWidth: 1,
-    borderColor: COLORS.gray[300],
+    borderColor: HAIRLINE,
   },
-  googleMark: { fontSize: 18, fontWeight: '900', color: '#4285F4' },
-  googleBtnText: { fontSize: FONT.sizes.md, fontWeight: '700', color: COLORS.gray[800] },
+  badge: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  naverMark: { color: '#fff', fontWeight: '900', fontSize: 12 },
+  socialText: { fontSize: 14.5, fontWeight: '600', color: '#272A30' },
 });

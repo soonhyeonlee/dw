@@ -12,7 +12,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, FONT, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, FONT, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import {
   getMarketProduct,
   toggleMarketWishlist,
@@ -21,7 +21,8 @@ import {
 } from '../../src/api/market';
 import { useAuth } from '../../src/contexts/AuthContext';
 
-const PURPLE = '#6633CC';
+// T3 Quiet Mono — accent 코랄. (구 보라 #6633CC 대체)
+const PURPLE = QM.coral;
 
 export default function MarketProductDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -139,12 +140,15 @@ export default function MarketProductDetail() {
           <Text style={styles.title}>{product.title}</Text>
 
           <View style={styles.priceRow}>
-            {discountRate > 0 && <Text style={styles.discount}>-{discountRate}%</Text>}
+            {discountRate > 0 && <Text style={styles.discount}>{discountRate}%</Text>}
             <Text style={styles.price}>{Number(product.price).toLocaleString()}원</Text>
+            {product.originalPrice && (
+              <Text style={styles.origPrice}>{Number(product.originalPrice).toLocaleString()}원</Text>
+            )}
           </View>
-          {product.originalPrice && (
-            <Text style={styles.origPrice}>{Number(product.originalPrice).toLocaleString()}원</Text>
-          )}
+          <View style={styles.earnPill}>
+            <Text style={styles.earnText}>💰 구매 시 {Math.floor(Number(product.price) * 0.02).toLocaleString()} P 적립 (2%)</Text>
+          </View>
         </View>
 
         {/* Stats */}
@@ -219,8 +223,8 @@ export default function MarketProductDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.white },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.white },
+  container: { flex: 1, backgroundColor: QM.pageBg },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: QM.pageBg },
   errorText: { color: COLORS.gray[500], fontSize: FONT.sizes.md },
 
   header: {
@@ -234,33 +238,47 @@ const styles = StyleSheet.create({
 
   image: {
     width: '100%',
-    height: 300,
+    height: 340,
     backgroundColor: COLORS.gray[100],
   },
   imagePlaceholder: {
     width: '100%',
-    height: 300,
+    height: 340,
     backgroundColor: PURPLE + '15',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  infoSection: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg },
-  badge: { backgroundColor: PURPLE, borderRadius: 6, paddingHorizontal: SPACING.sm, paddingVertical: 3, alignSelf: 'flex-start', marginBottom: SPACING.sm },
-  badgeText: { color: COLORS.white, fontSize: FONT.sizes.xs, fontWeight: '700' },
-  title: { fontSize: FONT.sizes.xl, fontWeight: '800', color: COLORS.secondary, lineHeight: 28 },
-  priceRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: SPACING.md },
-  discount: { fontSize: FONT.sizes.xxl, fontWeight: '900', color: '#FF4040' },
-  price: { fontSize: FONT.sizes.xxl, fontWeight: '900', color: COLORS.black },
-  origPrice: { fontSize: FONT.sizes.sm, color: COLORS.gray[500], textDecorationLine: 'line-through', marginTop: 2 },
+  infoSection: {
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.lg,
+    padding: 20,
+    borderRadius: 18,
+    backgroundColor: QM.card,
+    ...QM.cardShadow,
+  },
+  badge: { backgroundColor: QM.coralSoft, borderRadius: 7, paddingHorizontal: 9, paddingVertical: 4, alignSelf: 'flex-start', marginBottom: 10 },
+  badgeText: { color: QM.coral, fontSize: FONT.sizes.xs, fontWeight: '800' },
+  title: { fontSize: 22, fontWeight: '800', color: QM.ink, lineHeight: 31, letterSpacing: -0.4 },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 9, marginTop: 16 },
+  discount: { fontSize: 20, fontWeight: '800', color: QM.coral },
+  price: { fontSize: 27, fontWeight: '800', color: QM.ink, letterSpacing: -0.5 },
+  origPrice: { fontSize: 14, color: '#A6ACB4', textDecorationLine: 'line-through' },
+  earnPill: {
+    alignSelf: 'flex-start', marginTop: 12,
+    backgroundColor: QM.coralSoft, borderRadius: 11,
+    paddingHorizontal: 13, paddingVertical: 8,
+  },
+  earnText: { color: '#C23E1B', fontSize: 13, fontWeight: '700' },
 
   statsRow: {
     flexDirection: 'row',
     marginHorizontal: SPACING.lg,
-    marginTop: SPACING.xl,
-    backgroundColor: COLORS.gray[100],
-    borderRadius: RADIUS.md,
+    marginTop: SPACING.md,
+    backgroundColor: QM.card,
+    borderRadius: 18,
     padding: SPACING.lg,
+    ...QM.cardShadow,
   },
   statItem: { flex: 1, alignItems: 'center' },
   statLabel: { fontSize: FONT.sizes.xs, color: COLORS.gray[500] },
@@ -272,10 +290,10 @@ const styles = StyleSheet.create({
     marginHorizontal: SPACING.lg,
     marginTop: SPACING.md,
     padding: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.gray[200],
-    borderRadius: RADIUS.md,
+    backgroundColor: QM.card,
+    borderRadius: 18,
     gap: SPACING.md,
+    ...QM.cardShadow,
   },
   deliveryInfo: { flex: 1 },
   deliveryText: { fontSize: FONT.sizes.sm, fontWeight: '600', color: COLORS.gray[700] },
@@ -314,20 +332,21 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
   },
   heartBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.gray[100],
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: QM.fieldBg,
     justifyContent: 'center',
     alignItems: 'center',
   },
   buyBtn: {
     flex: 1,
-    height: 52,
-    backgroundColor: PURPLE,
-    borderRadius: RADIUS.lg,
+    height: 56,
+    backgroundColor: QM.coral,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: QM.coral, shadowOpacity: 0.24, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 4,
   },
-  buyText: { color: COLORS.white, fontSize: FONT.sizes.lg, fontWeight: '800' },
+  buyText: { color: COLORS.white, fontSize: 16.5, fontWeight: '700' },
 });

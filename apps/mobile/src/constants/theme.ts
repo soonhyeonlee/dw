@@ -1,11 +1,33 @@
 // ShopBack 디자인시스템(sbds_*) 토큰 구조를 따름. brand primary 만 더블윈 색.
+// 2026-06: 디자인 시안 "T3 Quiet Mono"(Toss 화이트 + 코랄) 채택 — accent 를 주황→코랄로 전환.
 
 const BRAND = {
-  primary: '#FF6B35',
-  primaryGlow: '#FFE6DC',
-  primaryTap: '#E55A2B',
-  primaryDisabled: '#FFC9B6',
-  primaryLight: '#FF8C5E',
+  primary: '#F0410E',       // 코랄 (Quiet Mono accent)
+  primaryGlow: '#FFF0EB',   // 소프트 코랄 배경
+  primaryTap: '#D63A0B',    // 눌림
+  primaryDisabled: '#FAB39E',
+  primaryLight: '#FB572F',  // 그라데이션 밝은 끝
+} as const;
+
+// Quiet Mono 디자인 토큰 — 새 T3 화면들이 공통으로 사용.
+export const QM = {
+  coral: '#F0410E',
+  coralLight: '#FB572F',
+  coralGrad: ['#FB572F', '#F0410E'] as const,
+  coralSoft: '#FFF0EB',
+  pageBg: '#F6F7F9',        // 라이트 그레이 앱 배경
+  card: '#FFFFFF',
+  ink: '#14161A',
+  sub: '#8B9097',
+  hairline: '#EEF0F2',
+  fieldBg: '#F5F6F8',
+  cardShadow: {
+    shadowColor: '#141928',
+    shadowOpacity: 0.06,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
+  },
 } as const;
 
 const BRAND_SECONDARY = {

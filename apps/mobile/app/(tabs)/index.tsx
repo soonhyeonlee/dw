@@ -12,10 +12,9 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../../src/constants/theme';
+import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { getHomeData, type Mall as ApiMall } from '../../src/api/home';
 import { getProducts, type Product as ApiProduct } from '../../src/api/products';
@@ -132,6 +131,9 @@ export default function HomeScreen() {
   const router = useRouter();
   const { width: windowW, height: windowH } = useWindowDimensions();
   const { user, isAuthenticated } = useAuth();
+  const balance = isAuthenticated ? Number(user?.cashbackBalance || 0) : 0;
+  const monthEarned = isAuthenticated ? Number((user as any)?.monthEarned || 0) : 0;
+  const totalEarned = isAuthenticated ? Number(user?.totalEarned || 0) : 0;
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [malls, setMalls] = useState<ApiMall[]>([]);
@@ -200,7 +202,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
+      <StatusBar barStyle="dark-content" backgroundColor={QM.pageBg} />
       <ScrollView
         ref={scrollRef}
         style={styles.container}
@@ -210,39 +212,67 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
         }
       >
-        {/* Hero: refined orange gradient header (compact) */}
-        <LinearGradient
-          colors={['#FFA862', '#FF6B35', '#E5511A']}
-          locations={[0, 0.55, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.hero}
-        >
+        {/* Greeting row + 캐시백 히어로 (Quiet Mono) */}
+        <View style={styles.hero}>
           <View style={styles.heroTopRow}>
-            <Text style={styles.heroGreeting} numberOfLines={1}>
-              {isAuthenticated ? `안녕하세요, ${user?.nickname || '회원'}님` : '안녕하세요'}
-            </Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.heroHello}>안녕하세요,</Text>
+              <Text style={styles.heroName} numberOfLines={1}>
+                {isAuthenticated ? `${user?.nickname || '회원'}님` : '반가워요'}
+              </Text>
+            </View>
             <TouchableOpacity style={styles.heroSearchBtn} onPress={() => router.push('/(tabs)/search')}>
-              <Ionicons name="search" size={21} color={COLORS.ink[800]} />
+              <Ionicons name="search" size={20} color={COLORS.ink[700]} />
             </TouchableOpacity>
           </View>
 
-          {!isAuthenticated ? (
+          {isAuthenticated ? (
+            <View style={styles.cashCard}>
+              <Text style={styles.cashLabel}>내 캐시백</Text>
+              <View style={styles.cashAmountRow}>
+                <Text style={styles.cashAmount}>{formatMoney(balance)}</Text>
+                <Text style={styles.cashUnit}>원</Text>
+              </View>
+              <View style={styles.cashStatsRow}>
+                <View>
+                  <Text style={styles.cashStatKey}>이번 달 적립</Text>
+                  <Text style={styles.cashStatVal}>{formatMoney(monthEarned)}원</Text>
+                </View>
+                <View>
+                  <Text style={styles.cashStatKey}>누적 적립</Text>
+                  <Text style={styles.cashStatVal}>{formatMoney(totalEarned)}원</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.cashRefBtn}
+                  onPress={() => {
+                    if (balance < 5000) return router.push('/(tabs)/cashback');
+                    router.push('/cashback/withdraw');
+                  }}
+                >
+                  <Text style={styles.cashRefText}>환급하기</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
             <TouchableOpacity
-              style={styles.heroGuestRow}
-              activeOpacity={0.85}
+              style={styles.guestCard}
+              activeOpacity={0.9}
               onPress={() => router.push('/auth/register' as any)}
             >
-              <Text style={styles.heroGuestText} numberOfLines={1}>
-                처음 오셨나요? 지금 바로 캐시백 적립을 받아보세요
-              </Text>
-              <Ionicons name="chevron-forward" size={18} color={COLORS.white} />
+              <View style={styles.guestIcon}>
+                <Ionicons name="gift-outline" size={22} color={COLORS.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.guestTitle}>지금 가입하고 캐시백 시작하기</Text>
+                <Text style={styles.guestSub}>쇼핑할 때마다 자동 적립</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={COLORS.primary} />
             </TouchableOpacity>
-          ) : null}
-        </LinearGradient>
+          )}
+        </View>
 
         {/* Promo carousel */}
-        <View style={{ marginTop: 16 }}>
+        <View style={{ marginTop: 14 }}>
           <PromoCarousel slides={PROMO_SLIDES(router)} />
         </View>
 
@@ -473,31 +503,66 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.primaryDark },
-  container: { flex: 1, backgroundColor: COLORS.background },
+  safe: { flex: 1, backgroundColor: QM.pageBg },
+  container: { flex: 1, backgroundColor: QM.pageBg },
 
   hero: {
     paddingHorizontal: SPACING.xl,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   heroTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    marginBottom: 16,
   },
-  heroGreeting: { flex: 1, fontSize: 19, fontWeight: '800', color: COLORS.white, letterSpacing: -0.4 },
+  heroHello: { fontSize: 13, color: QM.sub, fontWeight: '500' },
+  heroName: { fontSize: 22, fontWeight: '800', color: QM.ink, letterSpacing: -0.5, marginTop: 2 },
   heroSearchBtn: {
-    width: 40, height: 40, borderRadius: 20,
+    width: 42, height: 42, borderRadius: 14,
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: COLORS.white,
+    backgroundColor: QM.card, borderWidth: 1, borderColor: '#ECEEF1',
+    ...QM.cardShadow, shadowOpacity: 0.04, shadowRadius: 8,
   },
 
-  heroGuestRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    marginTop: 10,
+  // 캐시백 히어로 카드
+  cashCard: {
+    backgroundColor: QM.card,
+    borderRadius: 22,
+    padding: 22,
+    ...QM.cardShadow,
   },
-  heroGuestText: { flex: 1, fontSize: 13, fontWeight: '700', color: COLORS.white, letterSpacing: -0.3 },
+  cashLabel: { fontSize: 13, color: QM.sub, fontWeight: '600' },
+  cashAmountRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 5 },
+  cashAmount: { fontSize: 34, fontWeight: '800', color: QM.ink, letterSpacing: -1 },
+  cashUnit: { fontSize: 22, fontWeight: '800', color: QM.coral, marginLeft: 2 },
+  cashStatsRow: { flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 16 },
+  cashStatKey: { fontSize: 11, color: '#9097A0' },
+  cashStatVal: { fontSize: 15, fontWeight: '700', color: QM.ink, marginTop: 2 },
+  cashRefBtn: {
+    marginLeft: 'auto',
+    backgroundColor: QM.coral,
+    paddingHorizontal: 20, paddingVertical: 11,
+    borderRadius: 999,
+    shadowColor: QM.coral, shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3,
+  },
+  cashRefText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+
+  guestCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: QM.card,
+    borderRadius: 22,
+    padding: 18,
+    ...QM.cardShadow,
+  },
+  guestIcon: {
+    width: 44, height: 44, borderRadius: 14,
+    backgroundColor: QM.coralSoft,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  guestTitle: { fontSize: 15, fontWeight: '800', color: QM.ink, letterSpacing: -0.3 },
+  guestSub: { fontSize: 12, color: QM.sub, marginTop: 3 },
 
   guideBanner: {
     marginHorizontal: SPACING.xl,
@@ -524,7 +589,7 @@ const styles = StyleSheet.create({
   segmentBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    backgroundColor: COLORS.ink[50],
+    backgroundColor: QM.pageBg,
     paddingHorizontal: 10,
     paddingTop: 14,
     gap: 4,

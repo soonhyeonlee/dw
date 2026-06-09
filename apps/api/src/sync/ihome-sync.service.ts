@@ -33,6 +33,7 @@ interface IhomeItemRow {
   it_update_time: string;
   it_time: string;
   ca_name: string | null;
+  it_maker: string | null;
 }
 
 interface IhomeItemsResponse {
@@ -197,6 +198,7 @@ export class IhomeSyncService
       : '';
     const productUrl = `${ITEM_BASE_URL}/shop/item.php?it_id=${row.it_id}`;
     const category = (row.ca_name || row.ca_id || '기타').trim();
+    const brand = row.it_maker?.trim() ? row.it_maker.trim() : null;
 
     const existing = await this.products.findOne({
       where: { platform: PLATFORM, externalId: row.it_id },
@@ -216,6 +218,7 @@ export class IhomeSyncService
       productUrl,
       affiliateUrl: existing?.affiliateUrl ?? productUrl,
       category,
+      brand,
       cashbackRate: existing?.cashbackRate ?? 0,
       cashbackAmount: existing?.cashbackAmount ?? 0,
       rating:

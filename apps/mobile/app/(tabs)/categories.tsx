@@ -1,12 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  ScrollView,
   FlatList,
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -225,32 +228,49 @@ export default function CategoriesScreen() {
   const channelName = (platform?: string) =>
     (platform && (channelLabel[platform] || platform)) || '제휴몰';
 
-  // 선택 카테고리 상품을 (경유사 · 회사) 로 그룹핑 → 헤더 + 상품 행을 한 줄로 평탄화(가상화 유지)
-  const groupedRows = useMemo<GroupRow[]>(() => {
-    if (!selectedCat) return [];
-    const groups = new Map<string, ApiProduct[]>();
+  // 상품을 (경유사 · 회사) 그룹으로. 회사는 API brand 우선, 없으면 제목 첫 단어.
+  const groups = useMemo(() => {
+    if (!selectedCat) return [] as { key: string; channel: string; brand: string; items: ApiProduct[] }[];
+    const map = new Map<string, { key: string; channel: string; brand: string; items: ApiProduct[] }>();
     const order: string[] = [];
     for (const p of selProducts) {
-      const key = `${channelName(p.platform)}␟${brandOf(p.title)}`;
-      if (!groups.has(key)) { groups.set(key, []); order.push(key); }
-      groups.get(key)!.push(p);
+      const channel = channelName(p.platform);
+      const brand = ((p as any).brand?.trim?.() || brandOf(p.title));
+      const key = `${channel}␟${brand}`;
+      if (!map.has(key)) { map.set(key, { key, channel, brand, items: [] }); order.push(key); }
+      map.get(key)!.items.push(p);
     }
-    order.sort((a, b) => groups.get(b)!.length - groups.get(a)!.length);
-    const rows: GroupRow[] = [];
-    for (const key of order) {
-      const [channel, brand] = key.split('␟');
-      const arr = groups.get(key)!;
-      rows.push({ type: 'header', key, channel, brand, count: arr.length });
-      for (const p of arr) rows.push({ type: 'product', p });
-    }
-    return rows;
+    return order.map((k) => map.get(k)!).sort((a, b) => b.items.length - a.items.length);
   }, [selectedCat, selProducts, channelLabel]);
 
-  const visibleRows = selectedCat ? groupedRows.slice(0, visibleCount) : [];
+  // 브랜드 네비 필터 (null = 전체)
+  const [brandFilter, setBrandFilter] = useState<string | null>(null);
+  useEffect(() => { setBrandFilter(null); }, [selectedCat]);
 
-  const headerContent = (
+  const rows = useMemo<GroupRow[]>(() => {
+    const gs = brandFilter ? groups.filter((g) => g.brand === brandFilter) : groups;
+    const out: GroupRow[] = [];
+    for (const g of gs) {
+      out.push({ type: 'header', key: g.key, channel: g.channel, brand: g.brand, count: g.items.length });
+      for (const p of g.items) out.push({ type: 'product', p });
+    }
+    return out;
+  }, [groups, brandFilter]);
+
+  const visibleRows = selectedCat ? rows.slice(0, visibleCount) : [];
+
+  // 스크롤 추적 → "맨 위로" 버튼
+  const listRef = useRef<FlatList<GroupRow>>(null);
+  const [showTop, setShowTop] = useState(false);
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const down = e.nativeEvent.contentOffset.y > 600;
+    if (down !== showTop) setShowTop(down);
+  };
+  const scrollToTop = () => listRef.current?.scrollToOffset({ offset: 0, animated: true });
+
+  // 인라인 헤더 — 카드사혜택 + 프로모 + 카테고리 타일(항상). 선택 시 그 아래 제목 + 경유사·회사 네비 + (몰).
+  const listHeader = (
     <>
-      {/* Featured: 카드사 혜택 */}
       <TouchableOpacity style={styles.featured} activeOpacity={0.85}>
         <View style={styles.featuredIcon}>
           <Ionicons name="card-outline" size={26} color={COLORS.primary} />
@@ -266,7 +286,6 @@ export default function CategoriesScreen() {
         <PromoCarousel slides={CAT_PROMO_SLIDES} />
       </View>
 
-      {/* Category tile grid — 상품/몰이 들어와 있는 카테고리만 */}
       {tiles.length > 0 && (
         <>
           <Text style={styles.gridTitle}>전체 카테고리</Text>
@@ -283,9 +302,7 @@ export default function CategoriesScreen() {
                   <View style={[styles.tileIcon, active && styles.tileIconActive]}>
                     <Text style={styles.tileEmoji}>{t.emoji}</Text>
                   </View>
-                  <Text style={[styles.tileLabel, active && styles.tileLabelActive]} numberOfLines={1}>
-                    {t.label}
-                  </Text>
+                  <Text style={[styles.tileLabel, active && styles.tileLabelActive]} numberOfLines={1}>{t.label}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -294,7 +311,6 @@ export default function CategoriesScreen() {
         </>
       )}
 
-      {/* 선택 헤더 / 전체 미리보기 */}
       {loading && tiles.length === 0 ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 60 }} />
       ) : tiles.length === 0 ? (
@@ -303,30 +319,50 @@ export default function CategoriesScreen() {
           <Text style={styles.emptyCatText}>등록된 상품 카테고리가 없습니다</Text>
         </View>
       ) : selectedCat && selectedMeta ? (
-        /* 선택된 카테고리 — 몰(있으면) 상단, 상품은 아래 배너 리스트(FlatList data) */
-        <View style={styles.section}>
-          <View style={styles.sectionHead}>
+        /* 선택된 카테고리 — 인라인. 제목 + 경유사·회사 네비 + (몰). 상품은 아래 그룹 배너(FlatList data) */
+        <View>
+          <View style={[styles.sectionHead, { paddingHorizontal: SPACING.xl, marginTop: 24, marginBottom: 12 }]}>
             <Text style={styles.sectionTitle}>{selectedMeta.label} {metaFor(selectedCat).emoji}</Text>
-            <TouchableOpacity onPress={() => setSelectedCat(null)}>
-              <Text style={styles.resetText}>전체 보기</Text>
-            </TouchableOpacity>
           </View>
+          {groups.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.brandNavContent}
+              style={{ marginBottom: 4 }}
+            >
+              <TouchableOpacity
+                style={[styles.brandChip, !brandFilter && styles.brandChipActive]}
+                onPress={() => { setBrandFilter(null); setVisibleCount(PAGE); }}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.brandChipText, !brandFilter && styles.brandChipTextActive]}>전체</Text>
+              </TouchableOpacity>
+              {groups.map((g) => {
+                const active = brandFilter === g.brand;
+                return (
+                  <TouchableOpacity
+                    key={g.key}
+                    style={[styles.brandChip, active && styles.brandChipActive]}
+                    onPress={() => { setBrandFilter(active ? null : g.brand); setVisibleCount(PAGE); }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.brandChipText, active && styles.brandChipTextActive]} numberOfLines={1}>{g.brand}</Text>
+                    <View style={[styles.brandChipBadge, active && styles.brandChipBadgeActive]}>
+                      <Text style={[styles.brandChipBadgeText, active && styles.brandChipBadgeTextActive]}>{g.items.length}</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
           {selMalls.length > 0 && (
-            <View style={[styles.wrapGrid, { marginBottom: 6 }]}>
+            <View style={[styles.wrapGrid, { paddingHorizontal: SPACING.xl, marginTop: 8, marginBottom: 2 }]}>
               {selMalls.map((m) => (
-                <MallCard
-                  key={m.id}
-                  mall={m}
-                  variant="category"
-                  style={styles.wrapCard}
-                  onPress={() => router.push(`/mall/${m.platform}` as any)}
-                />
+                <MallCard key={m.id} mall={m} variant="category" style={styles.wrapCard} onPress={() => router.push(`/mall/${m.platform}` as any)} />
               ))}
             </View>
           )}
-          {selProducts.length === 0 && selMalls.length === 0 ? (
-            <Text style={styles.emptyCatText}>이 카테고리에 상품이 없습니다</Text>
-          ) : null}
         </View>
       ) : (
         /* 전체 — 카테고리별 미리보기 */
@@ -348,20 +384,10 @@ export default function CategoriesScreen() {
               </View>
               <View style={styles.tileRow}>
                 {previewMalls.map((m) => (
-                  <MallCard
-                    key={m.id}
-                    mall={m}
-                    variant="category"
-                    onPress={() => router.push(`/mall/${m.platform}` as any)}
-                  />
+                  <MallCard key={m.id} mall={m} variant="category" onPress={() => router.push(`/mall/${m.platform}` as any)} />
                 ))}
                 {previewProducts.map((p) => (
-                  <ProductTile
-                    key={p.id}
-                    p={p}
-                    style={styles.rowCard}
-                    onPress={() => router.push(`/product/${p.id}` as any)}
-                  />
+                  <ProductTile key={p.id} p={p} style={styles.rowCard} onPress={() => router.push(`/product/${p.id}` as any)} />
                 ))}
               </View>
             </View>
@@ -381,6 +407,7 @@ export default function CategoriesScreen() {
       </View>
 
       <FlatList
+        ref={listRef}
         style={styles.container}
         data={visibleRows}
         keyExtractor={(item) => (item.type === 'header' ? `h:${item.key}` : item.p.id)}
@@ -399,11 +426,21 @@ export default function CategoriesScreen() {
             </View>
           )
         }
-        ListHeaderComponent={headerContent}
+        ListHeaderComponent={listHeader}
+        ListEmptyComponent={
+          selectedCat && !loading && selMalls.length === 0 ? (
+            <View style={[styles.emptyCat, { marginTop: 40 }]}>
+              <Ionicons name="cube-outline" size={34} color={COLORS.ink[300]} />
+              <Text style={styles.emptyCatText}>이 카테고리에 상품이 없습니다</Text>
+            </View>
+          ) : null
+        }
         ListFooterComponent={<View style={{ height: 40 }} />}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         onEndReachedThreshold={0.5}
         onEndReached={() => {
-          if (selectedCat && visibleCount < groupedRows.length) {
+          if (selectedCat && visibleCount < rows.length) {
             setVisibleCount((c) => c + PAGE * 2);
           }
         }}
@@ -412,6 +449,13 @@ export default function CategoriesScreen() {
         maxToRenderPerBatch={PAGE}
         windowSize={7}
       />
+
+      {/* 맨 위로 */}
+      {showTop && (
+        <TouchableOpacity style={styles.toTop} onPress={scrollToTop} activeOpacity={0.85}>
+          <Ionicons name="arrow-up" size={22} color="#fff" />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }
@@ -428,6 +472,48 @@ const styles = StyleSheet.create({
   },
   headerTitle: { flex: 1, fontSize: 20, fontWeight: '800', color: QM.ink, letterSpacing: -0.3 },
   headerAction: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 32, height: 40, justifyContent: 'center', marginLeft: -6, marginRight: 2 },
+
+  // 경유사·회사 네비 칩바
+  brandNav: {
+    backgroundColor: QM.pageBg,
+    borderBottomWidth: 1,
+    borderBottomColor: QM.hairline,
+    paddingBottom: 10,
+  },
+  brandNavContent: { paddingHorizontal: SPACING.xl, gap: 8, alignItems: 'center' },
+  brandChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: QM.card,
+    borderWidth: 1,
+    borderColor: QM.hairline,
+  },
+  brandChipActive: { backgroundColor: QM.coral, borderColor: QM.coral },
+  brandChipText: { fontSize: 13, fontWeight: '700', color: COLORS.ink[700], maxWidth: 130 },
+  brandChipTextActive: { color: '#fff' },
+  brandChipBadge: {
+    minWidth: 18, paddingHorizontal: 5, height: 18, borderRadius: 9,
+    backgroundColor: QM.coralSoft, alignItems: 'center', justifyContent: 'center',
+  },
+  brandChipBadgeActive: { backgroundColor: 'rgba(255,255,255,0.28)' },
+  brandChipBadgeText: { fontSize: 10.5, fontWeight: '800', color: QM.coral },
+  brandChipBadgeTextActive: { color: '#fff' },
+
+  // 맨 위로 FAB
+  toTop: {
+    position: 'absolute',
+    right: 18,
+    bottom: 22,
+    width: 46, height: 46, borderRadius: 23,
+    backgroundColor: QM.coral,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: QM.coral, shadowOpacity: 0.32, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 6,
+  },
 
   featured: {
     marginHorizontal: SPACING.xl,

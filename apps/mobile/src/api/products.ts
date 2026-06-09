@@ -11,6 +11,7 @@ export interface Product {
   productUrl: string;
   affiliateUrl: string;
   category: string;
+  brand?: string | null;
   cashbackRate: number;
   cashbackAmount: number;
   rating?: number;

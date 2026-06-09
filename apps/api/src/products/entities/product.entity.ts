@@ -48,6 +48,9 @@ export class Product {
   @Index()
   category: string;
 
+  @Column({ type: 'varchar', length: 120, nullable: true })
+  brand: string | null; // 제조사/브랜드 (영카트 it_maker). 카테고리 그룹핑에 사용.
+
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
   cashbackRate: number;
 

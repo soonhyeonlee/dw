@@ -67,13 +67,51 @@ const CHANNEL_NAME: Record<string, string> = {
   lightning: '번개장터',
 };
 
-// 상품 제목에서 회사/브랜드(첫 단어) 추출. 브랜드 전용 필드가 없어 제목 기반 휴리스틱.
+// 상품 제목에서 회사/브랜드 추출 휴리스틱 (brand 필드가 비어있는 경우 폴백).
+// 규칙: ① 선두 [브랜드] 괄호(프로모 문구 제외)는 그 자체가 브랜드 ② 아니면 선두의
+// 설명어/연도/숫자/1글자 토큰을 건너뛰고 첫 의미있는 단어.
+const BRAND_PROMO = /특가|할인|세일|무료|배송|한정|수량|증정|사은|이벤트|쿠폰|타임|단독|매진|품절|선물|박스|포장|보자기|꾸러미|고품격|\d+\s*\+\s*\d+|%|원/;
+const BRAND_SKIP = new Set([
+  '가정용', '선물용', '업소용', '대용량', '소용량', '실속', '알뜰', '실속형', '가성비',
+  '냉동', '냉장', '생', '신선', '건조', '훈제', '급속냉동',
+  '국내산', '수입산', '국산', '국내', '수입', '미국산', '호주산', '친환경', '유기농', '무항생제', '무농약', '자연산', '산지직송',
+  '프리미엄', '명품', '정품', '신상', '신상품', '특가', '초특가', '할인', '인기', '베스트', '한정', '정성가득', '진짜', '오리지널', '고품격',
+  '첫출하', '출하', '당일발송', '오늘출발', '당일', '예약', '햇', '무료배송', '무료', '증정', '데일리',
+  '마지막', '수확', '달고', '맛있는', '씨없는', '못난이', '선물박스포장', '보자기포장', '선물세트', '꾸러미',
+]);
+const BRAND_QTY = /^\d+(\.\d+)?(kg|g|ml|l|개|포|팩|입|호|구|미|병|정|매|p|set|세트|박스|봉|캔|장)$/i;
+function isYearOrNum(w: string): boolean {
+  return /^\d{2,4}년?$/.test(w) || /^\d+$/.test(w) || BRAND_QTY.test(w);
+}
+function clampBrand(w: string): string {
+  return w.length > 14 ? w.slice(0, 14) : w;
+}
+// 브랜드+모델 붙은 토큰("테팔FP24CM")은 한글 접두를 브랜드로.
+function stripModel(w: string): string {
+  const m = w.match(/^([가-힣]{2,})[A-Za-z0-9]/);
+  return clampBrand(m ? m[1] : w);
+}
 function brandOf(title: string): string {
   if (!title) return '기타';
-  // 앞쪽 [태그]·(부가)·숫자%·할인 마커 제거 후 첫 단어
-  const cleaned = title.replace(/^\s*(\[[^\]]*\]|\([^)]*\)|\d+%?|무료배송|특가|신상)\s*/g, '').trim();
-  const first = (cleaned || title).trim().split(/\s+/)[0] || '기타';
-  return first.length > 14 ? first.slice(0, 14) : first;
+  let t = title.trim();
+  // ① 선두 [브랜드] / (브랜드) / 【브랜드】 — 프로모 문구가 아니면 브랜드.
+  const bm = t.match(/^\s*[[(【]\s*([^\])】]{1,20})\s*[\])】]/);
+  if (bm) {
+    const inner = bm[1].trim();
+    if (inner && !BRAND_PROMO.test(inner)) return clampBrand(inner);
+    t = t.slice(bm[0].length).trim(); // 프로모 괄호면 떼고 계속
+  }
+  // ② 남은 괄호 제거 후, 설명어/연도/1글자를 건너뛰고 첫 의미있는 단어.
+  const tokens = t.replace(/[[(【].*?[\])】]/g, ' ').split(/\s+/).filter(Boolean);
+  for (const raw of tokens) {
+    const w = raw.replace(/[★☆※•·.,~!]/g, '');
+    if (w.length < 2) continue;
+    if (isYearOrNum(w)) continue;
+    if (BRAND_SKIP.has(w)) continue;
+    return stripModel(w);
+  }
+  const f = tokens[0] || t.split(/\s+/)[0] || '기타';
+  return stripModel(f);
 }
 
 const CAT_PROMO_SLIDES: PromoSlide[] = [

@@ -52,7 +52,7 @@ export default function MarketScreen() {
             )}
             <View>
               <Text style={styles.title}>번개장터</Text>
-              <Text style={styles.subtitle}>더블윈 산지직송 위탁판매</Text>
+              <Text style={styles.subtitle}>더블원플러스 산지직송 위탁판매</Text>
             </View>
           </View>
           <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/market/search')}>

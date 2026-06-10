@@ -96,7 +96,7 @@ export default function HelpHomeScreen() {
               <Ionicons name="chatbubble-ellipses-outline" size={20} color={COLORS.ink[800]} />
             </View>
             <Text style={styles.quickTitle}>1:1 문의</Text>
-            <Text style={styles.quickSub}>더블윈 봇과 대화하기</Text>
+            <Text style={styles.quickSub}>더블원플러스 봇과 대화하기</Text>
           </TouchableOpacity>
         </View>
 

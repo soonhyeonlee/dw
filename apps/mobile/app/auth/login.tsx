@@ -99,7 +99,7 @@ export default function LoginScreen() {
           <LinearGradient colors={CORAL_GRAD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.mark}>
             <Text style={styles.markText}>W</Text>
           </LinearGradient>
-          <Text style={styles.wordmark}>더블윈</Text>
+          <Text style={styles.wordmark}>더블원플러스</Text>
         </View>
 
         {/* 헤드라인 */}

@@ -31,8 +31,8 @@ const MEMBER_TYPE_LABEL: Record<string, string> = {
 };
 
 const QUICK_MENU: { key: string; icon: IconName; label: string; route?: string }[] = [
+  // 1차 오픈 쿠폰 미노출 — '내 쿠폰' 퀵메뉴 제거.
   { key: 'orders',  icon: 'bag-handle-outline', label: '주문내역',  route: '/market/orders' },
-  { key: 'coupon',  icon: 'ticket-outline',  label: '내 쿠폰',     route: '/(tabs)/coupons' },
   { key: 'history', icon: 'receipt-outline', label: '적립내역',    route: '/(tabs)/cashback' },
   { key: 'recent',  icon: 'time-outline',    label: '최근 본 상품', route: '/mypage/recent' },
   { key: 'wish',    icon: 'heart-outline',   label: '찜한 상품',   route: '/mypage/wishlist' },
@@ -94,7 +94,7 @@ export default function MyPageScreen() {
   const supportItems: MenuItem[] = [
     { icon: 'help-circle-outline',         label: '고객센터',            route: '/help' },
     { icon: 'help-buoy-outline',           label: '누락 캐시 도움 요청',  route: '/help/missing-cashback' },
-    { icon: 'chatbubble-ellipses-outline', label: '더블윈 봇 (1:1 문의)', onPress: notReady },
+    { icon: 'chatbubble-ellipses-outline', label: '더블원플러스 봇 (1:1 문의)', onPress: notReady },
     { icon: 'book-outline',                label: '이용가이드',          route: '/guide' },
     { icon: 'document-text-outline',       label: '공지사항',            onPress: notReady },
   ];
@@ -229,17 +229,17 @@ export default function MyPageScreen() {
                 <Text style={styles.statKey}>누적 적립</Text>
                 <Text style={styles.statVal}>{formatMoney(totalEarned)}원</Text>
               </View>
+              {/* 1차 배포: 현금 환급 비활성화. 캐시백은 아이홈마켓 상품 구매에 사용 예정. */}
               <TouchableOpacity
-                style={styles.withdraw}
-                onPress={() => {
-                  if (balance < 5000) {
-                    Alert.alert('환급 불가', '최소 환급 금액은 5,000원입니다.');
-                    return;
-                  }
-                  router.push('/cashback/withdraw');
-                }}
+                style={[styles.withdraw, styles.withdrawDisabled]}
+                onPress={() =>
+                  Alert.alert(
+                    '환급 준비 중',
+                    '현금 환급은 준비 중입니다.\n적립하신 캐시백은 번개장터에서 사용 가능합니다.',
+                  )
+                }
               >
-                <Text style={styles.withdrawText}>환급하기</Text>
+                <Text style={[styles.withdrawText, styles.withdrawTextDisabled]}>환급 준비 중</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -319,7 +319,7 @@ export default function MyPageScreen() {
           </TouchableOpacity>
         )}
 
-        <Text style={styles.versionText}>더블윈 v0.3</Text>
+        <Text style={styles.versionText}>더블원플러스 v0.3</Text>
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
@@ -471,6 +471,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     ...QM.cardShadow, shadowColor: QM.coral, shadowOpacity: 0.22, shadowRadius: 14,
   },
+  withdrawDisabled: { backgroundColor: '#B9BFC7', shadowOpacity: 0 },
+  withdrawTextDisabled: { color: 'rgba(255,255,255,0.85)' },
   withdrawText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 
   guestCard: {

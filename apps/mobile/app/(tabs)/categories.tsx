@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { getMalls, type Mall } from '../../src/api/home';
 import { getProducts, type Product as ApiProduct } from '../../src/api/products';
+import { getBanners, type ApiBanner } from '../../src/api/banners';
 import { MallCard } from '../../src/components/MallCard';
 import { PromoCarousel, type PromoSlide } from '../../src/components/PromoCarousel';
 
@@ -114,6 +115,18 @@ function brandOf(title: string): string {
   return stripModel(f);
 }
 
+// 어드민 배너(API) → PromoCarousel 슬라이드. imageUrl 을 {uri} 로 넘기면 풀블리드 렌더.
+function bannerToSlide(b: ApiBanner): PromoSlide {
+  return {
+    id: b.id,
+    badge: b.badge || undefined,
+    title: b.title,
+    subtitle: b.subtitle || undefined,
+    image: b.imageUrl ? { uri: b.imageUrl } : undefined,
+    align: b.align === 'right' ? 'right' : 'left',
+  };
+}
+
 const CAT_PROMO_SLIDES: PromoSlide[] = [
   {
     id: 'cat-travel',
@@ -201,6 +214,7 @@ export default function CategoriesScreen() {
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE);
+  const [bannerSlides, setBannerSlides] = useState<PromoSlide[]>([]);
 
   // 카테고리를 바꾸면 무한스크롤 카운트 초기화
   useEffect(() => { setVisibleCount(PAGE); }, [selectedCat]);
@@ -211,10 +225,12 @@ export default function CategoriesScreen() {
       getProducts({ limit: 1000 })
         .then((d: any) => (d?.items as ApiProduct[]) || [])
         .catch(() => [] as ApiProduct[]),
+      getBanners('category'),
     ])
-      .then(([m, p]) => {
+      .then(([m, p, banners]) => {
         setMalls(m || []);
         setProducts(p || []);
+        setBannerSlides((banners || []).map(bannerToSlide));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -321,7 +337,7 @@ export default function CategoriesScreen() {
       </TouchableOpacity>
 
       <View style={{ marginTop: 18 }}>
-        <PromoCarousel slides={CAT_PROMO_SLIDES} />
+        <PromoCarousel slides={bannerSlides.length ? bannerSlides : CAT_PROMO_SLIDES} />
       </View>
 
       {tiles.length > 0 && (

@@ -72,7 +72,7 @@ export default function NotificationSettingsScreen() {
         <View style={styles.notice}>
           <Ionicons name="information-circle-outline" size={16} color={COLORS.ink[600]} />
           <Text style={styles.noticeText}>
-            기기 설정에서 더블윈 알림을 차단한 경우, 아래 설정과 무관하게 알림이 도착하지 않아요.
+            기기 설정에서 더블원플러스 알림을 차단한 경우, 아래 설정과 무관하게 알림이 도착하지 않아요.
           </Text>
         </View>
 

@@ -39,7 +39,7 @@ export default function LoginPage() {
   return (
     <div style={styles.container}>
       <form onSubmit={handleSubmit} style={styles.form}>
-        <h1 style={styles.title}>더블윈 관리자</h1>
+        <h1 style={styles.title}>더블원플러스 관리자</h1>
         <p style={styles.subtitle}>관리자 계정으로 로그인하세요</p>
 
         {error && <div style={styles.error}>{error}</div>}

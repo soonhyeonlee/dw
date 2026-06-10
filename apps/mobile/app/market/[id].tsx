@@ -134,7 +134,7 @@ export default function MarketProductDetail() {
         {/* Product Info */}
         <View style={styles.infoSection}>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>더블윈 인증</Text>
+            <Text style={styles.badgeText}>더블원플러스 인증</Text>
           </View>
 
           <Text style={styles.title}>{product.title}</Text>
@@ -190,8 +190,8 @@ export default function MarketProductDetail() {
             <Text style={styles.sellerIconText}>D</Text>
           </View>
           <View>
-            <Text style={styles.sellerName}>더블윈 위탁판매</Text>
-            <Text style={styles.sellerDesc}>더블윈이 품질을 보증하는 상품입니다</Text>
+            <Text style={styles.sellerName}>더블원플러스 위탁판매</Text>
+            <Text style={styles.sellerDesc}>더블원플러스가 품질을 보증하는 상품입니다</Text>
           </View>
         </View>
 

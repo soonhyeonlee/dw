@@ -22,9 +22,22 @@ import { PromoCarousel, type PromoSlide } from '../../src/components/PromoCarous
 import { MallLogo } from '../../src/components/MallLogo';
 import { MarketContent } from '../../src/components/home/MarketContent';
 import { RegionContent } from '../../src/components/home/RegionContent';
+import { getBanners, type ApiBanner } from '../../src/api/banners';
 
 function mallLabel(malls: ApiMall[], platform: string): string {
   return malls.find((m) => m.platform === platform)?.name || platform;
+}
+
+// 어드민 배너(API) → PromoCarousel 슬라이드. imageUrl 을 {uri} 로 넘기면 풀블리드 렌더.
+function bannerToSlide(b: ApiBanner): PromoSlide {
+  return {
+    id: b.id,
+    badge: b.badge || undefined,
+    title: b.title,
+    subtitle: b.subtitle || undefined,
+    image: b.imageUrl ? { uri: b.imageUrl } : undefined,
+    align: b.align === 'right' ? 'right' : 'left',
+  };
 }
 
 const QUICK_MENU = [
@@ -66,7 +79,7 @@ function PROMO_SLIDES(router: ReturnType<typeof useRouter>): PromoSlide[] {
       id: 'payback',
       badge: '페이백',
       title: '쇼핑하고 페이백 받기',
-      subtitle: '더블윈 경유 시 캐시 적립',
+      subtitle: '더블원플러스 경유 시 캐시 적립',
       image: require('../../assets/images/banner-payback.png'),
       align: 'left', // 그래픽이 오른쪽 → 텍스트 왼쪽 (2번 배너와 동일 위치)
       onPress: () => router.push('/guide'),
@@ -131,9 +144,6 @@ export default function HomeScreen() {
   const router = useRouter();
   const { width: windowW, height: windowH } = useWindowDimensions();
   const { user, isAuthenticated } = useAuth();
-  const balance = isAuthenticated ? Number(user?.cashbackBalance || 0) : 0;
-  const monthEarned = isAuthenticated ? Number((user as any)?.monthEarned || 0) : 0;
-  const totalEarned = isAuthenticated ? Number(user?.totalEarned || 0) : 0;
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [malls, setMalls] = useState<ApiMall[]>([]);
@@ -144,13 +154,16 @@ export default function HomeScreen() {
   const [dealProducts, setDealProducts] = useState<ApiProduct[]>([]);
   const [recProducts, setRecProducts] = useState<ApiProduct[]>([]);
   const [dealCountdown, setDealCountdown] = useState('00 : 00 : 00');
+  const [bannerSlides, setBannerSlides] = useState<PromoSlide[]>([]);
 
   const loadData = useCallback(async () => {
     try {
-      const [home, products] = await Promise.all([
+      const [home, products, banners] = await Promise.all([
         getHomeData().catch(() => ({ blocks: [], malls: [] as ApiMall[] })),
         getProducts({ limit: 20 }).catch(() => ({ items: [] as ApiProduct[] })),
+        getBanners('home'),
       ]);
+      setBannerSlides(banners.map(bannerToSlide));
       // 위메프는 서비스 불안정 — 노출 제외
       setMalls((home.malls || []).filter((m) => m.platform !== 'wemakeprice'));
       const items: ApiProduct[] = products.items || [];
@@ -226,34 +239,9 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {isAuthenticated ? (
-            <View style={styles.cashCard}>
-              <Text style={styles.cashLabel}>내 캐시백</Text>
-              <View style={styles.cashAmountRow}>
-                <Text style={styles.cashAmount}>{formatMoney(balance)}</Text>
-                <Text style={styles.cashUnit}>원</Text>
-              </View>
-              <View style={styles.cashStatsRow}>
-                <View>
-                  <Text style={styles.cashStatKey}>이번 달 적립</Text>
-                  <Text style={styles.cashStatVal}>{formatMoney(monthEarned)}원</Text>
-                </View>
-                <View>
-                  <Text style={styles.cashStatKey}>누적 적립</Text>
-                  <Text style={styles.cashStatVal}>{formatMoney(totalEarned)}원</Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.cashRefBtn}
-                  onPress={() => {
-                    if (balance < 5000) return router.push('/(tabs)/cashback');
-                    router.push('/cashback/withdraw');
-                  }}
-                >
-                  <Text style={styles.cashRefText}>환급하기</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
+          {/* 내 캐시백/환급 카드는 마이페이지로 일원화 — 홈 상단에서는 제거.
+              비로그인 시에만 가입 유도 카드를 노출. */}
+          {isAuthenticated ? null : (
             <TouchableOpacity
               style={styles.guestCard}
               activeOpacity={0.9}
@@ -271,9 +259,9 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Promo carousel */}
+        {/* Promo carousel — 어드민 배너 우선, 없으면 기본 배너 폴백 */}
         <View style={{ marginTop: 14 }}>
-          <PromoCarousel slides={PROMO_SLIDES(router)} />
+          <PromoCarousel slides={bannerSlides.length ? bannerSlides : PROMO_SLIDES(router)} />
         </View>
 
         {/* Folder-style tabs: 쇼핑 / 번개장터 / 우리지역 / 여행

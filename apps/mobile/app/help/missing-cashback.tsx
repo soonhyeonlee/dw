@@ -91,7 +91,7 @@ export default function MissingCashbackScreen() {
             <Text style={styles.noticeText}>
               · 구매 후 <Text style={styles.b}>최소 4일</Text>이 경과한 거래만 신청 가능해요{'\n'}
               · 주문번호와 주문일은 쇼핑몰의 <Text style={styles.b}>주문 내역</Text>에서 확인할 수 있어요{'\n'}
-              · 더블윈 경유 없이 직접 방문해 구매한 경우 적립 대상이 아니에요
+              · 더블원플러스 경유 없이 직접 방문해 구매한 경우 적립 대상이 아니에요
             </Text>
           </View>
 

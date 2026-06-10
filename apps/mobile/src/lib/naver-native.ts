@@ -8,7 +8,7 @@ export const NAVER_CANCELLED = '로그인이 취소되었습니다';
 // 네이티브 네이버 로그인 특성상 앱에 내장된다(네이버 모바일 로그인 표준).
 const CONSUMER_KEY = 'bgm8CCvyQVSYouzU6X3b';
 const CONSUMER_SECRET = 'XZow1S1viU';
-const APP_NAME = '더블윈';
+const APP_NAME = '더블원플러스';
 
 let initialized = false;
 function ensureInit() {

@@ -17,7 +17,7 @@ const STEPS: { num: string; icon: IconName; title: string; desc: string }[] = [
   {
     num: '01',
     icon: 'storefront-outline',
-    title: '더블윈에서 쇼핑몰 선택',
+    title: '더블원플러스에서 쇼핑몰 선택',
     desc: '홈 또는 쇼핑몰 탭에서 원하는 쇼핑몰을 골라 [캐시백 받고 이동]을 누르세요.',
   },
   {
@@ -30,7 +30,7 @@ const STEPS: { num: string; icon: IconName; title: string; desc: string }[] = [
     num: '03',
     icon: 'bag-check-outline',
     title: '평소처럼 구매',
-    desc: '쇼핑몰에서 결제까지 완료하세요. 더블윈 안에서 다시 시작하지 않아도 돼요.',
+    desc: '쇼핑몰에서 결제까지 완료하세요. 더블원플러스 안에서 다시 시작하지 않아도 돼요.',
   },
   {
     num: '04',
@@ -47,7 +47,7 @@ const WITHDRAW_STEPS: { num: string; title: string; desc: string }[] = [
 ];
 
 const CAUTIONS = [
-  { ok: false, label: '직접 방문 구매',     desc: '더블윈을 거치지 않고 쇼핑몰을 방문하면 적립되지 않아요.' },
+  { ok: false, label: '직접 방문 구매',     desc: '더블원플러스를 거치지 않고 쇼핑몰을 방문하면 적립되지 않아요.' },
   { ok: false, label: '결제 중 다른 앱',    desc: '결제 도중 비교 사이트·다른 캐시백 앱을 거치면 적립이 누락될 수 있어요.' },
   { ok: false, label: '쿠폰코드 외부 사이트', desc: '결제 화면에서 외부 쿠폰 코드를 적용하면 적립 대상에서 제외될 수 있어요.' },
   { ok: true,  label: '경유 후 30분 내 결제', desc: '경유 후 가능한 빠르게 결제하시면 누락 가능성을 낮출 수 있어요.' },
@@ -67,7 +67,7 @@ export default function GuideScreen() {
             <Text style={styles.heroBadgeText}>처음 사용하시나요?</Text>
           </View>
           <Text style={styles.heroTitle}>
-            더블윈으로 쇼핑하고{'\n'}
+            더블원플러스로 쇼핑하고{'\n'}
             <Text style={{ color: COLORS.primary }}>최대 30%</Text> 돌려받기
           </Text>
           <Text style={styles.heroSub}>

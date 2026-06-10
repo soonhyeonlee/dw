@@ -21,7 +21,7 @@ import {
 } from '../../api/market';
 import { useAuth } from '../../contexts/AuthContext';
 
-// 번개장터 = 더블윈 직접판매(위탁판매). 구매하면 번개장터 포인트 2% 적립.
+// 번개장터 = 더블원플러스 직접판매(위탁판매). 구매하면 번개장터 포인트 2% 적립.
 const POINT_RATE = 0.02; // 백엔드 MARKET_POINT_RATE_PERCENT 기본값과 동기
 
 // 칩은 고정 목록이 아니라, 실제 들어와 있는 직접판매 상품의 카테고리에서

@@ -71,12 +71,13 @@ export default function TabsLayout() {
           tabBarIcon: tabIcon('heart-outline', 'heart'),
         }}
       />
+      {/* 1차 오픈은 쿠폰 미노출 — 쿠폰 탭 자리를 맘카페로 대체 */}
       <Tabs.Screen
-        name="coupons"
+        name="momcafe"
         options={{
-          title: '쿠폰',
+          title: '맘카페',
           headerShown: false,
-          tabBarIcon: tabIcon('ticket-outline', 'ticket'),
+          tabBarIcon: tabIcon('people-outline', 'people'),
         }}
       />
       <Tabs.Screen
@@ -91,6 +92,8 @@ export default function TabsLayout() {
       {/* === 탭바에서 숨김 (라우트는 유지 — 홈 폴더탭/마이 등에서 사용) === */}
       {/* 번개장터 진열은 루트 스택 라우트 app/market/index.tsx (/market) 로 이동 —
           탭이 아니라 push 되어 뒤로가기 시 직전 화면으로 정확히 복귀. */}
+      {/* 쿠폰: 1차 오픈 미노출 — 탭바·접근 모두 차단(href: null). 라우트 파일은 보존. */}
+      <Tabs.Screen name="coupons" options={{ headerShown: false, href: null }} />
       <Tabs.Screen name="cashback" options={{ headerShown: false, href: null }} />
       <Tabs.Screen name="region" options={{ headerShown: false, href: null }} />
       <Tabs.Screen name="search" options={{ headerShown: false, href: null }} />

@@ -102,7 +102,7 @@ export default function AboutScreen() {
           <View style={styles.logoBox}>
             <Text style={styles.logoText}>D</Text>
           </View>
-          <Text style={styles.appName}>더블윈</Text>
+          <Text style={styles.appName}>더블원플러스</Text>
           <Text style={styles.appVersion}>v{APP_VERSION} ({BUILD_NUMBER})</Text>
           <TouchableOpacity onPress={handleVisitWebsite}>
             <Text style={styles.link}>doublewin.example</Text>

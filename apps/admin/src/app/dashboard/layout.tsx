@@ -6,6 +6,7 @@ import { getToken, clearToken } from '@/lib/api';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: '대시보드', icon: '📊' },
+  { href: '/dashboard/banners', label: '배너 관리', icon: '🖼️' },
   { href: '/dashboard/products', label: '상품 관리', icon: '🛍️' },
   { href: '/dashboard/academies', label: '학원 관리', icon: '🏫' },
   { href: '/dashboard/coupons', label: '쿠폰 관리', icon: '🎟️' },
@@ -43,7 +44,7 @@ export default function DashboardLayout({
   return (
     <div style={styles.wrapper}>
       <aside style={styles.sidebar}>
-        <div style={styles.logo}>더블윈 Admin</div>
+        <div style={styles.logo}>더블원플러스 Admin</div>
         <nav style={styles.nav}>
           {NAV_ITEMS.map((item) => {
             const active =

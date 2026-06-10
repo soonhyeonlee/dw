@@ -33,7 +33,7 @@ const PLATFORM_LABEL: Record<string, string> = {
   lotteon: '롯데ON',
   wemakeprice: '위메프',
   tmon: '티몬',
-  doublewin: '더블윈',
+  doublewin: '더블원플러스',
 };
 
 const { width } = Dimensions.get('window');
@@ -185,7 +185,7 @@ export default function ProductDetailScreen() {
               <Ionicons name="wallet" size={18} color={COLORS.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.cbLabel}>더블윈 캐시백</Text>
+              <Text style={styles.cbLabel}>더블원플러스 캐시백</Text>
               <Text style={styles.cbSub}>{mallLabel} 경유 구매 시 적립</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>

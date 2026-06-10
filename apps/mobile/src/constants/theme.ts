@@ -1,4 +1,4 @@
-// ShopBack 디자인시스템(sbds_*) 토큰 구조를 따름. brand primary 만 더블윈 색.
+// ShopBack 디자인시스템(sbds_*) 토큰 구조를 따름. brand primary 만 더블원플러스 색.
 // 2026-06: 디자인 시안 "T3 Quiet Mono"(Toss 화이트 + 코랄) 채택 — accent 를 주황→코랄로 전환.
 
 const BRAND = {

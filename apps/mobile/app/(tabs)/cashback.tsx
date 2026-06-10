@@ -78,7 +78,7 @@ function GuestCashback({ router }: { router: ReturnType<typeof useRouter> }) {
     getMalls().then((d) => setMalls(d || [])).catch(() => setMalls([]));
   }, []);
   const STEPS = [
-    { n: 1, t: '쇼핑몰 선택', s: '더블윈에서 원하는 쇼핑몰을 골라요' },
+    { n: 1, t: '쇼핑몰 선택', s: '더블원플러스에서 원하는 쇼핑몰을 골라요' },
     { n: 2, t: '경유 쇼핑', s: '평소처럼 결제만 하면 끝!' },
     { n: 3, t: '캐시백 적립', s: '구매 확정 후 평균 30일 이내 적립' },
   ];
@@ -200,12 +200,12 @@ export default function CashbackScreen() {
   const totalWithdrawn = Number(user?.totalWithdrawn || 0);
   const monthEarned = Number((user as any)?.monthEarned || 0);
 
+  // 1차 배포: 현금 환급 기능은 비활성화. 적립 캐시백은 아이홈마켓 상품 구매에 사용 예정.
   const handleWithdraw = () => {
-    if (balance < 5000) {
-      Alert.alert('환급 불가', '최소 환급 금액은 5,000원입니다.');
-      return;
-    }
-    router.push('/cashback/withdraw');
+    Alert.alert(
+      '환급 준비 중',
+      '현금 환급은 준비 중입니다.\n적립하신 캐시백은 번개장터에서 사용 가능합니다.',
+    );
   };
 
   if (!isAuthenticated) {
@@ -250,9 +250,9 @@ export default function CashbackScreen() {
             <Text style={styles.cashcardAmount}>{fmt(balance)}</Text>
             <Text style={styles.cashcardUnit}>원</Text>
           </View>
-          <TouchableOpacity style={styles.withdrawBtn} onPress={handleWithdraw} activeOpacity={0.85}>
-            <Text style={styles.withdrawBtnText}>환급하기</Text>
-            <Ionicons name="chevron-forward" size={16} color={COLORS.white} />
+          <TouchableOpacity style={[styles.withdrawBtn, styles.withdrawBtnDisabled]} onPress={handleWithdraw} activeOpacity={0.85}>
+            <Text style={[styles.withdrawBtnText, styles.withdrawBtnTextDisabled]}>환급 준비 중</Text>
+            <Ionicons name="lock-closed" size={14} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
         </View>
 
@@ -522,6 +522,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 4,
   },
+  withdrawBtnDisabled: { backgroundColor: '#B9BFC7' },
+  withdrawBtnTextDisabled: { color: 'rgba(255,255,255,0.85)' },
   withdrawBtnText: { color: COLORS.white, fontSize: 15, fontWeight: '800', letterSpacing: -0.2 },
 
   miniRow: {

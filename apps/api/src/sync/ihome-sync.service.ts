@@ -198,7 +198,10 @@ export class IhomeSyncService
       : '';
     const productUrl = `${ITEM_BASE_URL}/shop/item.php?it_id=${row.it_id}`;
     const category = (row.ca_name || row.ca_id || '기타').trim();
-    const brand = row.it_maker?.trim() ? row.it_maker.trim() : null;
+    // it_maker 는 이 쇼핑몰에서 대부분 빈 값/플레이스홀더("상품 상세설명에 표시").
+    // 의미 없는 값은 null 로 둬서(앱이 제목 첫 단어로 폴백) 그룹핑 품질을 지킨다.
+    const makerRaw = row.it_maker?.trim() || '';
+    const brand = makerRaw && !makerRaw.includes('상세설명') ? makerRaw : null;
 
     const existing = await this.products.findOne({
       where: { platform: PLATFORM, externalId: row.it_id },
@@ -246,7 +249,8 @@ export class IhomeSyncService
       discountRate: next.discountRate,
       imageUrl: next.imageUrl,
       category: next.category,
-      rating: next.rating,
+      // market_products.rating 은 NOT NULL — 평점 없는 상품(it_use_avg=0)은 0 으로.
+      rating: (next.rating ?? 0) as unknown as number,
       reviewCount: next.reviewCount,
       isActive: next.isActive,
       // youngcart it_stock_qty: 0 은 재고 무제한 취급 → 큰 값으로.

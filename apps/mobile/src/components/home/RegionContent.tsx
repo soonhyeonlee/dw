@@ -367,8 +367,8 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
           {academies.length === 0 ? (
             <EmptyState
               icon="school-outline"
-              title="등록된 학원이 없어요"
-              subtitle={'관리자 페이지에서 학원을 등록하면\n이곳에 노출됩니다.'}
+              title={scope === 'nearby' ? '내 주변 학원 정보를 준비 중이에요' : '학원 정보를 준비 중이에요'}
+              subtitle={'우리 동네 학원·어린이집 정보를\n곧 만나보실 수 있어요.'}
             />
           ) : filteredAcademies.length === 0 ? (
             <EmptyState

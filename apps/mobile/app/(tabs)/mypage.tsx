@@ -91,12 +91,11 @@ export default function MyPageScreen() {
 
   const notReady = () => Alert.alert('준비 중', '해당 기능은 준비 중입니다.');
 
+  // 1차 오픈: 미완성 항목(봇 1:1문의·공지사항)은 노출 제외.
   const supportItems: MenuItem[] = [
     { icon: 'help-circle-outline',         label: '고객센터',            route: '/help' },
     { icon: 'help-buoy-outline',           label: '누락 캐시 도움 요청',  route: '/help/missing-cashback' },
-    { icon: 'chatbubble-ellipses-outline', label: '더블원플러스 봇 (1:1 문의)', onPress: notReady },
     { icon: 'book-outline',                label: '이용가이드',          route: '/guide' },
-    { icon: 'document-text-outline',       label: '공지사항',            onPress: notReady },
   ];
 
   const partnerItems: MenuItem[] = [
@@ -282,8 +281,8 @@ export default function MyPageScreen() {
         {/* 고객지원 */}
         <Section title="고객지원" items={supportItems} onPress={handleMenuPress} />
 
-        {/* 파트너 전용 (조건부) */}
-        {isPartner && (
+        {/* 파트너 전용 (조건부) — 1차 오픈: 메뉴 미완성으로 숨김(추후 복구) */}
+        {false && isPartner && (
           <>
             <View style={styles.divider} />
             <Section

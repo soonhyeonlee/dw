@@ -46,49 +46,8 @@ const MIN = 60 * 1000;
 const HOUR = 60 * MIN;
 const DAY = 24 * HOUR;
 
-const MOCK_NOTIS: Noti[] = [
-  {
-    id: 'n1', type: 'cashback', read: false,
-    title: '캐시백 적립 완료',
-    body: '쿠팡 주문에서 1,250원이 적립됐어요. 잔액 확인해보세요.',
-    createdAt: NOW - 30 * MIN,
-    route: '/(tabs)/cashback',
-  },
-  {
-    id: 'n2', type: 'promo', read: false,
-    title: '쿠팡 캐시백 5% → 7% UP!',
-    body: '오늘 자정까지 쿠팡 모든 카테고리 캐시백 상향 중.',
-    createdAt: NOW - 2 * HOUR,
-    route: '/mall/coupang',
-  },
-  {
-    id: 'n3', type: 'withdrawal', read: true,
-    title: '환급 신청이 접수됐어요',
-    body: '신한은행 ***1234 계좌로 30,000원이 곧 입금됩니다.',
-    createdAt: NOW - 5 * HOUR,
-    route: '/(tabs)/cashback',
-  },
-  {
-    id: 'n4', type: 'cashback', read: true,
-    title: '캐시백 적립 완료',
-    body: '11번가 주문에서 870원이 적립됐어요.',
-    createdAt: NOW - 1 * DAY,
-    route: '/(tabs)/cashback',
-  },
-  {
-    id: 'n5', type: 'notice', read: true,
-    title: '서비스 이용약관 변경 안내',
-    body: '2026년 5월 15일부터 변경된 이용약관이 적용됩니다.',
-    createdAt: NOW - 1 * DAY - 4 * HOUR,
-  },
-  {
-    id: 'n7', type: 'cashback', read: true,
-    title: '캐시백 적립 완료',
-    body: 'G마켓 주문에서 2,400원이 적립됐어요.',
-    createdAt: NOW - 8 * DAY,
-    route: '/(tabs)/cashback',
-  },
-];
+// 알림 목록은 실제 알림 API 연동 전까지 빈 상태로 둔다(더미 데이터 노출 방지).
+// 백엔드 알림 엔드포인트 준비되면 useState 초기값을 fetch 결과로 대체.
 
 function relativeLabel(ms: number): string {
   const diff = NOW - ms;
@@ -116,7 +75,7 @@ const BUCKET_LABEL: Record<ReturnType<typeof bucket>, string> = {
 
 export default function NotificationsScreen() {
   const router = useRouter();
-  const [items, setItems] = useState<Noti[]>(MOCK_NOTIS);
+  const [items, setItems] = useState<Noti[]>([]);
   const [filter, setFilter] = useState<typeof FILTERS[number]['key']>('all');
 
   const filtered = useMemo(() => {

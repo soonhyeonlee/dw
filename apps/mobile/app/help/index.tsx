@@ -6,7 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
@@ -50,7 +50,12 @@ export default function HelpHomeScreen() {
     });
   }, [keyword, activeCat]);
 
-  const notReady = () => Alert.alert('준비 중', '해당 채널은 준비 중이에요.');
+  // 고객 지원 문의 — 이메일로 연결(스토어 지원 연락처). 필요 시 주소만 교체.
+  const SUPPORT_EMAIL = 'our.employee.ces@gmail.com';
+  const contactSupport = () =>
+    Linking.openURL(
+      `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('[더블원플러스] 1:1 문의')}`,
+    ).catch(() => {});
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
@@ -91,12 +96,12 @@ export default function HelpHomeScreen() {
             <Text style={styles.quickTitle}>누락 캐시 도움 요청</Text>
             <Text style={styles.quickSub}>적립 안 된 거래를 신고해주세요</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.quickCard} onPress={notReady} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.quickCard} onPress={() => router.push('/guide')} activeOpacity={0.85}>
             <View style={[styles.quickIcon, { backgroundColor: COLORS.ink[100] }]}>
-              <Ionicons name="chatbubble-ellipses-outline" size={20} color={COLORS.ink[800]} />
+              <Ionicons name="book-outline" size={20} color={COLORS.ink[800]} />
             </View>
-            <Text style={styles.quickTitle}>1:1 문의</Text>
-            <Text style={styles.quickSub}>더블원플러스 봇과 대화하기</Text>
+            <Text style={styles.quickTitle}>이용 가이드</Text>
+            <Text style={styles.quickSub}>쇼핑·적립 이용 방법 보기</Text>
           </TouchableOpacity>
         </View>
 
@@ -153,9 +158,9 @@ export default function HelpHomeScreen() {
         <View style={styles.contactBox}>
           <Text style={styles.contactTitle}>해결이 안 되셨나요?</Text>
           <Text style={styles.contactSub}>고객센터에 직접 문의해주세요.</Text>
-          <TouchableOpacity style={styles.contactBtn} onPress={notReady} activeOpacity={0.85}>
-            <Ionicons name="chatbubble-ellipses" size={16} color={COLORS.white} />
-            <Text style={styles.contactBtnText}>1:1 문의 시작하기</Text>
+          <TouchableOpacity style={styles.contactBtn} onPress={contactSupport} activeOpacity={0.85}>
+            <Ionicons name="mail-outline" size={16} color={COLORS.white} />
+            <Text style={styles.contactBtnText}>이메일로 문의하기</Text>
           </TouchableOpacity>
         </View>
 

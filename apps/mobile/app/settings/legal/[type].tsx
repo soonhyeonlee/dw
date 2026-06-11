@@ -1,10 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { COLORS, SPACING, QM } from '../../../src/constants/theme';
 
 type LegalType = 'terms' | 'privacy';
+
+// 호스팅된 전체 개인정보처리방침(스토어 제출용 공개 URL)
+const PRIVACY_URL = 'https://i-homemarket.co.kr/doublewin/privacy.html';
 
 const CONTENT: Record<LegalType, { title: string; updatedAt: string; sections: { h: string; b: string }[] }> = {
   terms: {
@@ -36,7 +39,9 @@ const CONTENT: Record<LegalType, { title: string; updatedAt: string; sections: {
     updatedAt: '2026.04.30 시행',
     sections: [
       { h: '1. 수집하는 개인정보 항목',
-        b: '회원가입·서비스 이용 과정에서 이메일, 닉네임, 비밀번호(암호화 저장), 출금 계좌 정보(은행/계좌번호/예금주), 결제 및 주문 식별 정보, 푸시 토큰, 기기 정보가 수집될 수 있습니다.' },
+        b: '회원가입·서비스 이용 과정에서 이메일, 닉네임, 비밀번호(암호화 저장), 소셜 로그인 식별자(카카오·네이버·구글), 출금 계좌 정보(은행/계좌번호/예금주), 결제 및 주문 식별 정보, 푸시 토큰, 기기 정보가 수집될 수 있습니다.' },
+      { h: '1-1. 위치정보',
+        b: '주변 학원·어린이집 등 ‘우리지역’ 정보를 제공하기 위해 단말기 위치정보를 이용합니다. 위치정보는 이용자가 위치 권한에 동의한 경우에만 수집·이용되며, 기기 설정에서 언제든 철회할 수 있습니다.' },
       { h: '2. 개인정보 수집 및 이용 목적',
         b: '회원 식별 및 인증, 캐시백 적립·환급 이행, 서비스 운영·개선, 부정 이용 방지, 고객 문의 응답, 마케팅 정보 제공(동의한 경우)에 한해 이용됩니다.' },
       { h: '3. 보유 및 이용 기간',
@@ -73,6 +78,15 @@ export default function LegalScreen() {
             <Text style={styles.sectionBody}>{s.b}</Text>
           </View>
         ))}
+        {key === 'privacy' ? (
+          <TouchableOpacity
+            style={styles.fullLink}
+            activeOpacity={0.85}
+            onPress={() => Linking.openURL(PRIVACY_URL).catch(() => {})}
+          >
+            <Text style={styles.fullLinkText}>전체 개인정보처리방침 보기 ↗</Text>
+          </TouchableOpacity>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -88,4 +102,12 @@ const styles = StyleSheet.create({
   section: { marginTop: 18 },
   sectionHead: { fontSize: 14, fontWeight: '800', color: COLORS.ink[900], marginBottom: 6, letterSpacing: -0.2 },
   sectionBody: { fontSize: 13, color: COLORS.ink[700], lineHeight: 21 },
+  fullLink: {
+    marginTop: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: QM.coralSoft,
+    alignItems: 'center',
+  },
+  fullLinkText: { fontSize: 14, fontWeight: '700', color: QM.coral },
 });

@@ -10,31 +10,63 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
+import { COLORS, SPACING, QM } from '../../src/constants/theme';
 
-// 맘카페 디렉터리. 카페 고유 ID 하드코딩 대신 네이버 카페 검색으로 연결 —
-// 항상 해당 지역/이름의 실제 카페로 정확히 도달(추후 직접 cafe.naver.com URL 로 교체 가능).
-function openCafe(query: string) {
-  const url = `https://m.search.naver.com/search.naver?query=${encodeURIComponent(query + ' 맘카페')}`;
+// 실존 네이버 카페로 직접 연결(검색 아님). URL·회원수는 2026-06 기준 검증값.
+type Cafe = { name: string; desc: string; url: string };
+
+function openCafe(url: string) {
   Linking.openURL(url).catch(() => {});
 }
 
-// 전국 인기 맘카페 (이름으로 검색 → 해당 카페가 최상단)
-const FEATURED: { name: string; desc: string }[] = [
-  { name: '맘스홀릭 베이비', desc: '국내 최대 임신·출산·육아 카페' },
-  { name: '맘이베베', desc: '임신 준비부터 육아까지' },
-  { name: '레몬테라스', desc: '살림·인테리어·육아 정보' },
+// 전국 대형 카페
+const FEATURED: Cafe[] = [
+  { name: '맘스홀릭 베이비', desc: '전국 · 임신·출산·육아 1위 (약 320만)', url: 'https://cafe.naver.com/imsanbu' },
+  { name: '레몬테라스', desc: '전국 · 살림·인테리어·육아 (약 296만)', url: 'https://cafe.naver.com/remonterrace' },
 ];
 
-// 권역별 지역 맘카페
-const REGIONS: { group: string; items: string[] }[] = [
-  { group: '서울', items: ['강남', '서초', '송파', '강동', '노원', '강서', '마포', '은평'] },
-  { group: '경기·인천', items: ['분당', '판교', '일산', '동탄', '수원', '용인', '평촌', '광교', '부천', '인천', '김포', '하남'] },
-  { group: '영남', items: ['부산', '대구', '울산', '창원', '김해', '포항', '진주', '경주'] },
-  { group: '호남', items: ['광주', '전주', '여수', '순천', '목포', '익산'] },
-  { group: '충청', items: ['대전', '세종', '청주', '천안', '아산', '충주'] },
-  { group: '강원·제주', items: ['춘천', '원주', '강릉', '속초', '제주', '서귀포'] },
+// 지역별 대표 맘카페
+const REGIONS: { group: string; items: Cafe[] }[] = [
+  {
+    group: '수도권',
+    items: [
+      { name: '용인맘 모여라', desc: '용인·광교·분당·수지 (약 37만)', url: 'https://cafe.naver.com/easyup' },
+      { name: '수원맘 모여라', desc: '수원 (약 33만)', url: 'https://cafe.naver.com/byungs94' },
+      { name: '동탄맘들 모여라', desc: '동탄·화성 (약 29만)', url: 'https://cafe.naver.com/dongtanmom' },
+      { name: '인천맘톡', desc: '인천 (약 24만)', url: 'https://cafe.naver.com/baby8' },
+    ],
+  },
+  {
+    group: '영남',
+    items: [
+      { name: '부경맘', desc: '부산·경남 (약 35만)', url: 'https://cafe.naver.com/pusanmom' },
+      { name: '대구맘 365', desc: '대구 (약 30만)', url: 'https://cafe.naver.com/dgmom365' },
+      { name: '울산맘들 모여라', desc: '울산 (약 14만)', url: 'https://cafe.naver.com/mammie' },
+    ],
+  },
+  {
+    group: '충청·제주',
+    items: [
+      { name: '대전 노은맘', desc: '대전 노은·유성 (약 6만)', url: 'https://cafe.naver.com/djnoen' },
+      { name: '제주맘', desc: '제주 (약 16만)', url: 'https://cafe.naver.com/jejumam' },
+    ],
+  },
 ];
+
+function CafeRow({ c }: { c: Cafe }) {
+  return (
+    <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => openCafe(c.url)}>
+      <View style={styles.cardIcon}>
+        <Ionicons name="heart" size={18} color={COLORS.primary} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.cardName}>{c.name}</Text>
+        <Text style={styles.cardDesc} numberOfLines={1}>{c.desc}</Text>
+      </View>
+      <Ionicons name="open-outline" size={18} color={COLORS.ink[400]} />
+    </TouchableOpacity>
+  );
+}
 
 export default function MomCafeScreen() {
   return (
@@ -53,25 +85,14 @@ export default function MomCafeScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.introTitle}>우리 동네 맘카페</Text>
-            <Text style={styles.introSub}>전국 각지의 맘카페를 한 곳에서. 눌러서 바로 이동하세요.</Text>
+            <Text style={styles.introSub}>전국 각지의 맘카페로 바로 이동하세요.</Text>
           </View>
         </View>
 
         {/* 전국 인기 */}
         <Text style={styles.sectionTitle}>전국 인기 맘카페</Text>
-        <View style={styles.featuredWrap}>
-          {FEATURED.map((f) => (
-            <TouchableOpacity key={f.name} style={styles.featuredCard} activeOpacity={0.85} onPress={() => openCafe(f.name)}>
-              <View style={styles.featuredIcon}>
-                <Ionicons name="heart" size={18} color={COLORS.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.featuredName}>{f.name}</Text>
-                <Text style={styles.featuredDesc} numberOfLines={1}>{f.desc}</Text>
-              </View>
-              <Ionicons name="open-outline" size={18} color={COLORS.ink[400]} />
-            </TouchableOpacity>
-          ))}
+        <View style={styles.cardWrap}>
+          {FEATURED.map((c) => <CafeRow key={c.url} c={c} />)}
         </View>
 
         {/* 권역별 */}
@@ -79,18 +100,14 @@ export default function MomCafeScreen() {
         {REGIONS.map((r) => (
           <View key={r.group} style={styles.regionBlock}>
             <Text style={styles.regionGroup}>{r.group}</Text>
-            <View style={styles.chipWrap}>
-              {r.items.map((city) => (
-                <TouchableOpacity key={city} style={styles.chip} activeOpacity={0.8} onPress={() => openCafe(city)}>
-                  <Text style={styles.chipText}>{city}맘</Text>
-                </TouchableOpacity>
-              ))}
+            <View style={styles.cardWrap}>
+              {r.items.map((c) => <CafeRow key={c.url} c={c} />)}
             </View>
           </View>
         ))}
 
         <Text style={styles.foot}>
-          찾는 지역이 없나요? 위 지역을 눌러 네이버 카페에서 더 많은 맘카페를 만나보세요.
+          각 카페를 누르면 네이버 카페로 바로 이동합니다. 회원 가입·등급은 카페 정책을 따릅니다.
         </Text>
         <View style={{ height: 32 }} />
       </ScrollView>
@@ -134,8 +151,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xl, marginTop: 26, marginBottom: 12, letterSpacing: -0.3,
   },
 
-  featuredWrap: { paddingHorizontal: SPACING.xl, gap: 10 },
-  featuredCard: {
+  cardWrap: { paddingHorizontal: SPACING.xl, gap: 10 },
+  card: {
     backgroundColor: QM.card,
     borderRadius: 14,
     paddingVertical: 14,
@@ -146,26 +163,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: QM.hairline,
   },
-  featuredIcon: {
+  cardIcon: {
     width: 38, height: 38, borderRadius: 12,
     backgroundColor: QM.coralSoft,
     alignItems: 'center', justifyContent: 'center',
   },
-  featuredName: { fontSize: 15, fontWeight: '700', color: QM.ink },
-  featuredDesc: { fontSize: 12, color: COLORS.ink[500], marginTop: 2 },
+  cardName: { fontSize: 15, fontWeight: '700', color: QM.ink },
+  cardDesc: { fontSize: 12, color: COLORS.ink[500], marginTop: 2 },
 
-  regionBlock: { paddingHorizontal: SPACING.xl, marginBottom: 18 },
-  regionGroup: { fontSize: 13, fontWeight: '700', color: COLORS.ink[700], marginBottom: 10 },
-  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 999,
-    backgroundColor: QM.card,
-    borderWidth: 1,
-    borderColor: QM.hairline,
+  regionBlock: { marginBottom: 18 },
+  regionGroup: {
+    fontSize: 13, fontWeight: '700', color: COLORS.ink[700],
+    paddingHorizontal: SPACING.xl, marginBottom: 10,
   },
-  chipText: { fontSize: 13, fontWeight: '700', color: COLORS.ink[700] },
 
   foot: {
     paddingHorizontal: SPACING.xl, marginTop: 8,

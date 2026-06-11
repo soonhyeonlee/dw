@@ -325,7 +325,8 @@ export default function CategoriesScreen() {
   // 인라인 헤더 — 카드사혜택 + 프로모 + 카테고리 타일(항상). 선택 시 그 아래 제목 + 경유사·회사 네비 + (몰).
   const listHeader = (
     <>
-      <TouchableOpacity style={styles.featured} activeOpacity={0.85}>
+      {/* 안내용 정보 카드(비클릭) — 별도 상세 페이지 없음 */}
+      <View style={styles.featured}>
         <View style={styles.featuredIcon}>
           <Ionicons name="card-outline" size={26} color={COLORS.primary} />
         </View>
@@ -333,8 +334,7 @@ export default function CategoriesScreen() {
           <Text style={styles.featuredTitle}>카드사 혜택</Text>
           <Text style={styles.featuredSub}>제휴 카드 캐시백 추가 적립</Text>
         </View>
-        <Ionicons name="chevron-forward" size={18} color={COLORS.ink[400]} />
-      </TouchableOpacity>
+      </View>
 
       <View style={{ marginTop: 18 }}>
         <PromoCarousel slides={bannerSlides.length ? bannerSlides : CAT_PROMO_SLIDES} />

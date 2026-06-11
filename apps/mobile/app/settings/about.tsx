@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Linking,
   Modal,
   Pressable,
   TextInput,
@@ -64,12 +63,6 @@ export default function AboutScreen() {
     Alert.alert('오픈소스 라이선스', 'React Native, Expo, TypeORM 등 오픈소스 사용 정보를 표시할 페이지입니다.');
   };
 
-  const handleVisitWebsite = () => {
-    Linking.openURL('https://doublewin.example').catch(() =>
-      Alert.alert('알림', '브라우저를 열 수 없어요.'),
-    );
-  };
-
   const handleLeave = async () => {
     if (confirmText.trim() !== '탈퇴합니다') {
       Alert.alert('확인 문구가 달라요', '"탈퇴합니다"를 정확히 입력해주세요.');
@@ -104,9 +97,6 @@ export default function AboutScreen() {
           </View>
           <Text style={styles.appName}>더블원플러스</Text>
           <Text style={styles.appVersion}>v{APP_VERSION} ({BUILD_NUMBER})</Text>
-          <TouchableOpacity onPress={handleVisitWebsite}>
-            <Text style={styles.link}>doublewin.example</Text>
-          </TouchableOpacity>
         </View>
 
         {/* App info */}

@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, QM } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { getMallDetail, type Mall as ApiMall } from '../../src/api/home';
-import { getProducts, toggleMallWishlist, type Product as ApiProduct } from '../../src/api/products';
+import { getProducts, toggleMallWishlist, getMallWishlist, type Product as ApiProduct } from '../../src/api/products';
 
 const PLATFORM_LABEL: Record<string, string> = {
   coupang: '쿠팡',
@@ -163,6 +163,17 @@ export default function MallDetailScreen() {
       })
       .catch(() => setProducts([]));
   }, [platform]);
+
+  // 찜 상태 hydrate — 재진입 시 하트가 풀려보이는 문제 방지
+  useEffect(() => {
+    if (!isAuthenticated || !apiMall?.id) return;
+    getMallWishlist()
+      .then((res) => {
+        const ids = (res?.items || []).map((x: any) => x.id);
+        setWishlisted(ids.includes(apiMall.id));
+      })
+      .catch(() => {});
+  }, [isAuthenticated, apiMall?.id]);
 
   const tint = PLATFORM_TINT[platform] || { color: QM.coral, wordmark: 'M' };
   const mall = apiMall

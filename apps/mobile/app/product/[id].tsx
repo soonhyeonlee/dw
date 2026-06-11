@@ -20,6 +20,7 @@ import {
   getProduct,
   clickProduct,
   toggleWishlist as toggleWishlistApi,
+  getWishlist,
   type Product as ApiProduct,
 } from '../../src/api/products';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -59,6 +60,17 @@ export default function ProductDetailScreen() {
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // 찜 상태 hydrate — 재진입 시 하트가 풀려보이는 문제 방지
+  useEffect(() => {
+    if (!isAuthenticated || !id) return;
+    getWishlist(1, 500)
+      .then((w) => {
+        const ids = (w?.items || []).map((x: any) => x.id);
+        setWishlisted(ids.includes(id));
+      })
+      .catch(() => {});
+  }, [isAuthenticated, id]);
 
   if (loading) {
     return (

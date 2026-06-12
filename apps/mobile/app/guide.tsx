@@ -68,7 +68,7 @@ export default function GuideScreen() {
           </View>
           <Text style={styles.heroTitle}>
             더블원플러스로 쇼핑하고{'\n'}
-            <Text style={{ color: COLORS.primary }}>최대 30%</Text> 돌려받기
+            <Text style={{ color: COLORS.primary }}>최대 10%</Text> 돌려받기
           </Text>
           <Text style={styles.heroSub}>
             평소처럼 쇼핑하면 자동으로 캐시백이 쌓여요.{'\n'}

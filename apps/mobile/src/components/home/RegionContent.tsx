@@ -26,8 +26,12 @@ import {
   type Coupon,
 } from '../../api/region';
 
-const CATEGORIES = ['전체', '학원', '어린이집', '태권도', '영어', '수학', '피아노', '미술', '코딩'];
+const CATEGORIES = ['전체', '학원', '어린이집', '유치원'];
 const NEARBY_RADIUS_KM = 5;
+
+// 쿠폰북은 제휴 쿠폰 데이터/기능이 준비되면 true 로. 그 전까지 '준비 중' 안내만 노출.
+// (학원정보 탭은 Google Places 데이터 수집 완료로 2026-06-11 부터 활성.)
+const COUPON_READY = false;
 
 const SORT_OPTIONS = [
   { key: 'popular',  label: '인기순' },
@@ -132,10 +136,19 @@ function AcademyCard({ a, onPress }: { a: Academy; onPress: () => void }) {
           <Text style={aStyles.addr} numberOfLines={1}>{a.address || a.region || ''}</Text>
         </View>
         <View style={aStyles.metaRow}>
-          <Ionicons name="star" size={12} color="#F59E0B" />
-          <Text style={aStyles.rating}>{a.rating}</Text>
-          <Text style={aStyles.review}>({a.reviewCount})</Text>
-          <View style={aStyles.dot} />
+          {Number(a.rating) > 0 ? (
+            <>
+              <Ionicons name="star" size={12} color="#F59E0B" />
+              <Text style={aStyles.rating}>{Number(a.rating).toFixed(1)}</Text>
+              <Text style={aStyles.review}>({a.reviewCount})</Text>
+              <View style={aStyles.dot} />
+            </>
+          ) : (
+            <>
+              <Text style={aStyles.newBadge}>신규</Text>
+              <View style={aStyles.dot} />
+            </>
+          )}
           <Ionicons name="eye-outline" size={12} color={COLORS.ink[500]} />
           <Text style={aStyles.stat}>{(a.viewCount || 0).toLocaleString()}</Text>
           <View style={aStyles.dot} />
@@ -182,13 +195,20 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
         setLocationError('위치 권한이 거부되어 가까운 학원을 표시할 수 없어요.');
         return null;
       }
-      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      let pos = await Location.getLastKnownPositionAsync();
+      if (!pos) {
+        pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      }
+      if (!pos) {
+        setLocationError('현재 위치를 확인할 수 없어요. 기기의 위치 서비스를 켜고 다시 시도해 주세요.');
+        return null;
+      }
       const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       setCoords(next);
       setLocationError(null);
       return next;
-    } catch (e: any) {
-      setLocationError(e?.message || '위치를 가져오지 못했어요.');
+    } catch {
+      setLocationError('현재 위치를 확인할 수 없어요. 기기의 위치 서비스를 켜고 다시 시도해 주세요.');
       return null;
     }
   }, []);
@@ -281,7 +301,15 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
         </TouchableOpacity>
       </View>
 
-      {loading ? (
+      {tab === 'coupons' && !COUPON_READY ? (
+        <View style={{ paddingTop: 32 }}>
+          <EmptyState
+            icon="gift-outline"
+            title="쿠폰북 준비 중이에요"
+            subtitle={'지역 제휴처의 특별 쿠폰을\n곧 선보일 예정이에요.'}
+          />
+        </View>
+      ) : loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 80 }} />
       ) : tab === 'academies' ? (
         <>
@@ -570,6 +598,7 @@ const aStyles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 6 },
   rating: { fontSize: 12, fontWeight: '700', color: COLORS.ink[900] },
   review: { fontSize: 12, color: COLORS.ink[500] },
+  newBadge: { fontSize: 11, fontWeight: '700', color: QM.coral },
   dot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: COLORS.ink[300], marginHorizontal: 4 },
   stat: { fontSize: 11, color: COLORS.ink[600], fontWeight: '500' },
   tagRow: { flexDirection: 'row', gap: 6, marginTop: 10, flexWrap: 'wrap' },

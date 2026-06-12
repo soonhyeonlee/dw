@@ -71,6 +71,7 @@ SEARCH_AREAS = [
 SEARCH_TARGETS = [
     {'keyword': '학원',     'category': '학원'},
     {'keyword': '어린이집', 'category': '어린이집'},
+    {'keyword': '유치원',   'category': '유치원'},
 ]
 
 

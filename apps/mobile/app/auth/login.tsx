@@ -107,7 +107,7 @@ export default function LoginScreen() {
           간편하게 로그인하고{'\n'}
           <Text style={{ color: CORAL }}>캐시백</Text>을 받아보세요
         </Text>
-        <Text style={styles.headSub}>아이홈마켓 계정 하나로 시작해요</Text>
+        <Text style={styles.headSub}>더블원플러스 하나로 간편하게 시작해요</Text>
 
         {/* 입력 */}
         <View style={styles.fields}>

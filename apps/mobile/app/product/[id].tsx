@@ -35,6 +35,7 @@ const PLATFORM_LABEL: Record<string, string> = {
   wemakeprice: '위메프',
   tmon: '티몬',
   doublewin: '더블원플러스',
+  ihomemarket: '아이홈마켓',
 };
 
 const { width } = Dimensions.get('window');

@@ -15,6 +15,7 @@ import {
   NativeSyntheticEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -419,10 +420,49 @@ export default function AcademyDetailScreen() {
             </View>
 
             <Text style={[styles.sectionTitle, { marginTop: 24 }]}>위치</Text>
-            <View style={styles.mapPlaceholder}>
-              <Ionicons name="map-outline" size={32} color={COLORS.ink[400]} />
-              <Text style={styles.mapText}>{academy.address}</Text>
-            </View>
+            {academy.latitude != null && academy.longitude != null ? (
+              <View style={styles.mapBox}>
+                <MapView
+                  provider={PROVIDER_GOOGLE}
+                  style={styles.map}
+                  pointerEvents="none"
+                  initialRegion={{
+                    latitude: Number(academy.latitude),
+                    longitude: Number(academy.longitude),
+                    latitudeDelta: 0.008,
+                    longitudeDelta: 0.008,
+                  }}
+                >
+                  <Marker
+                    coordinate={{
+                      latitude: Number(academy.latitude),
+                      longitude: Number(academy.longitude),
+                    }}
+                    title={academy.name}
+                    description={academy.address}
+                  />
+                </MapView>
+                <TouchableOpacity
+                  style={styles.mapOpenBtn}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    const q = encodeURIComponent(academy.address || academy.name);
+                    Linking.openURL(
+                      `https://www.google.com/maps/search/?api=1&query=${q}`,
+                    ).catch(() => {});
+                  }}
+                >
+                  <Ionicons name="navigate" size={13} color={COLORS.primary} />
+                  <Text style={styles.mapOpenText}>지도에서 보기</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.mapPlaceholder}>
+                <Ionicons name="map-outline" size={32} color={COLORS.ink[400]} />
+                <Text style={styles.mapText}>{academy.address}</Text>
+              </View>
+            )}
+            {academy.address ? <Text style={styles.mapAddr}>{academy.address}</Text> : null}
 
             {channels.length > 0 ? (
               <>
@@ -701,6 +741,24 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: QM.hairline,
   },
   mapText: { fontSize: 12, color: COLORS.ink[600] },
+  mapBox: {
+    height: 180,
+    borderRadius: 18,
+    overflow: 'hidden',
+    borderWidth: 1, borderColor: QM.hairline,
+  },
+  map: { ...StyleSheet.absoluteFillObject },
+  mapOpenBtn: {
+    position: 'absolute', right: 10, bottom: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 12, paddingVertical: 7,
+    borderRadius: 999,
+    shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 4, shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
+  },
+  mapOpenText: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
+  mapAddr: { fontSize: 13, color: COLORS.ink[700], marginTop: 10 },
 
   channelRow: { flexDirection: 'row', gap: 18, marginTop: 4 },
   channelBtn: { alignItems: 'center', gap: 6 },

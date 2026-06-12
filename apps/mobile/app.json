@@ -4,13 +4,13 @@
     "slug": "doublewin",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "light",
     "scheme": "doublewin",
     "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FF6B35"
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#025DF3"
     },
     "ios": {
       "supportsTablet": true,
@@ -18,10 +18,14 @@
     },
     "android": {
       "package": "com.doublewin.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCNtPHtUWNg_Fq5lpGXVjoVS355zjjtUmM"
+        }
+      },
       "adaptiveIcon": {
-        "backgroundColor": "#FF6B35",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
+        "backgroundColor": "#1967FD",
+        "foregroundImage": "./assets/app-icon.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       }
     },

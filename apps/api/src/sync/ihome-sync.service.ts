@@ -222,8 +222,9 @@ export class IhomeSyncService
       affiliateUrl: existing?.affiliateUrl ?? productUrl,
       category,
       brand,
-      cashbackRate: existing?.cashbackRate ?? 0,
-      cashbackAmount: existing?.cashbackAmount ?? 0,
+      // 신규 상품 기본 캐시백 10% (관리자가 개별 지정 시 보존). 2026-06-11.
+      cashbackRate: existing?.cashbackRate ?? 10,
+      cashbackAmount: existing?.cashbackAmount ?? Math.round(Number(price) * 0.1),
       rating:
         Number.isFinite(useAvg) && useAvg > 0
           ? (useAvg as unknown as number)

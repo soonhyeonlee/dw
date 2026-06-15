@@ -55,7 +55,37 @@ export class Academy {
   source: 'manual' | 'google_maps';
 
   @Column({ type: 'simple-json', nullable: true })
-  photos: string[]; // 사진 URL 배열
+  photos: string[]; // 사진 URL 배열 (Google Places 보강 시 사진 프록시 URL)
+
+  // Google Places photo_reference 원본 (사진 프록시 엔드포인트가 실제 이미지로 해석)
+  @Column({ type: 'simple-json', nullable: true })
+  photoRefs: string[];
+
+  // 영업시간 (Google Places opening_hours.weekday_text)
+  @Column({ type: 'simple-json', nullable: true })
+  businessHours: string[];
+
+  // 홈페이지/웹사이트 (Google Places website)
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  website: string;
+
+  // 구글 실제 리뷰 (Place Details reviews, 최대 5개)
+  @Column({ type: 'simple-json', nullable: true })
+  googleReviews: {
+    author: string;
+    rating: number;
+    text: string;
+    relativeTime?: string;
+    profilePhoto?: string;
+  }[];
+
+  // 관련 유튜브 영상 (YouTube Data API 검색 결과)
+  @Column({ type: 'simple-json', nullable: true })
+  videos: { id: string; title: string; thumbnail: string; channel?: string }[];
+
+  // Google 보강을 수행한 시각 (null이면 미보강 → 상세 진입 시 1회 보강)
+  @Column({ type: 'timestamp', nullable: true })
+  enrichedAt: Date | null;
 
   @Column({ type: 'simple-json', nullable: true })
   tags: string[]; // 체험수업, 셔틀운행, 소수정예 등

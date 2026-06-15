@@ -226,6 +226,17 @@ export default function AcademyDetailScreen() {
   const liveViewers = 8 + ((academy.reviewCount || 0) % 30);
   const channels = CHANNELS.filter((c) => !!(academy.sns && academy.sns[c.key]));
 
+  const hours = academy.businessHours && academy.businessHours.length ? academy.businessHours : null;
+  const gReviews = academy.googleReviews && academy.googleReviews.length ? academy.googleReviews : null;
+  const videos = academy.videos && academy.videos.length ? academy.videos : [];
+  const introText =
+    academy.description && academy.description.trim()
+      ? academy.description
+      : `${academy.name}은(는) ${addr}에 위치한 ${academy.category || ''} 전문 교육기관입니다.\n\n풍부한 경력의 강사진과 체계적인 커리큘럼을 통해 수강생 한 명 한 명의 성장에 집중합니다.`;
+  const ytSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(
+    `${academy.name} ${academy.category || ''}`.trim(),
+  )}`;
+
   const onHeroScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     setPhotoIdx(Math.round(e.nativeEvent.contentOffset.x / width));
   };
@@ -346,8 +357,18 @@ export default function AcademyDetailScreen() {
             <DetailRow
               icon="time-outline"
               tint="green"
-              label="평일 14:00 - 22:00 · 주말 10:00 - 18:00"
+              label={hours ? hours.join(' · ') : '영업시간 정보 준비 중'}
             />
+            {academy.website ? (
+              <DetailRow
+                icon="globe-outline"
+                tint="blue"
+                label={academy.website.replace(/^https?:\/\//, '')}
+                action="방문"
+                actionIcon="open-outline"
+                onAction={() => openUrl(academy.website)}
+              />
+            ) : null}
             <DetailRow
               icon="eye-outline"
               tint="orange"
@@ -391,33 +412,46 @@ export default function AcademyDetailScreen() {
         {tab === 'info' && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>소개</Text>
-            <Text style={styles.bodyText}>
-              {academy.name}은 {academy.address}에 위치한 {academy.category} 전문 교육기관입니다.
-              {'\n\n'}
-              풍부한 경력의 강사진과 체계적인 커리큘럼을 통해 수강생 한 명 한 명의 성장에 집중합니다.
-            </Text>
+            <Text style={styles.bodyText}>{introText}</Text>
 
-            <Text style={[styles.sectionTitle, { marginTop: 24 }]}>수업 내용</Text>
-            <Text style={styles.bodyText}>{academy.curriculum}</Text>
+            {academy.curriculum ? (
+              <>
+                <Text style={[styles.sectionTitle, { marginTop: 24 }]}>수업 내용</Text>
+                <Text style={styles.bodyText}>{academy.curriculum}</Text>
+              </>
+            ) : null}
 
-            <Text style={[styles.sectionTitle, { marginTop: 24 }]}>안내 및 유의사항</Text>
-            <View style={styles.noticeBox}>
-              <Ionicons name="information-circle" size={16} color={COLORS.primary} style={{ marginTop: 1 }} />
-              <Text style={styles.noticeText}>{academy.notice}</Text>
-            </View>
+            {academy.notice ? (
+              <>
+                <Text style={[styles.sectionTitle, { marginTop: 24 }]}>안내 및 유의사항</Text>
+                <View style={styles.noticeBox}>
+                  <Ionicons name="information-circle" size={16} color={COLORS.primary} style={{ marginTop: 1 }} />
+                  <Text style={styles.noticeText}>{academy.notice}</Text>
+                </View>
+              </>
+            ) : null}
 
             <Text style={[styles.sectionTitle, { marginTop: 24 }]}>운영 시간</Text>
-            <View style={styles.kvList}>
-              <Row k="평일" v="14:00 - 22:00" />
-              <Row k="주말" v="10:00 - 18:00" />
-              <Row k="휴무" v="공휴일" />
-            </View>
+            {hours ? (
+              <View style={styles.kvList}>
+                {hours.map((line, i) => {
+                  const [k, ...rest] = line.split(': ');
+                  return <Row key={i} k={k} v={rest.join(': ') || '-'} />;
+                })}
+              </View>
+            ) : (
+              <Text style={styles.bodyText}>영업시간 정보를 준비 중입니다.</Text>
+            )}
 
-            <Text style={[styles.sectionTitle, { marginTop: 24 }]}>주차 안내</Text>
-            <View style={styles.parkingRow}>
-              <Ionicons name="car-outline" size={16} color={COLORS.ink[600]} />
-              <Text style={styles.parkingText}>{academy.parking}</Text>
-            </View>
+            {academy.parking ? (
+              <>
+                <Text style={[styles.sectionTitle, { marginTop: 24 }]}>주차 안내</Text>
+                <View style={styles.parkingRow}>
+                  <Ionicons name="car-outline" size={16} color={COLORS.ink[600]} />
+                  <Text style={styles.parkingText}>{academy.parking}</Text>
+                </View>
+              </>
+            ) : null}
 
             <Text style={[styles.sectionTitle, { marginTop: 24 }]}>위치</Text>
             {academy.latitude != null && academy.longitude != null ? (
@@ -464,6 +498,53 @@ export default function AcademyDetailScreen() {
             )}
             {academy.address ? <Text style={styles.mapAddr}>{academy.address}</Text> : null}
 
+            {/* 관련 영상 (유튜브) */}
+            <View style={styles.videoHead}>
+              <Text style={[styles.sectionTitle, { marginTop: 24, marginBottom: 0 }]}>관련 영상</Text>
+              <TouchableOpacity onPress={() => openUrl(ytSearch)} activeOpacity={0.7}>
+                <Text style={styles.videoMore}>유튜브 더보기</Text>
+              </TouchableOpacity>
+            </View>
+            {videos.length ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ marginTop: 12 }}
+                contentContainerStyle={{ gap: 12, paddingRight: 8 }}
+              >
+                {videos.map((v) => (
+                  <TouchableOpacity
+                    key={v.id}
+                    style={styles.videoCard}
+                    activeOpacity={0.85}
+                    onPress={() => openUrl(`https://www.youtube.com/watch?v=${v.id}`)}
+                  >
+                    <View style={styles.videoThumbWrap}>
+                      <Image source={{ uri: v.thumbnail }} style={styles.videoThumb} resizeMode="cover" />
+                      <View style={styles.videoPlay}>
+                        <Ionicons name="play" size={18} color="#FFFFFF" />
+                      </View>
+                    </View>
+                    <Text style={styles.videoTitle} numberOfLines={2}>{v.title}</Text>
+                    {v.channel ? <Text style={styles.videoChannel} numberOfLines={1}>{v.channel}</Text> : null}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            ) : (
+              <TouchableOpacity style={styles.videoSearchCard} activeOpacity={0.85} onPress={() => openUrl(ytSearch)}>
+                <View style={styles.videoSearchIcon}>
+                  <Ionicons name="logo-youtube" size={22} color="#FF0000" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.videoSearchTitle} numberOfLines={1}>
+                    유튜브에서 "{academy.name}" 영상 보기
+                  </Text>
+                  <Text style={styles.videoSearchSub}>학원 후기·수업 영상을 확인해 보세요</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={COLORS.ink[400]} />
+              </TouchableOpacity>
+            )}
+
             {channels.length > 0 ? (
               <>
                 <Text style={[styles.sectionTitle, { marginTop: 24 }]}>문의 및 채널</Text>
@@ -505,7 +586,18 @@ export default function AcademyDetailScreen() {
             </View>
 
             <View style={styles.reviewList}>
-              {REVIEWS.map((r) => (
+              {(gReviews
+                ? gReviews.map((r, i) => ({
+                    id: `g${i}`,
+                    nickname: r.author,
+                    rating: r.rating,
+                    body: r.text,
+                    date: r.relativeTime || '',
+                    isGoogle: true,
+                    isMomCafe: false,
+                  }))
+                : REVIEWS.map((r) => ({ ...r, isGoogle: false }))
+              ).map((r: any) => (
                 <View key={r.id} style={styles.reviewItem}>
                   <View style={styles.reviewTop}>
                     <View style={styles.reviewAvatar}>
@@ -514,11 +606,15 @@ export default function AcademyDetailScreen() {
                     <View style={{ flex: 1 }}>
                       <View style={styles.reviewNameRow}>
                         <Text style={styles.reviewName}>{r.nickname}</Text>
-                        {r.isMomCafe && (
+                        {r.isGoogle ? (
+                          <View style={styles.gBadge}>
+                            <Text style={styles.gBadgeText}>구글</Text>
+                          </View>
+                        ) : r.isMomCafe ? (
                           <View style={styles.momBadge}>
                             <Text style={styles.momBadgeText}>맘카페</Text>
                           </View>
-                        )}
+                        ) : null}
                       </View>
                       <View style={styles.reviewMeta}>
                         <StarRow rating={r.rating} size={12} />
@@ -526,7 +622,7 @@ export default function AcademyDetailScreen() {
                       </View>
                     </View>
                   </View>
-                  <Text style={styles.reviewBody}>{r.body}</Text>
+                  {r.body ? <Text style={styles.reviewBody}>{r.body}</Text> : null}
                 </View>
               ))}
             </View>
@@ -759,6 +855,52 @@ const styles = StyleSheet.create({
   },
   mapOpenText: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
   mapAddr: { fontSize: 13, color: COLORS.ink[700], marginTop: 10 },
+
+  videoHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  videoMore: { fontSize: 12, fontWeight: '700', color: QM.coral, marginTop: 24 },
+  videoCard: { width: 200 },
+  videoThumbWrap: {
+    width: 200, height: 112,
+    borderRadius: 14, overflow: 'hidden',
+    backgroundColor: COLORS.ink[100],
+    position: 'relative',
+  },
+  videoThumb: { width: '100%', height: '100%' },
+  videoPlay: {
+    position: 'absolute', top: '50%', left: '50%',
+    width: 38, height: 38, borderRadius: 19,
+    marginTop: -19, marginLeft: -19,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  videoTitle: { fontSize: 12.5, fontWeight: '700', color: QM.ink, marginTop: 8, lineHeight: 17 },
+  videoChannel: { fontSize: 11, color: COLORS.ink[500], marginTop: 3 },
+  videoSearchCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    marginTop: 12,
+    padding: 14,
+    backgroundColor: QM.fieldBg,
+    borderRadius: 16,
+    borderWidth: 1, borderColor: QM.hairline,
+  },
+  videoSearchIcon: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: COLORS.white,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  videoSearchTitle: { fontSize: 13, fontWeight: '700', color: QM.ink },
+  videoSearchSub: { fontSize: 11.5, color: COLORS.ink[500], marginTop: 2 },
+
+  gBadge: {
+    paddingHorizontal: 6, paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: '#EAF2FE',
+  },
+  gBadgeText: { fontSize: 9, fontWeight: '800', color: '#1673E8' },
 
   channelRow: { flexDirection: 'row', gap: 18, marginTop: 4 },
   channelBtn: { alignItems: 'center', gap: 6 },

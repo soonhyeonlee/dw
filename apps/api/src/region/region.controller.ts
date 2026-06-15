@@ -9,7 +9,9 @@ import {
   Query,
   UseGuards,
   Request,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { RegionService } from './region.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AdminGuard } from '../common/guards/admin.guard';
@@ -29,11 +31,12 @@ export class RegionController {
     @Query('lng') lng?: string,
     @Query('radiusKm') radiusKm?: string,
     @Query('source') source?: 'manual' | 'google_maps',
+    @Query('sort') sort?: 'popular' | 'rating' | 'review' | 'distance',
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
     const data = await this.regionService.getAcademies({
-      region, category, keyword, source,
+      region, category, keyword, source, sort,
       lat: lat != null ? Number(lat) : undefined,
       lng: lng != null ? Number(lng) : undefined,
       radiusKm: radiusKm != null ? Number(radiusKm) : undefined,
@@ -47,6 +50,23 @@ export class RegionController {
   async getAcademy(@Param('id') id: string) {
     const data = await this.regionService.getAcademy(id);
     return { success: true, data };
+  }
+
+  // 사진 프록시: Google Place Photo(IP 제한 키, 서버에서만 호출) → googleusercontent 로 302
+  @Get('academies/:id/photo/:idx')
+  async academyPhoto(
+    @Param('id') id: string,
+    @Param('idx') idx: string,
+    @Query('w') w: string,
+    @Res() res: Response,
+  ) {
+    const url = await this.regionService.resolvePhotoUrl(id, Number(idx), w ? Number(w) : 800);
+    if (!url) {
+      res.status(404).send();
+      return;
+    }
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.redirect(302, url);
   }
 
   @UseGuards(JwtAuthGuard)

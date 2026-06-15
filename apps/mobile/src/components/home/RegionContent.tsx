@@ -26,8 +26,17 @@ import {
   type Coupon,
 } from '../../api/region';
 
-const CATEGORIES = ['전체', '학원', '어린이집', '유치원'];
+// 세분 카테고리 — 백엔드 ACADEMY_CATEGORY_KEYWORDS 키와 일치(이름 기반 분류).
+const CATEGORIES = [
+  '전체',
+  '어린이집', '유치원',
+  '태권도', '복싱', '킥복싱', '주짓수', 'MMA', '합기도', '유도', '검도',
+  '헬스클럽', '크로스핏', 'PT샵', '필라테스', '요가', '수영', '골프',
+  '영어', '수학', '논술', '과학', '코딩',
+  '피아노', '미술', '음악', '무용',
+];
 const NEARBY_RADIUS_KM = 5;
+const PAGE_SIZE = 20;
 
 // 쿠폰북은 제휴 쿠폰 데이터/기능이 준비되면 true 로. 그 전까지 '준비 중' 안내만 노출.
 // (학원정보 탭은 Google Places 데이터 수집 완료로 2026-06-11 부터 활성.)
@@ -181,11 +190,22 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
   const [category, setCategory] = useState('전체');
   const [keyword, setKeyword] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [sort, setSort] = useState<SortKey>('popular');
   const [academies, setAcademies] = useState<Academy[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+
+  // 검색어는 입력 즉시가 아니라 디바운스 후 서버에 질의(전체 DB 검색).
+  const [kwDebounced, setKwDebounced] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setKwDebounced(keyword.trim()), 350);
+    return () => clearTimeout(t);
+  }, [keyword]);
 
   // "가까운 지역" 선택 시 위치 권한 요청 + 현재 좌표 1회 취득.
   const ensureLocation = useCallback(async (): Promise<{ lat: number; lng: number } | null> => {
@@ -195,9 +215,13 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
         setLocationError('위치 권한이 거부되어 가까운 학원을 표시할 수 없어요.');
         return null;
       }
-      let pos = await Location.getLastKnownPositionAsync();
-      if (!pos) {
-        pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      // 현재 위치를 우선 취득(높은 정확도). 실패 시에만 마지막 알려진 위치로 폴백.
+      // last-known 을 먼저 쓰면 다른 지역의 오래된 좌표가 잡혀 "내 주변"이 엉뚱하게 나온다.
+      let pos: Location.LocationObject | null = null;
+      try {
+        pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      } catch {
+        pos = await Location.getLastKnownPositionAsync();
       }
       if (!pos) {
         setLocationError('현재 위치를 확인할 수 없어요. 기기의 위치 서비스를 켜고 다시 시도해 주세요.');
@@ -213,47 +237,69 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
     }
   }, []);
 
+  // 검색/카테고리/정렬/범위는 모두 서버에 위임(전체 DB 대상). 페이지네이션은 "더보기".
+  const buildOpts = useCallback(
+    (targetPage: number, geo: { lat: number; lng: number } | null): Parameters<typeof getAcademies>[0] => {
+      const opts: Parameters<typeof getAcademies>[0] = {
+        limit: PAGE_SIZE,
+        page: targetPage,
+        category: category !== '전체' ? category : undefined,
+        keyword: kwDebounced || undefined,
+        sort,
+      };
+      if (scope === 'nearby' && geo) {
+        opts.lat = geo.lat;
+        opts.lng = geo.lng;
+        opts.radiusKm = NEARBY_RADIUS_KM;
+      }
+      return opts;
+    },
+    [category, kwDebounced, sort, scope],
+  );
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const apiCategory = category && category !== '전체' ? category : undefined;
       let geo = coords;
-      if (scope === 'nearby' && !geo) {
-        geo = await ensureLocation();
-      }
-      const academyOpts: Parameters<typeof getAcademies>[0] = {
-        limit: 100,
-        category: apiCategory,
-      };
-      if (scope === 'nearby' && geo) {
-        academyOpts.lat = geo.lat;
-        academyOpts.lng = geo.lng;
-        academyOpts.radiusKm = NEARBY_RADIUS_KM;
-      }
+      if (scope === 'nearby' && !geo) geo = await ensureLocation();
       const [ac, cp] = await Promise.all([
-        getAcademies(academyOpts).catch(() => ({ items: [] as Academy[] })),
+        getAcademies(buildOpts(1, geo)).catch(() => null),
         getCoupons().catch(() => ({ items: [] as Coupon[] })),
       ]);
       setAcademies((ac?.items as Academy[]) || []);
+      setTotal(ac?.total ?? (ac?.items?.length || 0));
+      setPage(1);
+      setHasMore((ac?.totalPages ?? 1) > 1);
       setCoupons((cp?.items as Coupon[]) || []);
     } finally {
       setLoading(false);
     }
-  }, [scope, coords, category, ensureLocation]);
+  }, [scope, coords, buildOpts, ensureLocation]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const next = page + 1;
+      const ac = await getAcademies(buildOpts(next, coords)).catch(() => null);
+      if (ac?.items?.length) {
+        setAcademies((prev) => [...prev, ...(ac.items as Academy[])]);
+        setPage(next);
+        setHasMore((ac.totalPages ?? next) > next);
+      } else {
+        setHasMore(false);
+      }
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, page, buildOpts, coords]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
   useImperativeHandle(ref, () => ({ reload: loadData }), [loadData]);
 
-  const filteredAcademies = academies.filter((a) => {
-    const matchCat = category === '전체' || a.category === category;
-    const kw = keyword.trim();
-    const matchKeyword =
-      !kw || a.name.includes(kw) || (a.address || '').includes(kw) || (a.region || '').includes(kw);
-    return matchCat && matchKeyword;
-  });
-
+  const hasFilter = kwDebounced.length > 0 || category !== '전체';
   const sortLabel = SORT_OPTIONS.find((o) => o.key === sort)?.label ?? '인기순';
 
   const handleDownload = async (c: Coupon) => {
@@ -274,7 +320,12 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
     showActionSheet(
       '정렬 기준',
       SORT_OPTIONS.map((o) => o.label),
-      (idx) => setSort(SORT_OPTIONS[idx].key),
+      (idx) => {
+        const key = SORT_OPTIONS[idx].key;
+        setSort(key);
+        // 거리순은 내 위치 기준이 있어야 의미가 있으므로 자동으로 '내 주변'으로 전환.
+        if (key === 'distance') setScope('nearby');
+      },
     );
   };
 
@@ -384,7 +435,7 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
 
           <View style={styles.countRow}>
             <Text style={styles.countText}>
-              총 <Text style={styles.countStrong}>{filteredAcademies.length}</Text>개
+              총 <Text style={styles.countStrong}>{total}</Text>개
             </Text>
             <TouchableOpacity style={styles.sortBtn} onPress={handlePickSort}>
               <Text style={styles.sortText}>{sortLabel}</Text>
@@ -393,24 +444,49 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
           </View>
 
           {academies.length === 0 ? (
-            <EmptyState
-              icon="school-outline"
-              title={scope === 'nearby' ? '내 주변 학원 정보를 준비 중이에요' : '학원 정보를 준비 중이에요'}
-              subtitle={'우리 동네 학원·어린이집 정보를\n곧 만나보실 수 있어요.'}
-            />
-          ) : filteredAcademies.length === 0 ? (
-            <EmptyState
-              icon="search-outline"
-              title="검색 결과가 없어요"
-              subtitle={`'${keyword || category}' 와(과) 일치하는 학원을\n찾지 못했어요. 다른 조건으로 시도해 보세요.`}
-              actionLabel="조건 초기화"
-              onAction={resetAcademyFilters}
-            />
+            hasFilter ? (
+              <EmptyState
+                icon="search-outline"
+                title="검색 결과가 없어요"
+                subtitle={`'${kwDebounced || category}' 와(과) 일치하는 학원을\n찾지 못했어요. 다른 조건으로 시도해 보세요.`}
+                actionLabel="조건 초기화"
+                onAction={resetAcademyFilters}
+              />
+            ) : scope === 'nearby' ? (
+              <EmptyState
+                icon="navigate-outline"
+                title={`내 주변 ${NEARBY_RADIUS_KM}km에 등록된 학원이 없어요`}
+                subtitle={'아직 이 지역 정보가 수집되지 않았어요.\n전체 보기로 더 많은 학원을 확인해 보세요.'}
+              />
+            ) : (
+              <EmptyState
+                icon="school-outline"
+                title="학원 정보를 준비 중이에요"
+                subtitle={'우리 동네 학원·어린이집 정보를\n곧 만나보실 수 있어요.'}
+              />
+            )
           ) : (
             <View style={styles.listWrap}>
-              {filteredAcademies.map((a) => (
+              {academies.map((a) => (
                 <AcademyCard key={a.id} a={a} onPress={() => router.push(`/region/${a.id}` as any)} />
               ))}
+              {hasMore ? (
+                <TouchableOpacity
+                  style={styles.moreBtn}
+                  onPress={loadMore}
+                  disabled={loadingMore}
+                  activeOpacity={0.8}
+                >
+                  {loadingMore ? (
+                    <ActivityIndicator size="small" color={QM.coral} />
+                  ) : (
+                    <>
+                      <Text style={styles.moreBtnText}>더보기 ({academies.length}/{total})</Text>
+                      <Ionicons name="chevron-down" size={16} color={QM.coral} />
+                    </>
+                  )}
+                </TouchableOpacity>
+              ) : null}
             </View>
           )}
         </>
@@ -536,6 +612,18 @@ const styles = StyleSheet.create({
   sortText: { fontSize: 13, color: COLORS.ink[700], fontWeight: '500' },
 
   listWrap: { paddingHorizontal: SPACING.xl, gap: 12 },
+
+  moreBtn: {
+    marginTop: 4,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: QM.coralSoft,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  moreBtnText: { fontSize: 14, fontWeight: '700', color: QM.coral },
 
   couponHero: {
     marginHorizontal: SPACING.xl,

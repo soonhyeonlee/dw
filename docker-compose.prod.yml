@@ -24,6 +24,9 @@ services:
       IHOME_SYNC_URL: ${IHOME_SYNC_URL:-}
       IHOME_SYNC_SECRET: ${IHOME_SYNC_SECRET:-}
       IHOME_SYNC_INTERVAL_MS: ${IHOME_SYNC_INTERVAL_MS:-600000}
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      PUBLIC_API_URL: ${PUBLIC_API_URL:-https://api-dev.sumbodyweb.com}
     restart: unless-stopped
 
   admin:

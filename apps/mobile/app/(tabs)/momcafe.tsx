@@ -78,19 +78,8 @@ export default function MomCafeScreen() {
       </View>
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* 인트로 */}
-        <View style={styles.intro}>
-          <View style={styles.introIcon}>
-            <Ionicons name="people" size={24} color={COLORS.primary} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.introTitle}>우리 동네 맘카페</Text>
-            <Text style={styles.introSub}>전국 각지의 맘카페로 바로 이동하세요.</Text>
-          </View>
-        </View>
-
         {/* 전국 인기 */}
-        <Text style={styles.sectionTitle}>전국 인기 맘카페</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 8 }]}>전국 인기 맘카페</Text>
         <View style={styles.cardWrap}>
           {FEATURED.map((c) => <CafeRow key={c.url} c={c} />)}
         </View>

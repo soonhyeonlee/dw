@@ -57,8 +57,6 @@ const FOLDER_TABS = [
 ] as const;
 type FolderTabKey = typeof FOLDER_TABS[number]['key'];
 
-const DAILY_LABELS = ['실시간', '오늘', '+1일', '+2일', '+3일', '+4일'] as const;
-
 const PROMO_BADGE_LABEL: Record<string, { text: string; bg: string; fg: string }> = {
   time_deal: { text: '타임특가', bg: '#E0311E', fg: '#FFFFFF' },
   rate_up:   { text: '상향', bg: '#EEEEFF', fg: '#4B4BF4' },
@@ -150,7 +148,7 @@ export default function HomeScreen() {
   const [homeTab, setHomeTab] = useState<FolderTabKey>('shop');
   const scrollRef = useRef<ScrollView>(null);
   const tabBarYRef = useRef(0);
-  const [dailyTabIdx, setDailyTabIdx] = useState(0);
+  const [showAllMalls, setShowAllMalls] = useState(false);
   const [dealProducts, setDealProducts] = useState<ApiProduct[]>([]);
   const [recProducts, setRecProducts] = useState<ApiProduct[]>([]);
   const [dealCountdown, setDealCountdown] = useState('00 : 00 : 00');
@@ -164,8 +162,12 @@ export default function HomeScreen() {
         getBanners('home'),
       ]);
       setBannerSlides(banners.map(bannerToSlide));
-      // 위메프는 서비스 불안정 — 노출 제외
-      setMalls((home.malls || []).filter((m) => m.platform !== 'wemakeprice'));
+      // 위메프는 서비스 불안정 — 노출 제외. 캐시백률 높은 순으로 정렬.
+      setMalls(
+        (home.malls || [])
+          .filter((m) => m.platform !== 'wemakeprice')
+          .sort((a, b) => Number(b.cashbackRate || 0) - Number(a.cashbackRate || 0)),
+      );
       const items: ApiProduct[] = products.items || [];
       const deals = [...items]
         .filter((p) => Number(p.discountRate || 0) > 0)
@@ -267,7 +269,10 @@ export default function HomeScreen() {
         {/* Folder-style tabs: 쇼핑 / 번개장터 / 우리지역 / 여행
             ⚠️ stickyHeaderIndices 가 직접 자식 View 의 flexDirection 을 무시하는 RN 버그가
             있어 wrapper View 로 감싸고 안쪽 segmentBar 에 flex 를 적용. */}
-        <View onLayout={(e) => { tabBarYRef.current = e.nativeEvent.layout.y; }}>
+        <View
+          style={styles.segmentBarWrap}
+          onLayout={(e) => { tabBarYRef.current = e.nativeEvent.layout.y; }}
+        >
           <View style={styles.segmentBar}>
             {FOLDER_TABS.map((t) => {
               const active = homeTab === t.key;
@@ -365,64 +370,47 @@ export default function HomeScreen() {
             <View style={styles.sectionHead}>
               <View style={styles.sectionTitleGroup}>
                 <Text style={styles.sectionTitle}>인기 상향 캐시백</Text>
-                <Text style={styles.sectionSub}>매일 새로 갱신</Text>
+                <Text style={styles.sectionSub}>캐시백률 높은 순</Text>
               </View>
-              <TouchableOpacity style={styles.moreBtn} onPress={() => router.push('/(tabs)/categories' as any)}>
-                <Text style={styles.moreText}>전체</Text>
-                <Ionicons name="chevron-forward" size={12} color={COLORS.ink[500]} />
-              </TouchableOpacity>
+              {malls.length > 9 ? (
+                <TouchableOpacity style={styles.moreBtn} onPress={() => setShowAllMalls((v) => !v)}>
+                  <Text style={styles.moreText}>{showAllMalls ? '접기' : '전체'}</Text>
+                  <Ionicons name={showAllMalls ? 'chevron-up' : 'chevron-forward'} size={12} color={COLORS.ink[500]} />
+                </TouchableOpacity>
+              ) : null}
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dayTabScroll}>
-              {DAILY_LABELS.map((label, i) => {
-                const active = i === dailyTabIdx;
-                return (
-                  <TouchableOpacity
-                    key={label}
-                    style={[styles.dayTab, active && styles.dayTabActive]}
-                    onPress={() => setDailyTabIdx(i)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.dayTabText, active && styles.dayTabTextActive]}>{label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
             <View style={[gridStyles.grid, { columnGap: GRID_GAP }]}>
               {loading && malls.length === 0 ? (
                 <ActivityIndicator size="small" color={COLORS.primary} style={{ width: '100%', paddingVertical: 20 }} />
               ) : malls.length === 0 ? (
                 <Text style={styles.emptyText}>등록된 쇼핑몰이 없습니다</Text>
               ) : (
-                (() => {
-                  const offset = dailyTabIdx;
-                  const ordered = [...malls.slice(offset), ...malls.slice(0, offset)];
-                  return ordered.slice(0, 9).map((m) => {
-                    const badge = m.promoBadge ? PROMO_BADGE_LABEL[m.promoBadge] : null;
-                    const prev = m.previousCashbackRate != null ? Number(m.previousCashbackRate) : null;
-                    return (
-                      <TouchableOpacity
-                        key={m.id}
-                        style={[gridStyles.card, { width: gridCardW }]}
-                        onPress={() => router.push(`/mall/${m.platform}` as any)}
-                        activeOpacity={0.85}
-                      >
-                        <View style={{ width: gridCardW, height: gridCardW }}>
-                          <MallLogo mall={m} size={gridCardW} radius={16} />
-                          {badge ? (
-                            <View style={[gridStyles.badge, { backgroundColor: badge.bg }]}>
-                              <Text style={[gridStyles.badgeText, { color: badge.fg }]}>{badge.text}</Text>
-                            </View>
-                          ) : null}
-                        </View>
-                        <Text style={gridStyles.name} numberOfLines={1}>{m.name}</Text>
-                        <View style={gridStyles.rateRow}>
-                          <Text style={gridStyles.rate}>최대 {Number(m.cashbackRate)}%</Text>
-                          {prev != null ? <Text style={gridStyles.prev}>{prev}%</Text> : null}
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  });
-                })()
+                (showAllMalls ? malls : malls.slice(0, 9)).map((m) => {
+                  const badge = m.promoBadge ? PROMO_BADGE_LABEL[m.promoBadge] : null;
+                  const prev = m.previousCashbackRate != null ? Number(m.previousCashbackRate) : null;
+                  return (
+                    <TouchableOpacity
+                      key={m.id}
+                      style={[gridStyles.card, { width: gridCardW }]}
+                      onPress={() => router.push(`/mall/${m.platform}` as any)}
+                      activeOpacity={0.85}
+                    >
+                      <View style={{ width: gridCardW, height: gridCardW }}>
+                        <MallLogo mall={m} size={gridCardW} radius={16} />
+                        {badge ? (
+                          <View style={[gridStyles.badge, { backgroundColor: badge.bg }]}>
+                            <Text style={[gridStyles.badgeText, { color: badge.fg }]}>{badge.text}</Text>
+                          </View>
+                        ) : null}
+                      </View>
+                      <Text style={gridStyles.name} numberOfLines={1}>{m.name}</Text>
+                      <View style={gridStyles.rateRow}>
+                        <Text style={gridStyles.rate}>최대 {Number(m.cashbackRate)}%</Text>
+                        {prev != null ? <Text style={gridStyles.prev}>{prev}%</Text> : null}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })
               )}
             </View>
 
@@ -574,6 +562,14 @@ const styles = StyleSheet.create({
   guideBannerSub: { fontSize: 11, color: COLORS.ink[500], marginTop: 2 },
 
   // Folder-style tabs
+  // ⚠️ sticky 로 고정될 때, 아래로 스크롤된 콘텐츠 카드(elevation 보유)가 탭바 위로
+  //    그려져 탭/콘텐츠 터치를 가로채는 Android 버그가 있다. wrapper 에 불투명 배경 +
+  //    높은 elevation/zIndex 를 줘서 항상 콘텐츠 위에 그려지도록 한다.
+  segmentBarWrap: {
+    backgroundColor: QM.pageBg,
+    zIndex: 20,
+    elevation: 20,
+  },
   segmentBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',

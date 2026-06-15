@@ -19,6 +19,20 @@ export interface Academy {
   notice?: string;
   parking?: string;
   sns?: { kakao?: string; instagram?: string; facebook?: string; band?: string };
+  /** Google Places opening_hours.weekday_text */
+  businessHours?: string[];
+  /** 홈페이지 */
+  website?: string;
+  /** 구글 실제 리뷰 (Place Details) */
+  googleReviews?: {
+    author: string;
+    rating: number;
+    text: string;
+    relativeTime?: string;
+    profilePhoto?: string;
+  }[];
+  /** 관련 유튜브 영상 */
+  videos?: { id: string; title: string; thumbnail: string; channel?: string }[];
   rating: number;
   reviewCount: number;
   viewCount: number;
@@ -52,22 +66,32 @@ export interface Coupon {
   expireAt: string;
 }
 
+export interface AcademyList {
+  items: Academy[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export async function getAcademies(opts?: {
   region?: string;
   category?: string;
   keyword?: string;
   source?: 'manual' | 'google_maps';
+  sort?: 'popular' | 'rating' | 'review' | 'distance';
   lat?: number;
   lng?: number;
   radiusKm?: number;
   page?: number;
   limit?: number;
-}) {
+}): Promise<AcademyList> {
   const params = new URLSearchParams();
   if (opts?.region) params.set('region', opts.region);
   if (opts?.category) params.set('category', opts.category);
   if (opts?.keyword) params.set('keyword', opts.keyword);
   if (opts?.source) params.set('source', opts.source);
+  if (opts?.sort) params.set('sort', opts.sort);
   if (opts?.lat != null) params.set('lat', String(opts.lat));
   if (opts?.lng != null) params.set('lng', String(opts.lng));
   if (opts?.radiusKm != null) params.set('radiusKm', String(opts.radiusKm));

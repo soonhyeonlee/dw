@@ -100,15 +100,17 @@ export class RegionService {
 
     if (region) qb.andWhere('a.region = :region', { region });
     if (category) {
-      // 세분 카테고리는 이름 키워드 OR 매칭, 그 외(어린이집/유치원 등 큰 분류)는 category 컬럼 일치.
+      // 크롤러가 세분 category 를 직접 태깅(예: '복싱')하므로 우선 category 정확 일치로 잡고,
+      // 아직 넓게 '학원'으로만 들어온 건은 이름 키워드(ACADEMY_CATEGORY_KEYWORDS)로 보강 매칭.
       const keywords = ACADEMY_CATEGORY_KEYWORDS[category];
       if (keywords?.length) {
-        const ors = keywords
-          .map((_, i) => `LOWER(a.name) LIKE LOWER(:catkw${i})`)
-          .join(' OR ');
-        const params: Record<string, string> = {};
-        keywords.forEach((k, i) => (params[`catkw${i}`] = `%${k}%`));
-        qb.andWhere(`(${ors})`, params);
+        const ors = ['a.category = :category'];
+        const params: Record<string, string> = { category };
+        keywords.forEach((k, i) => {
+          ors.push(`LOWER(a.name) LIKE LOWER(:catkw${i})`);
+          params[`catkw${i}`] = `%${k}%`;
+        });
+        qb.andWhere(`(${ors.join(' OR ')})`, params);
       } else {
         qb.andWhere('a.category = :category', { category });
       }

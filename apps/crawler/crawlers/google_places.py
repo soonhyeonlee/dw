@@ -68,10 +68,42 @@ SEARCH_AREAS = [
     {'region': '울산 남구',     'lat': 35.5388, 'lng': 129.3309, 'radius': 5000},
 ]
 
+# keyword = 구글 Places 검색어, category = academies.category 에 저장(모바일 칩/백엔드
+# ACADEMY_CATEGORY_KEYWORDS 키와 동일해야 필터가 맞물림). 넓은 '학원'은 첫 타깃으로 두고,
+# 세분 키워드가 같은 place 를 더 구체적 category 로 덮어쓴다(repository UPSERT 의 CASE).
 SEARCH_TARGETS = [
+    # 넓은 분류
     {'keyword': '학원',     'category': '학원'},
     {'keyword': '어린이집', 'category': '어린이집'},
     {'keyword': '유치원',   'category': '유치원'},
+    # 격투/무술
+    {'keyword': '복싱',        'category': '복싱'},
+    {'keyword': '킥복싱',      'category': '킥복싱'},
+    {'keyword': '주짓수',      'category': '주짓수'},
+    {'keyword': '종합격투기',  'category': 'MMA'},
+    {'keyword': '합기도',      'category': '합기도'},
+    {'keyword': '유도',        'category': '유도'},
+    {'keyword': '태권도',      'category': '태권도'},
+    {'keyword': '검도',        'category': '검도'},
+    # 헬스/피트니스
+    {'keyword': '헬스장',      'category': '헬스클럽'},
+    {'keyword': '크로스핏',    'category': '크로스핏'},
+    {'keyword': 'PT 퍼스널트레이닝', 'category': 'PT샵'},
+    {'keyword': '필라테스',    'category': '필라테스'},
+    {'keyword': '요가',        'category': '요가'},
+    {'keyword': '수영장',      'category': '수영'},
+    {'keyword': '골프연습장',  'category': '골프'},
+    # 교과
+    {'keyword': '영어학원',    'category': '영어'},
+    {'keyword': '수학학원',    'category': '수학'},
+    {'keyword': '논술학원',    'category': '논술'},
+    {'keyword': '과학학원',    'category': '과학'},
+    {'keyword': '코딩학원',    'category': '코딩'},
+    # 예체능
+    {'keyword': '피아노학원',  'category': '피아노'},
+    {'keyword': '미술학원',    'category': '미술'},
+    {'keyword': '음악학원',    'category': '음악'},
+    {'keyword': '발레학원',    'category': '무용'},
 ]
 
 
@@ -154,6 +186,7 @@ class GooglePlacesCrawler:
                     places = fetch_nearby(
                         self.api_key, area['lat'], area['lng'],
                         area['radius'], target['keyword'],
+                        max_pages=2,  # 지역×카테고리당 최대 40건. 비용/시간 균형.
                     )
                     rows = [normalize(area, target, p) for p in places if p.get('place_id')]
                     saved = save_academies(rows)

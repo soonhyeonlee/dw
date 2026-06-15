@@ -100,6 +100,12 @@ INSERT INTO academies (
 )
 ON CONFLICT ("googlePlaceId") DO UPDATE SET
     name = EXCLUDED.name,
+    -- 세분 카테고리 보존: 들어온 값이 넓은 '학원'이고 기존이 이미 더 구체적이면 기존 유지.
+    category = CASE
+        WHEN EXCLUDED.category = '학원' AND academies.category NOT IN ('', '학원')
+        THEN academies.category
+        ELSE EXCLUDED.category
+    END,
     address = EXCLUDED.address,
     phone = EXCLUDED.phone,
     region = EXCLUDED.region,

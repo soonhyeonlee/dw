@@ -15,6 +15,7 @@ import { MarketModule } from './market/market.module';
 import { RegionModule } from './region/region.module';
 import { SyncModule } from './sync/sync.module';
 import { BannersModule } from './banners/banners.module';
+import { AffiliateModule } from './affiliate/affiliate.module';
 import { CommonModule } from './common/common.module';
 import { AppController } from './app.controller';
 
@@ -68,6 +69,7 @@ import { AppController } from './app.controller';
     RegionModule,
     SyncModule,
     BannersModule,
+    AffiliateModule,
   ],
   controllers: [AppController],
   providers: [

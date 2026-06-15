@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as crypto from 'crypto';
 import { Product } from './entities/product.entity';
 import { ClickLog } from './entities/click-log.entity';
 import { Wishlist } from './entities/wishlist.entity';
 import { MallWishlist } from './entities/mall-wishlist.entity';
 import { Mall } from '../blocks/entities/mall.entity';
+import { CoupangPartnersService } from '../affiliate/coupang-partners.service';
 
 @Injectable()
 export class ProductsService {
@@ -20,6 +22,7 @@ export class ProductsService {
     private readonly mallWishlistRepo: Repository<MallWishlist>,
     @InjectRepository(Mall)
     private readonly mallRepo: Repository<Mall>,
+    private readonly coupang: CoupangPartnersService,
   ) {}
 
   async findAll(query: {
@@ -149,11 +152,29 @@ export class ProductsService {
 
   async logClick(userId: string, productId: string): Promise<ClickLog> {
     const product = await this.findById(productId);
+
+    // 클릭별 고유 추적 토큰 — 제휴사 전환 리포트의 subId 로 되돌아온다.
+    const trackingId = crypto.randomBytes(10).toString('hex'); // 20 chars
+
+    let affiliateUrl = product.affiliateUrl || product.productUrl;
+
+    // 쿠팡 + 키 설정됨 → 유저별 subId(=trackingId) 추적 딥링크 생성.
+    if (
+      (product.platform || '').toLowerCase() === 'coupang' &&
+      this.coupang.isEnabled()
+    ) {
+      const target = product.productUrl || product.affiliateUrl;
+      if (target) {
+        affiliateUrl = await this.coupang.generateDeeplink(target, trackingId);
+      }
+    }
+
     const log = this.clickLogRepo.create({
       userId,
       productId,
       platform: product.platform,
-      affiliateUrl: product.affiliateUrl || product.productUrl,
+      affiliateUrl,
+      trackingId,
     });
     return this.clickLogRepo.save(log);
   }

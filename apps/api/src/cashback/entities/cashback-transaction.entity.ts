@@ -24,6 +24,10 @@ export class CashbackTransaction {
   @Column()
   platform: string;
 
+  // 제휴사 주문 식별자 (쿠팡 orderId 등). 리포트 재수집 시 중복 적립 방지용.
+  @Column({ nullable: true, unique: true })
+  externalOrderId: string;
+
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   orderAmount: number;
 

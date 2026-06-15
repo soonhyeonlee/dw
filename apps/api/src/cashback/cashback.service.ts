@@ -72,6 +72,58 @@ export class CashbackService {
     await this.txRepo.update(txId, { status: 'cancelled' });
   }
 
+  /**
+   * 제휴사 전환 리포트에서 확인된 1건의 구매를 멱등하게 적립한다.
+   * externalOrderId 로 중복 수집을 방지하고, 적립 금액(cashbackAmount)은
+   * 호출부(약속된 캐시백률)에서 계산해 그대로 넣는다.
+   */
+  async recordConversion(data: {
+    userId: string;
+    productId?: string;
+    platform: string;
+    orderAmount: number;
+    commissionAmount: number;
+    cashbackAmount: number;
+    externalOrderId: string;
+  }): Promise<{ created: boolean; txId?: string }> {
+    const existing = await this.txRepo.findOne({
+      where: { externalOrderId: data.externalOrderId },
+    });
+    if (existing) return { created: false, txId: existing.id };
+
+    const tx = this.txRepo.create({ ...data, status: 'pending' });
+    try {
+      await this.txRepo.save(tx);
+    } catch (e) {
+      // unique(externalOrderId) 동시성 충돌 → 이미 적립된 것으로 간주
+      return { created: false };
+    }
+    await this.confirmTransaction(tx.id);
+    return { created: true, txId: tx.id };
+  }
+
+  /** 제휴사 취소 리포트로 적립을 취소(차감) 처리 */
+  async cancelByExternalOrder(externalOrderId: string): Promise<boolean> {
+    const tx = await this.txRepo.findOne({ where: { externalOrderId } });
+    if (!tx || tx.status === 'cancelled') return false;
+
+    // 이미 적립(paid)된 건은 잔액/포인트를 차감 후 취소 상태로.
+    if (tx.status === 'paid') {
+      const isMarket = ['ihomemarket', 'market'].includes(
+        (tx.platform || '').toLowerCase(),
+      );
+      const amount = Number(tx.cashbackAmount);
+      if (isMarket) {
+        await this.usersService.spendMarketPoint(tx.userId, amount);
+      } else {
+        await this.usersService.deductBalance(tx.userId, amount);
+      }
+    }
+    tx.status = 'cancelled';
+    await this.txRepo.save(tx);
+    return true;
+  }
+
   async getUserTransactions(userId: string, page = 1, limit = 20) {
     const [items, total] = await this.txRepo.findAndCount({
       where: { userId },

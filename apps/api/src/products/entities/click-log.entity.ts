@@ -29,6 +29,11 @@ export class ClickLog {
   @Column()
   affiliateUrl: string;
 
+  // 제휴사 전환 리포트의 subId 와 매칭되는 클릭 추적 토큰(유저별 식별).
+  @Column({ nullable: true })
+  @Index()
+  trackingId: string;
+
   @Column({ default: false })
   purchaseConfirmed: boolean;
 

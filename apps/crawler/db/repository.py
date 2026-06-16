@@ -90,12 +90,12 @@ ACADEMY_UPSERT_SQL = """
 INSERT INTO academies (
     name, category, address, phone, region,
     latitude, longitude, "googlePlaceId", source,
-    rating, "reviewCount", photos,
+    rating, "reviewCount", photos, "photoRefs",
     "isActive", "createdAt", "updatedAt"
 ) VALUES (
     %(name)s, %(category)s, %(address)s, %(phone)s, %(region)s,
     %(latitude)s, %(longitude)s, %(google_place_id)s, 'google_maps',
-    %(rating)s, %(review_count)s, %(photos)s::json,
+    %(rating)s, %(review_count)s, %(photos)s::json, %(photo_refs)s::json,
     true, NOW(), NOW()
 )
 ON CONFLICT ("googlePlaceId") DO UPDATE SET
@@ -113,7 +113,12 @@ ON CONFLICT ("googlePlaceId") DO UPDATE SET
     longitude = EXCLUDED.longitude,
     rating = EXCLUDED.rating,
     "reviewCount" = EXCLUDED."reviewCount",
-    photos = EXCLUDED.photos,
+    -- 이미 Place Details 로 보강된(enrichedAt) 건의 사진 ref 는 더 풍부하므로 보존,
+    -- 미보강 건만 Nearby 의 photo_reference 로 채운다.
+    "photoRefs" = CASE
+        WHEN academies."enrichedAt" IS NULL THEN EXCLUDED."photoRefs"
+        ELSE academies."photoRefs"
+    END,
     "updatedAt" = NOW()
 """
 
@@ -142,6 +147,7 @@ def save_academies(academies: list[dict]) -> int:
                 'rating': a.get('rating'),
                 'review_count': a.get('review_count') or 0,
                 'photos': json.dumps(a.get('photos') or []),
+                'photo_refs': json.dumps(a.get('photo_refs') or []),
             }
             try:
                 cur.execute(ACADEMY_UPSERT_SQL, params)

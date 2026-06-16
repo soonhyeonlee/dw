@@ -147,18 +147,26 @@ def normalize(area: dict, target: dict, place: dict) -> dict:
     """Google Place 객체 → academies row dict."""
     pid = place.get('place_id')
     loc = (place.get('geometry') or {}).get('location') or {}
+    # Nearby 응답에 무료로 photo_reference 가 포함됨 → 최대 3개 저장.
+    # API 가 이걸로 사진 프록시 URL(/region/academies/:id/photo/:idx)을 만들어 목록 썸네일에 노출.
+    photo_refs = [
+        p.get('photo_reference')
+        for p in (place.get('photos') or [])
+        if p.get('photo_reference')
+    ][:3]
     return {
         'name': place.get('name', ''),
         'category': target['category'],
         'address': place.get('vicinity', '') or place.get('formatted_address', ''),
-        'phone': '',  # Nearby 결과엔 없음. 필요시 Place Details 별도 호출
+        'phone': '',  # Nearby 결과엔 없음. Place Details 보강(상세 진입 시) 때 채움
         'region': area['region'],
         'latitude': loc.get('lat'),
         'longitude': loc.get('lng'),
         'google_place_id': pid,
         'rating': place.get('rating'),
         'review_count': place.get('user_ratings_total') or 0,
-        'photos': [],  # Photo reference → 실제 URL 변환은 별도 API 필요. 추후 추가
+        'photos': [],  # 프록시 URL 은 id 가 있어야 해서 API 응답 시점에 photoRefs 로부터 생성
+        'photo_refs': photo_refs,
     }
 
 

@@ -81,6 +81,17 @@ export class RegionService {
     return this.config.get<string>('PUBLIC_API_URL', 'https://api-dev.sumbodyweb.com').replace(/\/+$/, '');
   }
 
+  /**
+   * photos 가 비어있지만 photoRefs(크롤러가 Nearby 에서 수집)가 있으면 사진 프록시 URL 을 생성한다.
+   * → 상세를 한 번도 안 본(미보강) 학원도 목록 썸네일/히어로 사진이 바로 뜬다.
+   */
+  private fillPhotos<T extends Academy>(a: T): T {
+    if (a && (!a.photos || a.photos.length === 0) && a.photoRefs && a.photoRefs.length) {
+      a.photos = a.photoRefs.map((_, i) => `${this.publicApiUrl}/region/academies/${a.id}/photo/${i}`);
+    }
+    return a;
+  }
+
   // === 학원 ===
 
   async getAcademies(opts: {
@@ -145,7 +156,7 @@ export class RegionService {
         .sort((x, y) => x.distanceKm - y.distanceKm);
 
       const total = withDist.length;
-      const items = withDist.slice((page - 1) * limit, page * limit);
+      const items = withDist.slice((page - 1) * limit, page * limit).map((a) => this.fillPhotos(a));
       return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
     }
 
@@ -159,7 +170,7 @@ export class RegionService {
     }
     qb.skip((page - 1) * limit).take(limit);
     const [items, total] = await qb.getManyAndCount();
-    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+    return { items: items.map((a) => this.fillPhotos(a)), total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async getAcademy(id: string) {
@@ -174,13 +185,13 @@ export class RegionService {
       try {
         await this.enrichAcademy(academy);
         const fresh = await this.academyRepo.findOne({ where: { id } });
-        if (fresh) return fresh;
+        if (fresh) return this.fillPhotos(fresh);
       } catch (e) {
         this.logger.warn(`학원 보강 실패 (${academy.name}): ${(e as Error).message}`);
       }
     }
 
-    return academy;
+    return this.fillPhotos(academy);
   }
 
   // === Google Places / YouTube 보강 ===

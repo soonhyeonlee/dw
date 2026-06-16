@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useCallback, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import {
   View,
   Text,
@@ -197,7 +197,8 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const coordsRef = useRef<{ lat: number; lng: number } | null>(null);
+  const [nearArea, setNearArea] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
 
   // 검색어는 입력 즉시가 아니라 디바운스 후 서버에 질의(전체 DB 검색).
@@ -228,8 +229,24 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
         return null;
       }
       const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      setCoords(next);
+      coordsRef.current = next;
       setLocationError(null);
+      // 어느 지역 기준인지 사용자에게 보여줘 "엉뚱한 곳" 오해를 줄인다(역지오코딩).
+      try {
+        const places = await Location.reverseGeocodeAsync({
+          latitude: next.lat,
+          longitude: next.lng,
+        });
+        const g = places?.[0];
+        if (g) {
+          const label = [g.region, g.city, g.district || g.subregion]
+            .filter(Boolean)
+            .join(' ');
+          setNearArea(label || g.name || null);
+        }
+      } catch {
+        // 역지오코딩 실패해도 좌표 기반 조회는 정상 동작
+      }
       return next;
     } catch {
       setLocationError('현재 위치를 확인할 수 없어요. 기기의 위치 서비스를 켜고 다시 시도해 주세요.');
@@ -260,8 +277,9 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      let geo = coords;
-      if (scope === 'nearby' && !geo) geo = await ensureLocation();
+      // 내 주변은 매번 현재 위치를 새로 취득(이전에 캐시된 엉뚱한 좌표 재사용 방지).
+      const geo = scope === 'nearby' ? await ensureLocation() : null;
+      coordsRef.current = geo;
       const [ac, cp] = await Promise.all([
         getAcademies(buildOpts(1, geo)).catch(() => null),
         getCoupons().catch(() => ({ items: [] as Coupon[] })),
@@ -274,14 +292,14 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
     } finally {
       setLoading(false);
     }
-  }, [scope, coords, buildOpts, ensureLocation]);
+  }, [scope, buildOpts, ensureLocation]);
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
     try {
       const next = page + 1;
-      const ac = await getAcademies(buildOpts(next, coords)).catch(() => null);
+      const ac = await getAcademies(buildOpts(next, coordsRef.current)).catch(() => null);
       if (ac?.items?.length) {
         setAcademies((prev) => [...prev, ...(ac.items as Academy[])]);
         setPage(next);
@@ -292,7 +310,7 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
     } finally {
       setLoadingMore(false);
     }
-  }, [loadingMore, hasMore, page, buildOpts, coords]);
+  }, [loadingMore, hasMore, page, buildOpts]);
 
   useEffect(() => {
     loadData();
@@ -398,6 +416,13 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
             <View style={styles.locWarn}>
               <Ionicons name="alert-circle" size={14} color={COLORS.error} />
               <Text style={styles.locWarnText} numberOfLines={2}>{locationError}</Text>
+            </View>
+          ) : scope === 'nearby' && nearArea ? (
+            <View style={styles.nearInfo}>
+              <Ionicons name="location" size={13} color={QM.coral} />
+              <Text style={styles.nearInfoText} numberOfLines={1}>
+                현재 위치 <Text style={styles.nearInfoStrong}>{nearArea}</Text> 기준 반경 {NEARBY_RADIUS_KM}km
+              </Text>
             </View>
           ) : null}
 
@@ -573,6 +598,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 8,
   },
   locWarnText: { flex: 1, fontSize: 12, color: COLORS.error, fontWeight: '600' },
+
+  nearInfo: {
+    marginHorizontal: SPACING.xl,
+    marginTop: 8,
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+  },
+  nearInfoText: { flex: 1, fontSize: 12, color: COLORS.ink[600] },
+  nearInfoStrong: { color: QM.coral, fontWeight: '700' },
 
   searchBar: {
     marginHorizontal: SPACING.xl,

@@ -86,6 +86,15 @@ function openUrl(url?: string) {
   Linking.openURL(url).catch(() => Alert.alert('열기 실패', '링크를 열 수 없습니다.'));
 }
 
+// 유튜브 URL → 영상 ID. youtu.be/ID, watch?v=ID, /embed/ID, /shorts/ID, /live/ID 지원.
+function youtubeId(url?: string): string | null {
+  if (!url) return null;
+  const m = url.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/i,
+  );
+  return m ? m[1] : null;
+}
+
 function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
   return (
     <View style={{ flexDirection: 'row', gap: 1 }}>
@@ -229,6 +238,10 @@ export default function AcademyDetailScreen() {
   const hours = academy.businessHours && academy.businessHours.length ? academy.businessHours : null;
   const gReviews = academy.googleReviews && academy.googleReviews.length ? academy.googleReviews : null;
   const videos = academy.videos && academy.videos.length ? academy.videos : [];
+  // 어드민이 등록한 유튜브 영상(링크 → 영상 ID/썸네일). 유효한 유튜브 링크만 노출.
+  const adminVideos = (academy.adminVideos || [])
+    .map((v) => ({ ...v, vid: youtubeId(v.url) }))
+    .filter((v): v is { url: string; title?: string; vid: string } => !!v.vid);
   const introText =
     academy.description && academy.description.trim()
       ? academy.description
@@ -411,6 +424,42 @@ export default function AcademyDetailScreen() {
 
         {tab === 'info' && (
           <View style={styles.section}>
+            {/* 어드민이 등록한 유튜브 영상 — 소개 위에 최우선 노출 */}
+            {adminVideos.length ? (
+              <View style={{ marginBottom: 24 }}>
+                <Text style={styles.sectionTitle}>영상</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={{ marginTop: 4 }}
+                  contentContainerStyle={{ gap: 12, paddingRight: 8 }}
+                >
+                  {adminVideos.map((v, i) => (
+                    <TouchableOpacity
+                      key={`${v.vid}-${i}`}
+                      style={styles.videoCard}
+                      activeOpacity={0.85}
+                      onPress={() => openUrl(`https://www.youtube.com/watch?v=${v.vid}`)}
+                    >
+                      <View style={styles.videoThumbWrap}>
+                        <Image
+                          source={{ uri: `https://img.youtube.com/vi/${v.vid}/mqdefault.jpg` }}
+                          style={styles.videoThumb}
+                          resizeMode="cover"
+                        />
+                        <View style={styles.videoPlay}>
+                          <Ionicons name="play" size={18} color="#FFFFFF" />
+                        </View>
+                      </View>
+                      {v.title ? (
+                        <Text style={styles.videoTitle} numberOfLines={2}>{v.title}</Text>
+                      ) : null}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            ) : null}
+
             <Text style={styles.sectionTitle}>소개</Text>
             <Text style={styles.bodyText}>{introText}</Text>
 

@@ -39,3 +39,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# play store deploy secrets & local artifacts
+_secrets/
+*play-service-account*.json
+/_store
+/_qa

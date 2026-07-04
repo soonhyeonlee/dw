@@ -36,7 +36,8 @@ const CATEGORIES = [
   '피아노', '미술', '음악', '무용',
 ];
 const NEARBY_RADIUS_KM = 5;
-const PAGE_SIZE = 20;
+// 한 번에 적게 불러와 첫 화면을 빠르게 그리고(거리뷰 썸네일 동시 로드도 분산), 나머지는 무한 스크롤로 이어붙인다.
+const PAGE_SIZE = 10;
 
 // 쿠폰북은 제휴 쿠폰 데이터/기능이 준비되면 true 로. 그 전까지 '준비 중' 안내만 노출.
 // (학원정보 탭은 Google Places 데이터 수집 완료로 2026-06-11 부터 활성.)
@@ -180,6 +181,8 @@ function AcademyCard({ a, onPress }: { a: Academy; onPress: () => void }) {
 
 export type RegionContentHandle = {
   reload: () => Promise<void>;
+  /** 부모 스크롤뷰가 바닥 근처에서 호출 → 다음 페이지 이어붙이기(무한 스크롤). 내부에서 중복/끝 가드. */
+  loadMore: () => void;
 };
 
 export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
@@ -198,6 +201,7 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
   const [hasMore, setHasMore] = useState(false);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const coordsRef = useRef<{ lat: number; lng: number } | null>(null);
+  const loadMoreLock = useRef(false);
   const [nearArea, setNearArea] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
 
@@ -216,13 +220,21 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
         setLocationError('위치 권한이 거부되어 가까운 학원을 표시할 수 없어요.');
         return null;
       }
-      // 현재 위치를 우선 취득(높은 정확도). 실패 시에만 마지막 알려진 위치로 폴백.
-      // last-known 을 먼저 쓰면 다른 지역의 오래된 좌표가 잡혀 "내 주변"이 엉뚱하게 나온다.
+      // 속도 우선: ① 최근(2분 이내·1km 이내 정확도) 캐시 위치가 있으면 즉시 사용 → 측위 대기 0.
+      //   2분이면 5km 반경 기준 "엉뚱한 지역"이 될 만큼 이동하지 않아 안전.
+      // ② 없으면 Balanced 정확도로 현재 위치 취득(High 는 GPS 정밀 fix 를 기다려 수 초 걸림 → Balanced 가 훨씬 빠르고 5km 반경엔 충분).
       let pos: Location.LocationObject | null = null;
       try {
-        pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+        pos = await Location.getLastKnownPositionAsync({ maxAge: 120000, requiredAccuracy: 1000 });
       } catch {
-        pos = await Location.getLastKnownPositionAsync();
+        pos = null;
+      }
+      if (!pos) {
+        try {
+          pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        } catch {
+          pos = await Location.getLastKnownPositionAsync();
+        }
       }
       if (!pos) {
         setLocationError('현재 위치를 확인할 수 없어요. 기기의 위치 서비스를 켜고 다시 시도해 주세요.');
@@ -295,7 +307,9 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
   }, [scope, buildOpts, ensureLocation]);
 
   const loadMore = useCallback(async () => {
-    if (loadingMore || !hasMore) return;
+    // 무한 스크롤은 한 프레임에 여러 번 호출될 수 있어, state(비동기) 대신 ref 로 즉시 잠가 중복 페치 방지.
+    if (loadMoreLock.current || !hasMore) return;
+    loadMoreLock.current = true;
     setLoadingMore(true);
     try {
       const next = page + 1;
@@ -308,14 +322,15 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
         setHasMore(false);
       }
     } finally {
+      loadMoreLock.current = false;
       setLoadingMore(false);
     }
-  }, [loadingMore, hasMore, page, buildOpts]);
+  }, [hasMore, page, buildOpts]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
-  useImperativeHandle(ref, () => ({ reload: loadData }), [loadData]);
+  useImperativeHandle(ref, () => ({ reload: loadData, loadMore }), [loadData, loadMore]);
 
   const hasFilter = kwDebounced.length > 0 || category !== '전체';
   const sortLabel = SORT_OPTIONS.find((o) => o.key === sort)?.label ?? '인기순';
@@ -378,9 +393,9 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
             subtitle={'지역 제휴처의 특별 쿠폰을\n곧 선보일 예정이에요.'}
           />
         </View>
-      ) : loading ? (
-        <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 80 }} />
       ) : tab === 'academies' ? (
+        // 검색바·필터는 항상 마운트 유지(재검색 중 TextInput 언마운트로 키보드 내려가는 문제 방지).
+        // 로딩 스피너는 리스트 영역만 교체한다.
         <>
           {/* 전체 / 가까운 지역 토글 */}
           <View style={styles.scopeRow}>
@@ -468,7 +483,9 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
             </TouchableOpacity>
           </View>
 
-          {academies.length === 0 ? (
+          {loading ? (
+            <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 60 }} />
+          ) : academies.length === 0 ? (
             hasFilter ? (
               <EmptyState
                 icon="search-outline"
@@ -495,6 +512,8 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
               {academies.map((a) => (
                 <AcademyCard key={a.id} a={a} onPress={() => router.push(`/region/${a.id}` as any)} />
               ))}
+              {/* 무한 스크롤: 부모 스크롤뷰가 바닥 근처에서 loadMore 를 호출해 자동으로 이어붙인다.
+                  로딩 중에는 스피너, 끝에 도달하면 전체 건수 안내. (스피너 영역 탭으로도 수동 로드 가능) */}
               {hasMore ? (
                 <TouchableOpacity
                   style={styles.moreBtn}
@@ -502,15 +521,11 @@ export const RegionContent = forwardRef<RegionContentHandle>((_props, ref) => {
                   disabled={loadingMore}
                   activeOpacity={0.8}
                 >
-                  {loadingMore ? (
-                    <ActivityIndicator size="small" color={QM.coral} />
-                  ) : (
-                    <>
-                      <Text style={styles.moreBtnText}>더보기 ({academies.length}/{total})</Text>
-                      <Ionicons name="chevron-down" size={16} color={QM.coral} />
-                    </>
-                  )}
+                  <ActivityIndicator size="small" color={QM.coral} />
+                  <Text style={styles.moreBtnText}>불러오는 중 ({academies.length}/{total})</Text>
                 </TouchableOpacity>
+              ) : academies.length > 0 ? (
+                <Text style={styles.listEndText}>전체 {total}개를 모두 불러왔어요</Text>
               ) : null}
             </View>
           )}
@@ -657,6 +672,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   moreBtnText: { fontSize: 14, fontWeight: '700', color: QM.coral },
+  listEndText: {
+    textAlign: 'center',
+    paddingVertical: 16,
+    fontSize: 12,
+    color: COLORS.ink[400],
+  },
 
   couponHero: {
     marginHorizontal: SPACING.xl,

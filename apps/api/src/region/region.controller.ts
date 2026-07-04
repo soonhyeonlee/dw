@@ -69,6 +69,26 @@ export class RegionController {
     res.redirect(302, url);
   }
 
+  // 거리뷰 프록시: 사진 없는 업체를 그 업체 위치의 Google Street View 사진으로 채운다.
+  // (없으면 관련 유튜브 영상 썸네일로 302) — 키가 IP 제한이라 서버에서만 호출 가능해 바이트 스트리밍.
+  @Get('academies/:id/streetview')
+  async academyStreetView(@Param('id') id: string, @Res() res: Response) {
+    const r = await this.regionService.resolveStreetView(id);
+    if (!r) {
+      res.status(404).send();
+      return;
+    }
+    if (r.redirect) {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.redirect(302, r.redirect);
+      return;
+    }
+    // 거리뷰 이미지는 자주 안 바뀌므로 길게 캐시(CloudFront/클라이언트). 비용도 절감.
+    res.setHeader('Content-Type', r.contentType || 'image/jpeg');
+    res.setHeader('Cache-Control', 'public, max-age=604800');
+    res.send(r.body);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('academies/:id/heart')
   async toggleHeart(@Param('id') id: string, @Body('increment') increment: boolean) {

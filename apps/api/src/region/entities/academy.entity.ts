@@ -83,6 +83,11 @@ export class Academy {
   @Column({ type: 'simple-json', nullable: true })
   videos: { id: string; title: string; thumbnail: string; channel?: string }[];
 
+  // 어드민이 수동 등록한 유튜브 영상/링크. 상세 '학원 정보' 탭 최상단(소개 위)에 노출.
+  // 자동 수집(videos)과 별개로 운영자가 직접 큐레이션. url 만 필수, title 은 선택.
+  @Column({ type: 'simple-json', nullable: true })
+  adminVideos: { url: string; title?: string }[];
+
   // Google 보강을 수행한 시각 (null이면 미보강 → 상세 진입 시 1회 보강)
   @Column({ type: 'timestamp', nullable: true })
   enrichedAt: Date | null;

@@ -86,10 +86,58 @@ export class RegionService {
    * → 상세를 한 번도 안 본(미보강) 학원도 목록 썸네일/히어로 사진이 바로 뜬다.
    */
   private fillPhotos<T extends Academy>(a: T): T {
-    if (a && (!a.photos || a.photos.length === 0) && a.photoRefs && a.photoRefs.length) {
+    if (!a) return a;
+    if ((!a.photos || a.photos.length === 0) && a.photoRefs && a.photoRefs.length) {
       a.photos = a.photoRefs.map((_, i) => `${this.publicApiUrl}/region/academies/${a.id}/photo/${i}`);
     }
+    // 구글 사진이 전혀 없으면 "그 업체와 실제로 관련된" 이미지로 채운다(랜덤 스톡 금지):
+    // streetview 프록시가 ① 업체 좌표의 구글 거리뷰 사진 → ② 없으면 관련 유튜브 영상 썸네일 순으로 해결.
+    if (!a.photos || a.photos.length === 0) {
+      const hasGeo = a.latitude != null && a.longitude != null;
+      const hasVideo = !!a.videos?.some((v) => v?.thumbnail);
+      if (hasGeo || hasVideo) {
+        a.photos = [`${this.publicApiUrl}/region/academies/${a.id}/streetview`];
+      }
+    }
     return a;
+  }
+
+  /**
+   * 사진 없는 업체용 "관련 실이미지" 프록시.
+   * ① 업체 좌표의 Google Street View Static(IP 제한 키, 서버에서만 호출) 이미지를 그대로 스트리밍.
+   *    - 먼저 metadata(무료) 로 해당 좌표에 거리뷰가 있는지 확인 → '이미지 없음' 회색판에 과금 방지.
+   * ② 거리뷰가 없으면 보강된 관련 유튜브 영상 썸네일로 302 리다이렉트.
+   * 둘 다 없으면 null → 컨트롤러가 404(앱은 기본 플레이스홀더 표시).
+   */
+  async resolveStreetView(
+    id: string,
+  ): Promise<{ body?: Buffer; contentType?: string; redirect?: string } | null> {
+    const a = await this.academyRepo.findOne({
+      where: { id },
+      select: ['id', 'latitude', 'longitude', 'videos'],
+    });
+    if (!a) return null;
+
+    if (this.placesKey && a.latitude != null && a.longitude != null) {
+      const loc = `${a.latitude},${a.longitude}`;
+      try {
+        // 단일 호출: return_error_code=true → 거리뷰가 없으면 404(이미지 과금X)·있으면 바로 이미지.
+        // metadata 사전 확인을 없애 왕복 1회로 줄여 지연을 절반으로(목록 20장 동시 로드 체감 개선).
+        const imgRes = await fetch(
+          `https://maps.googleapis.com/maps/api/streetview?size=640x400&location=${loc}&radius=80&fov=80&source=outdoor&return_error_code=true&key=${this.placesKey}`,
+        );
+        if (imgRes.ok) {
+          const body = Buffer.from(await imgRes.arrayBuffer());
+          return { body, contentType: imgRes.headers.get('content-type') || 'image/jpeg' };
+        }
+      } catch (e) {
+        this.logger.warn(`StreetView 실패 (${id}): ${(e as Error).message}`);
+      }
+    }
+
+    const vid = a.videos?.find((v) => v?.thumbnail)?.thumbnail;
+    if (vid) return { redirect: vid };
+    return null;
   }
 
   // === 학원 ===
@@ -483,7 +531,27 @@ export class RegionService {
     return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
+  // 어드민이 보낸 유튜브 영상 입력을 [{url, title?}] 로 정규화(문자열 배열/객체 배열 모두 허용, 빈 값 제거).
+  private normalizeAdminVideos(input: any): { url: string; title?: string }[] | undefined {
+    if (input == null) return undefined;
+    const arr = Array.isArray(input) ? input : [input];
+    const out = arr
+      .map((v) => {
+        if (typeof v === 'string') return { url: v.trim() };
+        if (v && typeof v === 'object' && typeof v.url === 'string') {
+          const title = typeof v.title === 'string' && v.title.trim() ? v.title.trim() : undefined;
+          return { url: v.url.trim(), ...(title ? { title } : {}) };
+        }
+        return null;
+      })
+      .filter((v): v is { url: string; title?: string } => !!v && /^https?:\/\//i.test(v.url))
+      .slice(0, 10);
+    return out;
+  }
+
   async adminCreateAcademy(data: Partial<Academy>): Promise<Academy> {
+    const normalized = this.normalizeAdminVideos((data as any).adminVideos);
+    if (normalized !== undefined) (data as any).adminVideos = normalized;
     const academy = this.academyRepo.create(data);
     return this.academyRepo.save(academy);
   }
@@ -492,6 +560,7 @@ export class RegionService {
     const academy = await this.academyRepo.findOne({ where: { id } });
     if (!academy) throw new NotFoundException('학원 정보를 찾을 수 없습니다');
     const { id: _i, createdAt: _c, updatedAt: _u, ...patch } = data as any;
+    if ('adminVideos' in patch) patch.adminVideos = this.normalizeAdminVideos(patch.adminVideos) ?? [];
     await this.academyRepo.update(id, patch);
     return this.academyRepo.findOne({ where: { id } }) as Promise<Academy>;
   }

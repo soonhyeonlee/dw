@@ -7,6 +7,7 @@ import { getToken, clearToken } from '@/lib/api';
 const NAV_ITEMS = [
   { href: '/dashboard', label: '대시보드', icon: '📊' },
   { href: '/dashboard/banners', label: '배너 관리', icon: '🖼️' },
+  { href: '/dashboard/malls', label: '쇼핑몰 관리', icon: '🏬' },
   { href: '/dashboard/products', label: '상품 관리', icon: '🛍️' },
   { href: '/dashboard/academies', label: '학원 관리', icon: '🏫' },
   { href: '/dashboard/coupons', label: '쿠폰 관리', icon: '🎟️' },

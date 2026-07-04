@@ -18,6 +18,7 @@ interface Academy {
   notice?: string;
   parking?: string;
   sns?: { kakao?: string; instagram?: string; facebook?: string; band?: string };
+  adminVideos?: { url: string; title?: string }[];
   rating?: number;
   reviewCount?: number;
   viewCount?: number;
@@ -40,6 +41,7 @@ const emptyForm = {
   notice: '',
   parking: '',
   photos: '',
+  youtubeVideos: '',
   tags: '',
   snsKakao: '',
   snsInstagram: '',
@@ -103,6 +105,9 @@ export default function AcademiesPage() {
       notice: a.notice || '',
       parking: a.parking || '',
       photos: (a.photos || []).join('\n'),
+      youtubeVideos: (a.adminVideos || [])
+        .map((v) => (v.title ? `${v.url} | ${v.title}` : v.url))
+        .join('\n'),
       tags: (a.tags || []).join(', '),
       snsKakao: a.sns?.kakao || '',
       snsInstagram: a.sns?.instagram || '',
@@ -123,6 +128,17 @@ export default function AcademiesPage() {
     }
     const photos = form.photos.split('\n').map((s) => s.trim()).filter(Boolean);
     const tags = form.tags.split(',').map((s) => s.trim()).filter(Boolean);
+    // 유튜브 영상: 한 줄에 하나, "링크" 또는 "링크 | 제목" 형식.
+    const adminVideos = form.youtubeVideos
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const [url, ...rest] = line.split('|');
+        const title = rest.join('|').trim();
+        return title ? { url: url.trim(), title } : { url: url.trim() };
+      })
+      .filter((v) => /^https?:\/\//i.test(v.url));
     const sns: Record<string, string> = {};
     if (form.snsKakao.trim()) sns.kakao = form.snsKakao.trim();
     if (form.snsInstagram.trim()) sns.instagram = form.snsInstagram.trim();
@@ -143,6 +159,7 @@ export default function AcademiesPage() {
       photos,
       tags,
       sns: Object.keys(sns).length ? sns : undefined,
+      adminVideos,
       rating: form.rating ? Number(form.rating) : undefined,
       reviewCount: form.reviewCount ? Number(form.reviewCount) : undefined,
       isActive: form.isActive,
@@ -307,6 +324,15 @@ export default function AcademiesPage() {
             </Field>
             <Field label="상세 주소">
               <input type="text" value={form.addressDetail} onChange={(e) => setForm({ ...form, addressDetail: e.target.value })} style={styles.input} />
+            </Field>
+
+            <Field label="유튜브 영상 (한 줄에 하나, 앱 상세 '학원 정보' 최상단에 노출)">
+              <textarea
+                value={form.youtubeVideos}
+                onChange={(e) => setForm({ ...form, youtubeVideos: e.target.value })}
+                style={{ ...styles.input, minHeight: 56 }}
+                placeholder={'https://youtu.be/VIDEO_ID&#10;https://www.youtube.com/watch?v=VIDEO_ID | 제목(선택)'}
+              />
             </Field>
 
             <Field label="소개">

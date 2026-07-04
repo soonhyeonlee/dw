@@ -35,6 +35,7 @@ coverage/
 .next/
 *.apk
 *.xapk
+*.aab
 
 # Android / iOS native build artifacts (huge)
 **/android/build/

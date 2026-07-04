@@ -10,6 +10,8 @@ import {
   Image,
   ActivityIndicator,
   useWindowDimensions,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -21,7 +23,7 @@ import { getProducts, type Product as ApiProduct } from '../../src/api/products'
 import { PromoCarousel, type PromoSlide } from '../../src/components/PromoCarousel';
 import { MallLogo } from '../../src/components/MallLogo';
 import { MarketContent } from '../../src/components/home/MarketContent';
-import { RegionContent } from '../../src/components/home/RegionContent';
+import { RegionContent, type RegionContentHandle } from '../../src/components/home/RegionContent';
 import { getBanners, type ApiBanner } from '../../src/api/banners';
 
 function mallLabel(malls: ApiMall[], platform: string): string {
@@ -148,6 +150,20 @@ export default function HomeScreen() {
   const [homeTab, setHomeTab] = useState<FolderTabKey>('shop');
   const scrollRef = useRef<ScrollView>(null);
   const tabBarYRef = useRef(0);
+  const regionRef = useRef<RegionContentHandle>(null);
+
+  // 무한 스크롤: 우리지역 탭에서 루트 스크롤뷰가 바닥 근처에 오면 다음 페이지를 이어붙인다.
+  // (RegionContent.loadMore 가 중복/끝 가드를 가져 매 프레임 불려도 안전)
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (homeTab !== 'region') return;
+      const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+      if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 700) {
+        regionRef.current?.loadMore();
+      }
+    },
+    [homeTab],
+  );
   const [showAllMalls, setShowAllMalls] = useState(false);
   const [dealProducts, setDealProducts] = useState<ApiProduct[]>([]);
   const [recProducts, setRecProducts] = useState<ApiProduct[]>([]);
@@ -223,6 +239,8 @@ export default function HomeScreen() {
         style={styles.container}
         showsVerticalScrollIndicator={false}
         stickyHeaderIndices={[2]}
+        onScroll={handleScroll}
+        scrollEventThrottle={64}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
         }
@@ -322,7 +340,7 @@ export default function HomeScreen() {
           <MarketContent />
         ) : homeTab === 'region' ? (
           /* 우리지역 탭 — 인라인 콘텐츠 */
-          <RegionContent />
+          <RegionContent ref={regionRef} />
         ) : (
           /* 쇼핑 탭 */
           <>

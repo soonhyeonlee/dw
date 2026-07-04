@@ -31,8 +31,10 @@ export interface Academy {
     relativeTime?: string;
     profilePhoto?: string;
   }[];
-  /** 관련 유튜브 영상 */
+  /** 관련 유튜브 영상 (자동 수집) */
   videos?: { id: string; title: string; thumbnail: string; channel?: string }[];
+  /** 어드민이 수동 등록한 유튜브 영상 (상세 '학원 정보' 최상단에 노출) */
+  adminVideos?: { url: string; title?: string }[];
   rating: number;
   reviewCount: number;
   viewCount: number;

@@ -167,40 +167,50 @@ export default function MarketProductDetail() {
           </View>
         </View>
 
-        {/* Delivery */}
-        <View style={styles.deliveryCard}>
-          <Text style={{ fontSize: 16 }}>🚚</Text>
-          <View style={styles.deliveryInfo}>
-            <Text style={styles.deliveryText}>
-              {product.freeDelivery ? '무료배송' : '배송비 별도'}
-              {product.deliveryInfo ? `  |  ${product.deliveryInfo}` : ''}
-            </Text>
-            {product.producer && (
-              <Text style={styles.deliveryOrigin}>
-                생산자: {product.producer}
-                {product.origin ? `  |  원산지: ${product.origin}` : ''}
-              </Text>
-            )}
-          </View>
+        {/* 상품 정보 — 실제 상세 정보를 항상 노출 */}
+        <View style={styles.detailCard}>
+          <Text style={styles.detailTitle}>상품 정보</Text>
+          <InfoRow label="카테고리" value={product.category} />
+          <InfoRow label="원산지" value={product.origin} />
+          <InfoRow label="생산자" value={product.producer} />
+          <InfoRow
+            label="배송"
+            value={
+              product.freeDelivery
+                ? `무료배송${product.deliveryInfo ? ` · ${product.deliveryInfo}` : ''}`
+                : product.deliveryInfo || '배송비 별도'
+            }
+          />
+          <InfoRow
+            label="재고"
+            value={
+              product.stockQuantity > 0
+                ? product.stockQuantity >= 9999
+                  ? '재고 충분'
+                  : `${product.stockQuantity.toLocaleString()}개 남음`
+                : '품절'
+            }
+            last
+          />
         </View>
 
-        {/* Seller */}
-        <View style={styles.sellerCard}>
-          <View style={styles.sellerIcon}>
-            <Text style={styles.sellerIconText}>D</Text>
-          </View>
-          <View>
-            <Text style={styles.sellerName}>더블원플러스 위탁판매</Text>
-            <Text style={styles.sellerDesc}>더블원플러스가 품질을 보증하는 상품입니다</Text>
-          </View>
-        </View>
-
-        {product.description && (
-          <View style={styles.descSection}>
-            <Text style={styles.descTitle}>상품 설명</Text>
+        {/* 상품 설명 */}
+        <View style={styles.descSection}>
+          <Text style={styles.descTitle}>상품 설명</Text>
+          {product.description ? (
             <Text style={styles.descText}>{product.description}</Text>
-          </View>
-        )}
+          ) : (
+            <Text style={styles.descEmpty}>등록된 상세 설명이 없습니다.</Text>
+          )}
+        </View>
+
+        {/* 판매자 — 신뢰 문구(작게) */}
+        <View style={styles.sellerLine}>
+          <Ionicons name="shield-checkmark" size={14} color={QM.coral} />
+          <Text style={styles.sellerLineText}>
+            더블원플러스가 검수·발송하는 위탁판매 상품입니다
+          </Text>
+        </View>
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -218,6 +228,17 @@ export default function MarketProductDetail() {
           <Text style={styles.buyText}>구매하기</Text>
         </TouchableOpacity>
       </View>
+    </View>
+  );
+}
+
+/** 상품 정보 한 줄. 값이 없으면(원산지/생산자 등) 렌더링하지 않는다. */
+function InfoRow({ label, value, last }: { label: string; value?: string | null; last?: boolean }) {
+  if (!value || !String(value).trim()) return null;
+  return (
+    <View style={[styles.infoRow, last && { borderBottomWidth: 0 }]}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
     </View>
   );
 }
@@ -284,39 +305,47 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: FONT.sizes.xs, color: COLORS.gray[500] },
   statValue: { fontSize: FONT.sizes.sm, fontWeight: '700', color: COLORS.gray[900], marginTop: 4 },
 
-  deliveryCard: {
+  detailCard: {
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    backgroundColor: QM.card,
+    borderRadius: 18,
+    ...QM.cardShadow,
+  },
+  detailTitle: { fontSize: FONT.sizes.md, fontWeight: '800', color: QM.ink, marginTop: SPACING.sm, marginBottom: 4 },
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 11,
+    borderBottomWidth: 1,
+    borderBottomColor: QM.hairline,
+  },
+  infoLabel: { width: 84, fontSize: FONT.sizes.sm, color: COLORS.gray[500], fontWeight: '600' },
+  infoValue: { flex: 1, fontSize: FONT.sizes.sm, color: COLORS.gray[800], fontWeight: '600' },
+
+  descSection: {
     marginHorizontal: SPACING.lg,
     marginTop: SPACING.md,
     padding: SPACING.lg,
     backgroundColor: QM.card,
     borderRadius: 18,
-    gap: SPACING.md,
     ...QM.cardShadow,
   },
-  deliveryInfo: { flex: 1 },
-  deliveryText: { fontSize: FONT.sizes.sm, fontWeight: '600', color: COLORS.gray[700] },
-  deliveryOrigin: { fontSize: FONT.sizes.xs, color: COLORS.gray[500], marginTop: 4 },
+  descTitle: { fontSize: FONT.sizes.md, fontWeight: '800', color: QM.ink, marginBottom: SPACING.sm },
+  descText: { fontSize: FONT.sizes.md, color: COLORS.gray[700], lineHeight: 22 },
+  descEmpty: { fontSize: FONT.sizes.sm, color: COLORS.gray[400] },
 
-  sellerCard: {
+  sellerLine: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
     marginHorizontal: SPACING.lg,
     marginTop: SPACING.md,
-    backgroundColor: PURPLE + '12',
-    borderRadius: RADIUS.md,
-    padding: SPACING.lg,
-    gap: SPACING.md,
+    paddingHorizontal: 4,
   },
-  sellerIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: PURPLE, justifyContent: 'center', alignItems: 'center' },
-  sellerIconText: { color: COLORS.white, fontWeight: '800', fontSize: FONT.sizes.md },
-  sellerName: { fontSize: FONT.sizes.sm, fontWeight: '700', color: PURPLE },
-  sellerDesc: { fontSize: FONT.sizes.xs, color: COLORS.gray[500], marginTop: 2 },
-
-  descSection: { paddingHorizontal: SPACING.lg, marginTop: SPACING.xxl },
-  descTitle: { fontSize: FONT.sizes.lg, fontWeight: '800', color: COLORS.secondary, marginBottom: SPACING.md },
-  descText: { fontSize: FONT.sizes.md, color: COLORS.gray[700], lineHeight: 22 },
+  sellerLineText: { fontSize: FONT.sizes.xs, color: COLORS.gray[500], fontWeight: '600' },
 
   ctaBar: {
     position: 'absolute',

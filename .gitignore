@@ -57,7 +57,9 @@ apps/mobile/gradle-build*.log
 /*배너.png
 
 # Local tooling / agent state (not project source)
-.claude/
+# — but keep committed Claude agents so they travel with the repo
+.claude/*
+!.claude/agents/
 .serena/
 
 # Sibling working directories used by other projects, not part of this repo

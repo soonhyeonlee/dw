@@ -1,0 +1,27 @@
+- **[세션 종합 — 다음 "이어서" 진입점 (2026-06-10)](project_session_2026_06_10.md)** — 경유몰 실캐시백 추적. **2026-06-15: affiliate 모듈 커밋(bf2a76a)+EC2 배포 완료. EC2 .env에 COUPANG ACCESS/SECRET/PARTNER_ID 모두 세팅돼 affiliate `isEnabled()`=true → 쿠팡 클릭이 추적 딥링크 생성, `POST /affiliate/coupang/ingest` 호출 시 실적립.** 남은 일=ingest 정기 호출(cron) 배선 확인. RDS trackingId/externalOrderId/academy enrich 컬럼 모두 존재 검증됨. 과거완료분: 스토어 출시(AAB 70.6MB), T3 Quiet Mono, 우리지역 Places 4271건.
+- **[우리지역/홈 UX 수정 + 백엔드 배포 (2026-06-15)](project_region_home_fixes_2026_06_15.md)** — 우리지역 서버검색·더보기·정렬·카테고리 세분화 + 홈 sticky탭 터치먹통 + 맘카페 박스제거. 백엔드 커밋 f6c0be0 EC2 배포완료. ⚠️모바일 변경은 앱 재빌드/OTA 필요(미반영). 세분카테고리는 업체명 키워드 분류라 데이터 있는 학과(영어=128)만 채워지고 격투/헬스(복싱=0)는 크롤 안 돼 빔.
+- [세션 종합 2026-06-01](project_session_2026_06_01.md) — 아이홈마켓 SSO+네이티브 소셜(카카오 완료, 네이버·구글 OAuth 콘솔등록만 남음) + 키스토어 + 동적카테고리 + 번개장터 포인트. 상세 [[project-ihome-sso]]
+- **[T3 Quiet Mono 디자인 채택·반영 (2026-06-09)](project_t3_quiet_mono.md)** — 앱 전면 디자인=**T3 Quiet Mono**(화이트+코랄 `#F0410E`). ⚠️login_C(소프트카드)는 버려진 1차안, 되돌리지 말 것. theme 코랄전환+QM토큰, login/mypage/home/product 반영. 시안HTML `jobs/640fd2bb/tmp/*_T3.html`
+- [2026-05-29 세션 종합](project_session_2026_05_29.md) — sticky 폴더탭 인라인 + 학원/어린이집 Google Places 인프라 4 commits. 에뮬 검증 완료. P1 Google Places API 키 발급 대기
+- **[아이홈마켓 계정공유 SSO + 네이티브 로그인 (~2026-06-01)](project_ihome_sso.md)** — 앱↔아이홈마켓 HMAC 로그인. 웹뷰 SSO + **네이티브 ID/PW 폼**(verify.php) 둘 다 커밋·배포·에뮬 E2E 완료. 다음: 소셜 네이티브화(외부 OAuth 키 발급 필요)
+- **[안드로이드 프로덕션 키스토어 (2026-06-01)](reference_android_release_keystore.md)** — release 서명키 위치·SHA-1 지문·빌드 배선. 비번은 계정.md. 소셜/스토어 배포 시 참조. ⚠️분실주의
+- [2026-05-28 세션 종합](project_session_2026_05_28.md) — 미커밋 정리 + 아이홈마켓 sync + APK 1차 빌드 8 commits
+- [DoubleWin 대규모 리디자인](project_doublewin_redesign.md) — 샵백 스타일 경유쇼핑몰 + 번개장터 + 3단계 회원 + 우리지역 전면 개편, 우선순위 합의됨
+- [DoubleWin 노션 스펙 리디자인 + 어드민화](project_ui_ref_pass.md) — Phase 1·2·4·5 + AI배너 + 몰로고 + 학원/쿠폰 어드민화. 2026-05-28에 4 commits로 정리 완료
+- [어드민 상품관리 + 모바일 더미 제거 (2026-05-08)](project_admin_product_mgmt.md) — admin CRUD/페이지 + market·mall·product·search mock→API 전환 + EC2 재배포 완료, E2E 검증됨
+- [아이홈마켓→DoubleWin sync (2026-05-28)](project_ihome_doublewin_sync.md) — HMAC PHP 엔드포인트 + EC2 cron, 영카트 455상품 RDS 동기화 + 모바일 번개장터 노출 + 에뮬 검증 완료 (commits e81c903/985fe2d/4f256dc)
+- [아이홈마켓 (i-homemarket.co.kr)](project_ihomemarket.md) — 카페24 호스팅 영카트5/그누보드5 쇼핑몰. CEN 폴더에서 같이 만지는 별도 PHP 프로젝트
+- [LLM 통합 모듈](project_llm_integration.md) — GPT 3종 + Gemini 3종 채팅 모듈 구현 완료, 추가 요청 대기 중
+- [샵백 스타일 리디자인 #1~#15 (재평가)](project_shopback_restyle.md) — UX 패턴만 부분 적용. 시각 디자인 갭은 아래 갭 분석 문서에서 P1/P2/P3로 재정리됨
+- [샵백 vs 더블윈 갭 분석 (2026-05-06)](project_shopback_gap_analysis.md) — 7화면 비교 후 P1(오렌지헤더/promo carousel/mall카드) → P2 → P3 우선순위 확정
+- [P1~P3 리디자인 완료 (2026-05-06)](project_p1_progress.md) — 4 commits cfcfd38/0960c8b/26fea02/df48354. 후속 작업은 [[project-ui-ref-pass]]로 이어짐
+- [샵백 리디자인 작업 상세 히스토리](project_shopback_restyle_history.md) — 화면별 결정·근거·코드 변경 풀 디테일 (commit 메시지/PR 작성 참고)
+- [ALPH 채굴 인프라](project_aws_mining.md) — aws-mining/ 안전 강화 완료(2026-05-21), 사용자 terraform apply 대기. 정당 결제 계정 한정
+- **[GitHub 원격 레포 (2026-07-05)](reference_github_repo.md)** — origin=`soonhyeonlee/dw`(비공개). 다른PC `git clone`으로 이어서작업. ⚠️이 PC엔 다른계정(minwookfromaichemist) 자격증명 저장돼 그냥 push하면 403
+- [AWS 직접 배포 워크플로우](reference_aws_deploy_workflow.md) — GitHub 거치지 말고 SSH 54.238.64.159 + tarball + docker compose. 백엔드 작업 전 반드시 먼저 읽기
+- [카페24 작업 SOP](reference_cafe24_workflow.md) — FTP 접속/외부 DB IP 화이트리스트/일회용 PHP 진단 우회 패턴
+- [에뮬레이터 워크플로우](reference_emulator_workflow.md) — Pixel_7_Pro_API_30 AVD, Start-Process detach, ADB 캡처 절차
+- [Figma Make 워크플로우](feedback_figma_workflow.md) — Figma Make로 디자인 생성 후 Claude가 코드 변환하는 프로세스 선호
+- [묻지 말고 진행](feedback_no_questions_just_do.md) — 4지선다 확인 질문 거부, 합리적 디폴트로 실행 후 보고 선호
+- [TypeORM nullable/union 컬럼은 type 명시 필수](feedback_typeorm_nullable_union.md) — `string | null` / union literal 은 reflect-metadata 가 Object 로 추론 → DataTypeNotSupportedError
+- [RN ScrollView stickyHeaderIndices 는 직접 자식 flex 깨뜨림](feedback_rn_sticky_flex_break.md) — wrapper View 로 감싸고 안쪽에 진짜 flex 컨테이너 두기

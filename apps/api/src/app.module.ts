@@ -17,6 +17,7 @@ import { SyncModule } from './sync/sync.module';
 import { BannersModule } from './banners/banners.module';
 import { AffiliateModule } from './affiliate/affiliate.module';
 import { CommonModule } from './common/common.module';
+import { MomCafeModule } from './momcafe/momcafe.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -70,6 +71,7 @@ import { AppController } from './app.controller';
     SyncModule,
     BannersModule,
     AffiliateModule,
+    MomCafeModule,
   ],
   controllers: [AppController],
   providers: [

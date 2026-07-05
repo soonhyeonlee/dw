@@ -18,6 +18,7 @@
     },
     "android": {
       "package": "com.doublewin.app",
+      "usesCleartextTraffic": true,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyCNtPHtUWNg_Fq5lpGXVjoVS355zjjtUmM"

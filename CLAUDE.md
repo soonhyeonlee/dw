@@ -3,6 +3,8 @@
 > 이 파일은 Claude Code가 모든 PC에서 자동 로드한다. **새 PC에서 처음 열었다면 아래 "새 PC 시작"부터.**
 
 ## 🚀 새 PC 시작 (첫 세팅)
+> 사람이 읽는 A→Z 완전판은 **`docs/ONBOARDING.md`**. 아래는 요약.
+
 1. **`pc-setup` 에이전트를 실행**해서 세팅을 자동 진행한다.
    - 사용자: "새 컴퓨터라 세팅해줘" / "이어서 하자" → Claude는 `pc-setup` 서브에이전트를 띄운다.
    - 수동으로 하려면: Windows `powershell -ExecutionPolicy Bypass -File scripts/setup.ps1`, 그 외 `bash scripts/setup.sh`.

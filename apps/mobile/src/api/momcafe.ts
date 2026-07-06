@@ -19,7 +19,7 @@ export async function getMomCafes(params?: {
   const query = new URLSearchParams();
   if (params?.region) query.set('region', params.region);
   if (params?.q) query.set('q', params.q);
-  query.set('limit', String(params?.limit || 2));
+  if (params?.limit) query.set('limit', String(params.limit));
 
   const qs = query.toString();
   const res = await api<MomCafeData>(`/momcafes${qs ? `?${qs}` : ''}`);

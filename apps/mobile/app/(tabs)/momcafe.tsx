@@ -89,7 +89,6 @@ export default function MomCafeScreen() {
       const data = await getMomCafes({
         region: locationInfo?.area,
         q: searchQuery.trim(),
-        limit: 2,
       });
       setSearchResults(data.items || []);
       setSearchError('');

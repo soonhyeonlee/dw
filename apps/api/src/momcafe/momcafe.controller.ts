@@ -14,7 +14,7 @@ export class MomCafeController {
     const data = this.momCafeService.getMomCafes({
       region,
       q,
-      limit: limit ? Number(limit) : 2,
+      limit: limit ? Number(limit) : undefined,
     });
     return { success: true, data };
   }

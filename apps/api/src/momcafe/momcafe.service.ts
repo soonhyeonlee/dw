@@ -109,7 +109,7 @@ console.log(region);
 export class MomCafeService {
   getMomCafes(query: MomCafeQuery = {}): MomCafeList {
     const keyword = query.q?.trim().toLowerCase();
-    const limit = Math.max(1, Math.min(query.limit || 2, 20));
+    const limit = query.limit ? Math.max(1, Math.min(query.limit, 100)) : undefined;
     const regionGroup = resolveRegionGroup(query.region);
 
     let items = MOM_CAFES.filter((cafe) => {
@@ -125,6 +125,6 @@ export class MomCafeService {
       items = items.filter((cafe) => cafe.region !== '전국');
     }
 
-    return { items: items.slice(0, limit) };
+    return { items: limit ? items.slice(0, limit) : items };
   }
 }

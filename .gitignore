@@ -69,7 +69,9 @@ vast-mining/
 
 # Local-only references and secrets
 계정.md
+*.pem
 KakaoTalk_*.jpg
 KakaoTalk_*.jpeg
 KakaoTalk_*.png
+.merge-backup-*/
 
